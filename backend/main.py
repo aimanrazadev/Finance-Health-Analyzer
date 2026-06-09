@@ -91,6 +91,9 @@ def on_startup():
     seed_default_categories()
 
 
+seed_default_categories()
+
+
 @app.get("/")
 def home():
     return {
