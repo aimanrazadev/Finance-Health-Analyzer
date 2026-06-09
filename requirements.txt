@@ -35,4 +35,4 @@ openai  # optional: LLM integration (OpenAI)
 # Notes:
 # - Use `pymysql` as a pure-Python MySQL driver for ease of setup.
 # - `python-jose[cryptography]` provides JWT support for authentication flows.
-# - Add or pin versions as needed for production stability.
+# - Add or pin versions as needed for production stability
