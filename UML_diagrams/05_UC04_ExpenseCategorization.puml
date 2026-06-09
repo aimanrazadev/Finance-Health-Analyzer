@@ -1,0 +1,129 @@
+@startuml
+title UC04 - Expense Categorization Use Case
+
+top to bottom direction
+
+skinparam linetype ortho
+skinparam ranksep 90
+skinparam nodesep 55
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "User" as User
+actor "AI Service\nGemini / Groq / OpenAI" as AI
+database "MySQL Database" as DB
+
+rectangle "Expense Categorization Module" {
+
+usecase "Categorize Expenses" as U1
+
+usecase "Read Transaction Description" as U2
+usecase "Read Merchant Name" as U3
+
+usecase "Apply Rule-Based Categorization" as U4
+
+usecase "Check Food Keywords" as U5
+usecase "Check Transport Keywords" as U6
+usecase "Check Shopping Keywords" as U7
+usecase "Check Bills Keywords" as U8
+usecase "Check Subscription Keywords" as U9
+usecase "Check Salary Keywords" as U10
+usecase "Check Investment Keywords" as U11
+
+usecase "Assign Category" as U12
+
+usecase "AI Categorization Fallback" as U13
+usecase "Generate AI Category Prediction" as U14
+usecase "Assign AI Category" as U15
+
+usecase "Store Category Result" as U16
+
+usecase "User Overrides Category" as U17
+usecase "Select Correct Category" as U18
+
+usecase "Store Category Correction" as U19
+usecase "Update Learning Rules" as U20
+
+usecase "Show Category Result" as U21
+
+usecase "Keyword Match Not Found" as U22
+usecase "AI Service Failure" as U23
+
+}
+
+' Vertical Layout
+
+U1 -[hidden]down-> U2
+U2 -[hidden]down-> U3
+U3 -[hidden]down-> U4
+U4 -[hidden]down-> U5
+U5 -[hidden]down-> U6
+U6 -[hidden]down-> U7
+U7 -[hidden]down-> U8
+U8 -[hidden]down-> U9
+U9 -[hidden]down-> U10
+U10 -[hidden]down-> U11
+U11 -[hidden]down-> U12
+U12 -[hidden]down-> U13
+U13 -[hidden]down-> U14
+U14 -[hidden]down-> U15
+U15 -[hidden]down-> U16
+U16 -[hidden]down-> U17
+U17 -[hidden]down-> U18
+U18 -[hidden]down-> U19
+U19 -[hidden]down-> U20
+U20 -[hidden]down-> U21
+U21 -[hidden]down-> U22
+U22 -[hidden]down-> U23
+
+' User Actions
+
+User --> U1
+User --> U17
+
+' Main Flow
+
+U1 ..> U2 : <<include>>
+U1 ..> U3 : <<include>>
+U1 ..> U4 : <<include>>
+U1 ..> U12 : <<include>>
+U1 ..> U16 : <<include>>
+U1 ..> U21 : <<include>>
+
+' Rule Engine
+
+U4 ..> U5 : <<include>>
+U4 ..> U6 : <<include>>
+U4 ..> U7 : <<include>>
+U4 ..> U8 : <<include>>
+U4 ..> U9 : <<include>>
+U4 ..> U10 : <<include>>
+U4 ..> U11 : <<include>>
+
+' AI Fallback
+
+U13 ..> U14 : <<include>>
+U13 ..> U15 : <<include>>
+
+U13 ..> U1 : <<extend>>
+
+' User Correction
+
+U17 ..> U18 : <<include>>
+U17 ..> U19 : <<include>>
+U17 ..> U20 : <<include>>
+
+' Alternative Flows
+
+U4 ..> U22 : <<extend>>
+U13 ..> U23 : <<extend>>
+
+' External Systems
+
+AI --> U14
+
+DB --> U16
+DB --> U19
+DB --> U20
+
+@enduml

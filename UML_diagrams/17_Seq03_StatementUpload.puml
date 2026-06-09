@@ -1,0 +1,147 @@
+@startuml Seq03_StatementUpload
+!theme plain
+participant User
+participant "React Frontend" as Frontend
+participant "FastAPI Backend" as Backend
+participant "File Parser\n(Pandas)" as Parser
+participant "Data Cleaner" as Cleaner
+participant "Categorizer" as Categorizer
+participant "MySQL Database" as DB
+
+autonumber
+
+Note over User,DB: **FILE UPLOAD & PARSING**
+
+User -> Frontend: Navigate to upload page
+Frontend -> Frontend: Display file upload interface
+
+User -> Frontend: Click "Select File"
+Frontend -> Frontend: Open file picker
+User -> Frontend: Select CSV/Excel file
+
+Frontend -> Frontend: Validate file
+alt Valid File Type
+    Frontend -> Frontend: Show file name
+    User -> Frontend: Click "Preview"
+    
+    Frontend -> Backend: POST /upload/preview\n(multipart/form-data file)
+    
+    Backend -> Parser: parse_file(file)
+    alt File is CSV
+        Parser -> Parser: Use pandas.read_csv()
+    else File is Excel
+        Parser -> Parser: Use pandas.read_excel()
+    end
+    
+    Parser --> Backend: [raw_data: [...rows...]]
+    
+    Backend -> Frontend: {preview: [...first 5 rows...]}\nExpected columns: date, description, amount, type
+    Frontend -> Frontend: Render preview table
+    
+    Frontend --> User: Show preview with sample data
+    
+else Invalid File
+    Frontend -> Frontend: Show error message
+    Frontend --> User: Please upload CSV or Excel
+end
+
+Note over User,DB: **DATA CLEANING & EXTRACTION**
+
+User -> Frontend: Confirm data looks good
+User -> Frontend: Click "Upload"
+
+Frontend -> Backend: POST /upload/statement\n(multipart/form-data)
+
+Backend -> Parser: extract_transactions(file)
+Parser --> Backend: [raw_transactions]
+
+Backend -> Cleaner: clean_data([transactions])
+
+Note over Cleaner: Data Cleaning:
+Note over Cleaner: - Remove duplicates
+Note over Cleaner: - Handle null values
+Note over Cleaner: - Standardize date format
+Note over Cleaner: - Remove special chars
+Note over Cleaner: - Normalize amounts
+
+Cleaner -> Cleaner: remove_duplicates()
+Cleaner -> Cleaner: handle_nulls()
+Cleaner -> Cleaner: standardize_dates()
+Cleaner -> Cleaner: normalize_amounts()
+
+Cleaner --> Backend: [cleaned_transactions]
+
+Backend -> Frontend: {status: "processing", processed: 45, total: 47}
+Frontend -> Frontend: Show progress
+
+Note over User,DB: **AUTO-CATEGORIZATION**
+
+Backend -> Categorizer: categorize_batch([transactions])
+
+loop For Each Transaction
+    Categorizer -> Categorizer: Check rule-based keywords
+    alt Category Found
+        Categorizer -> Categorizer: Assign category
+    else No Match
+        Categorizer -> Categorizer: Send to LLM
+        Categorizer -> Categorizer: Get AI category
+    end
+end
+
+Categorizer --> Backend: [categorized_transactions]
+
+Backend -> Frontend: {status: "saving", categorized: 47}
+
+Note over User,DB: **BULK INSERT TO DATABASE**
+
+Backend -> DB: bulk INSERT INTO transactions\nVALUES (...transaction1...),\n(...transaction2...),\n...(all 47 transactions)...
+
+DB --> Backend: {rows_inserted: 47, success}
+
+Backend -> Frontend: {status: "success",\ntotal_uploaded: 47,\ncategories_detected: {...summary...}}
+
+Frontend -> Frontend: Hide loading spinner
+Frontend -> Frontend: Show success summary
+
+Note over Frontend: Summary shown:
+Note over Frontend: - Total transactions: 47
+Note over Frontend: - Food: 12
+Note over Frontend: - Transport: 8
+Note over Frontend: - Shopping: 10
+Note over Frontend: - Bills: 10
+Note over Frontend: - Entertainment: 7
+
+Frontend -> Frontend: Show upload history option
+Frontend --> User: Upload completed successfully!
+
+Note over User,DB: **VIEW UPLOAD HISTORY**
+
+User -> Frontend: Click "Upload History"
+Frontend -> Backend: GET /upload/history
+
+Backend -> DB: SELECT * FROM uploaded_files\nWHERE user_id={user_id}\nORDER BY upload_date DESC
+DB --> Backend: [file1, file2, file3, ...]
+
+Backend --> Frontend: {uploads: [...]}
+Frontend -> Frontend: Render upload history table
+Frontend --> User: Show all uploaded files
+
+Note over User,DB: **ERROR HANDLING**
+
+alt File Parsing Error
+    Parser --> Backend: {error: "Invalid CSV format"}
+    Backend --> Frontend: {error: "File format invalid"}
+    Frontend -> Frontend: Show error message
+    Frontend --> User: Cannot parse file
+else Duplicate Detection
+    Backend -> Backend: Check for duplicates
+    Backend -> Frontend: {warning: "10 duplicates found",\naction: "skip/merge?"}
+    Frontend -> Frontend: Show options
+    User -> Frontend: Choose action
+else Categorization Error
+    Categorizer --> Backend: {error: "LLM API error"}
+    Backend -> Frontend: {partial_success: true,\nerrors: [...]}
+    Frontend -> Frontend: Show partial success
+end
+
+@enduml

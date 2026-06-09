@@ -1,0 +1,114 @@
+@startuml
+title UC06 - AI Spending Insights Use Case
+
+top to bottom direction
+
+skinparam linetype ortho
+skinparam ranksep 90
+skinparam nodesep 55
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "User" as User
+actor "AI Service\nGemini / Groq / OpenAI" as AI
+database "MySQL Database" as DB
+
+rectangle "AI Spending Insights Module" {
+
+usecase "Generate AI Spending Insights" as U1
+
+usecase "Fetch Monthly Transactions" as U2
+usecase "Fetch Previous Month Transactions" as U3
+usecase "Calculate Current Month Spending" as U4
+usecase "Calculate Previous Month Spending" as U5
+
+usecase "Compare Monthly Spending" as U6
+usecase "Detect Category Increase" as U7
+usecase "Detect Highest Spending Category" as U8
+usecase "Detect Unusual Spending" as U9
+usecase "Detect Recurring Payments" as U10
+usecase "Detect Subscription Spending" as U11
+
+usecase "Create Spending Summary" as U12
+usecase "Build AI Insight Prompt" as U13
+usecase "Send Summary to AI Service" as U14
+usecase "Generate Insight Text" as U15
+
+usecase "Save AI Insights" as U16
+usecase "Display Insight Cards" as U17
+usecase "Regenerate Insights" as U18
+
+usecase "Show No Data Message" as U19
+usecase "Handle AI Timeout" as U20
+usecase "Handle Invalid AI Response" as U21
+
+}
+
+' Vertical Layout
+
+U1 -[hidden]down-> U2
+U2 -[hidden]down-> U3
+U3 -[hidden]down-> U4
+U4 -[hidden]down-> U5
+U5 -[hidden]down-> U6
+U6 -[hidden]down-> U7
+U7 -[hidden]down-> U8
+U8 -[hidden]down-> U9
+U9 -[hidden]down-> U10
+U10 -[hidden]down-> U11
+U11 -[hidden]down-> U12
+U12 -[hidden]down-> U13
+U13 -[hidden]down-> U14
+U14 -[hidden]down-> U15
+U15 -[hidden]down-> U16
+U16 -[hidden]down-> U17
+U17 -[hidden]down-> U18
+U18 -[hidden]down-> U19
+U19 -[hidden]down-> U20
+U20 -[hidden]down-> U21
+
+' User Actions
+
+User --> U1
+User --> U17
+User --> U18
+
+' Main Flow
+
+U1 ..> U2 : <<include>>
+U1 ..> U3 : <<include>>
+U1 ..> U4 : <<include>>
+U1 ..> U5 : <<include>>
+U1 ..> U6 : <<include>>
+U1 ..> U7 : <<include>>
+U1 ..> U8 : <<include>>
+U1 ..> U9 : <<include>>
+U1 ..> U10 : <<include>>
+U1 ..> U11 : <<include>>
+U1 ..> U12 : <<include>>
+U1 ..> U13 : <<include>>
+U1 ..> U14 : <<include>>
+U1 ..> U15 : <<include>>
+U1 ..> U16 : <<include>>
+U1 ..> U17 : <<include>>
+
+' Regenerate Flow
+
+U18 ..> U1 : <<include>>
+
+' Alternative Flows
+
+U2 ..> U19 : <<extend>>
+U14 ..> U20 : <<extend>>
+U15 ..> U21 : <<extend>>
+
+' External Systems
+
+DB --> U2
+DB --> U3
+DB --> U16
+
+AI --> U14
+AI --> U15
+
+@enduml

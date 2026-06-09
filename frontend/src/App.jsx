@@ -1,131 +1,112 @@
-import { useState, useEffect } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { lazy, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import './App.css';
+
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Transactions = lazy(() => import('./pages/Transactions'));
+const UploadStatement = lazy(() => import('./pages/UploadStatement'));
+const Budgets = lazy(() => import('./pages/Budgets'));
+const BudgetRecommendations = lazy(() => import('./pages/BudgetRecommendations'));
+const SavingsGoals = lazy(() => import('./pages/SavingsGoals'));
+const Insights = lazy(() => import('./pages/Insights'));
+const NeedsReview = lazy(() => import('./pages/NeedsReview'));
+const Friends = lazy(() => import('./pages/Friends'));
 
 function App() {
-  const [count, setCount] = useState(0)
-  const [backendMsg, setBackendMsg] = useState(null)
-
-  useEffect(() => {
-    fetch('http://localhost:8000/')
-      .then((res) => res.json())
-      .then((data) => setBackendMsg(data.message))
-      .catch(() => setBackendMsg('Unable to reach backend'))
-  }, [])
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p className="backend-status">Backend: {backendMsg ?? 'checking...'}</p>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <Router>
+      <AuthProvider>
+        <Suspense fallback={<div className="app-loading">Loading...</div>}>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-      <div className="ticks"></div>
+            {/* Protected Routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/transactions"
+              element={
+                <ProtectedRoute>
+                  <Transactions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/upload"
+              element={
+                <ProtectedRoute>
+                  <UploadStatement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/friends"
+              element={
+                <ProtectedRoute>
+                  <Friends />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/needs-review"
+              element={
+                <ProtectedRoute>
+                  <NeedsReview />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/budgets"
+              element={
+                <ProtectedRoute>
+                  <Budgets />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recommendations"
+              element={
+                <ProtectedRoute>
+                  <BudgetRecommendations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/savings-goals"
+              element={
+                <ProtectedRoute>
+                  <SavingsGoals />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/insights"
+              element={
+                <ProtectedRoute>
+                  <Insights />
+                </ProtectedRoute>
+              }
+            />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+            {/* Redirect */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Suspense>
+      </AuthProvider>
+    </Router>
+  );
 }
 
-export default App
+export default App;

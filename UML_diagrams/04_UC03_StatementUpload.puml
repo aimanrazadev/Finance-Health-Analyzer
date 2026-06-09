@@ -1,0 +1,147 @@
+@startuml
+title UC03 - Statement Upload Use Case
+
+top to bottom direction
+
+skinparam linetype ortho
+skinparam ranksep 90
+skinparam nodesep 55
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "User" as User
+actor "File Parser\nPandas / OpenPyXL / PDFPlumber" as Parser
+database "MySQL Database" as DB
+
+rectangle "Statement Upload Module" {
+
+usecase "Upload Bank Statement" as U1
+
+usecase "Select Statement File" as U2
+usecase "Choose CSV / Excel / PDF" as U3
+usecase "Validate File Type" as U4
+usecase "Validate File Size" as U5
+usecase "Store Uploaded File Info" as U6
+
+usecase "Read Statement File" as U7
+usecase "Read CSV Using Pandas" as U8
+usecase "Read Excel Using OpenPyXL" as U9
+usecase "Read PDF Using PDFPlumber" as U10
+
+usecase "Extract Transaction Rows" as U11
+usecase "Extract Date Column" as U12
+usecase "Extract Description Column" as U13
+usecase "Extract Amount Column" as U14
+usecase "Detect Income / Expense" as U15
+
+usecase "Clean Transaction Data" as U16
+usecase "Remove Empty Rows" as U17
+usecase "Format Dates" as U18
+usecase "Normalize Amounts" as U19
+usecase "Clean Merchant Names" as U20
+
+usecase "Auto-Categorize Transactions" as U21
+usecase "Show Upload Preview" as U22
+usecase "Confirm Before Saving" as U23
+usecase "Save Transactions" as U24
+usecase "Show Upload History" as U25
+
+usecase "Show Invalid File Error" as U26
+usecase "Show File Too Large Error" as U27
+usecase "Show Parser Failure Error" as U28
+usecase "Show No Transactions Found" as U29
+
+}
+
+' Vertical Layout
+
+U1 -[hidden]down-> U2
+U2 -[hidden]down-> U3
+U3 -[hidden]down-> U4
+U4 -[hidden]down-> U5
+U5 -[hidden]down-> U6
+U6 -[hidden]down-> U7
+U7 -[hidden]down-> U8
+U8 -[hidden]down-> U9
+U9 -[hidden]down-> U10
+U10 -[hidden]down-> U11
+U11 -[hidden]down-> U12
+U12 -[hidden]down-> U13
+U13 -[hidden]down-> U14
+U14 -[hidden]down-> U15
+U15 -[hidden]down-> U16
+U16 -[hidden]down-> U17
+U17 -[hidden]down-> U18
+U18 -[hidden]down-> U19
+U19 -[hidden]down-> U20
+U20 -[hidden]down-> U21
+U21 -[hidden]down-> U22
+U22 -[hidden]down-> U23
+U23 -[hidden]down-> U24
+U24 -[hidden]down-> U25
+U25 -[hidden]down-> U26
+U26 -[hidden]down-> U27
+U27 -[hidden]down-> U28
+U28 -[hidden]down-> U29
+
+' User Actions
+
+User --> U1
+User --> U2
+User --> U23
+User --> U25
+
+' Upload Flow
+
+U1 ..> U2 : <<include>>
+U1 ..> U3 : <<include>>
+U1 ..> U4 : <<include>>
+U1 ..> U5 : <<include>>
+U1 ..> U6 : <<include>>
+U1 ..> U7 : <<include>>
+U1 ..> U11 : <<include>>
+U1 ..> U16 : <<include>>
+U1 ..> U21 : <<include>>
+U1 ..> U22 : <<include>>
+U1 ..> U23 : <<include>>
+U1 ..> U24 : <<include>>
+
+' File Reading Alternatives
+
+U7 ..> U8 : <<extend>>
+U7 ..> U9 : <<extend>>
+U7 ..> U10 : <<extend>>
+
+' Extraction Flow
+
+U11 ..> U12 : <<include>>
+U11 ..> U13 : <<include>>
+U11 ..> U14 : <<include>>
+U11 ..> U15 : <<include>>
+
+' Cleaning Flow
+
+U16 ..> U17 : <<include>>
+U16 ..> U18 : <<include>>
+U16 ..> U19 : <<include>>
+U16 ..> U20 : <<include>>
+
+' Alternative / Error Flows
+
+U4 ..> U26 : <<extend>>
+U5 ..> U27 : <<extend>>
+U7 ..> U28 : <<extend>>
+U11 ..> U29 : <<extend>>
+
+' External Systems
+
+Parser --> U8
+Parser --> U9
+Parser --> U10
+Parser --> U11
+
+DB --> U6
+DB --> U24
+DB --> U25
+
+@enduml

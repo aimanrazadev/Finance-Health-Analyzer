@@ -1,0 +1,367 @@
+@startuml Class_Diagram
+!theme plain
+skinparam class {
+    BackgroundColor #E8F5E9
+    BorderColor #2E7D32
+}
+
+'''''''' MODELS ''''''''
+package "Backend Models" {
+    class User {
+        -id: int
+        -name: str
+        -email: str
+        -password_hash: str
+        -created_at: datetime
+        +register(name, email, password): User
+        +login(email, password): JWT
+        +get_profile(): dict
+        +update_profile(data): void
+        +delete_account(): void
+    }
+
+    class Transaction {
+        -id: int
+        -user_id: int
+        -date: date
+        -description: str
+        -merchant: str
+        -amount: float
+        -type: str (income/expense)
+        -category_id: int
+        -source: str
+        -payment_method: str
+        +add_transaction(data): Transaction
+        +update_transaction(data): void
+        +delete_transaction(): void
+        +get_all_by_user(user_id): list
+        +get_by_category(category_id): list
+        +get_by_date_range(start, end): list
+    }
+
+    class Category {
+        -id: int
+        -name: str
+        -type: str
+        -description: str
+        -icon: str
+        +get_all_categories(): list
+        +get_default_keywords(): dict
+        +add_category(name, type): Category
+    }
+
+    class Budget {
+        -id: int
+        -user_id: int
+        -category_id: int
+        -monthly_limit: float
+        -month: int
+        -year: int
+        +create_budget(data): Budget
+        +update_budget(data): void
+        +get_status(category_id, month, year): dict
+        +is_over_budget(category_id): bool
+        +get_remaining(category_id): float
+    }
+
+    class SavingsGoal {
+        -id: int
+        -user_id: int
+        -goal_name: str
+        -target_amount: float
+        -current_amount: float
+        -monthly_contribution: float
+        -target_date: date
+        -status: str
+        +create_goal(data): SavingsGoal
+        +update_goal(data): void
+        +calculate_months_to_goal(): int
+        +get_progress_percentage(): float
+        +mark_completed(): void
+    }
+
+    class RecurringTransaction {
+        -id: int
+        -user_id: int
+        -category_id: int
+        -description: str
+        -merchant: str
+        -amount: float
+        -frequency: str
+        -next_due_date: date
+        +create_recurring(data): RecurringTransaction
+        +detect_recurring_patterns(): list
+        +get_subscriptions(): list
+    }
+}
+
+'''''''' SERVICES ''''''''
+package "Backend Services" {
+    class AuthenticationService {
+        -user_repo: UserRepository
+        -jwt_manager: JWTManager
+        +register(name, email, password): dict
+        +login(email, password): dict
+        +verify_token(token): bool
+        +refresh_token(token): str
+        +logout(token): void
+    }
+
+    class TransactionService {
+        -transaction_repo: TransactionRepository
+        -categorizer: CategorizationService
+        +add_transaction(user_id, data): Transaction
+        +get_all_transactions(user_id): list
+        +get_by_category(user_id, category_id): list
+        +filter_transactions(user_id, filters): list
+    }
+
+    class CategorizationService {
+        -category_repo: CategoryRepository
+        -rule_engine: RuleBasedCategorizer
+        -ai_service: LLMService
+        -learning_repo: UserLearningRepository
+        +categorize(description): str
+        +apply_rules(description): str
+        +fallback_to_ai(description): str
+        +learn_from_correction(merchant, category): void
+    }
+
+    class DashboardService {
+        -transaction_repo: TransactionRepository
+        -budget_repo: BudgetRepository
+        +get_summary(user_id): dict
+        +calculate_totals(user_id): dict
+        +get_category_breakdown(user_id): dict
+        +get_monthly_trend(user_id): dict
+        +get_top_merchants(user_id): list
+    }
+
+    class BudgetService {
+        -budget_repo: BudgetRepository
+        -transaction_repo: TransactionRepository
+        +create_budget(user_id, data): Budget
+        +get_budget_status(user_id, category_id): dict
+        +check_over_budget(user_id, category_id): bool
+        +get_recommendations(user_id): list
+    }
+
+    class SavingsGoalService {
+        -goal_repo: SavingsGoalRepository
+        -ai_service: LLMService
+        +create_goal(user_id, data): SavingsGoal
+        +calculate_timeline(goal): dict
+        +get_acceleration_tips(goal): str
+        +track_progress(goal): dict
+    }
+
+    class FileUploadService {
+        -file_parser: FileParser
+        -categorizer: CategorizationService
+        -transaction_repo: TransactionRepository
+        +validate_file(file): bool
+        +parse_csv(file): list
+        +parse_excel(file): list
+        +extract_transactions(data): list
+        +clean_transactions(data): list
+        +bulk_save_transactions(user_id, data): int
+    }
+
+    class AiInsightsService {
+        -analytics_engine: AnalyticsEngine
+        -llm_service: LLMService
+        -insight_repo: InsightRepository
+        +calculate_patterns(user_id): dict
+        +generate_insights(patterns): str
+        +detect_anomalies(user_id): list
+        +save_insights(user_id, insights): void
+    }
+
+    class ForecastingService {
+        -transaction_repo: TransactionRepository
+        -ml_engine: MLEngine
+        -forecast_repo: ForecastRepository
+        +get_historical_data(user_id): list
+        +prepare_features(data): list
+        +train_model(features): void
+        +predict_next_month(user_id): dict
+        +predict_by_category(user_id): dict
+    }
+
+    class FinancialHealthService {
+        -transaction_repo: TransactionRepository
+        -budget_repo: BudgetRepository
+        -goal_repo: SavingsGoalRepository
+        -score_repo: ScoreRepository
+        +calculate_savings_rate_score(user_id): float
+        +calculate_budget_control_score(user_id): float
+        +calculate_spending_stability_score(user_id): float
+        +calculate_debt_score(user_id): float
+        +calculate_emergency_fund_score(user_id): float
+        +calculate_final_score(user_id): dict
+    }
+
+    class ChatbotService {
+        -intent_recognizer: IntentRecognizer
+        -data_fetcher: DataFetcher
+        -llm_service: LLMService
+        -chat_repo: ChatRepository
+        +process_message(user_id, message): str
+        +recognize_intent(message): str
+        +fetch_data(intent, user_id): dict
+        +generate_response(intent, data): str
+        +save_chat_history(user_id, message, response): void
+    }
+
+    class LLMService {
+        -api_key: str
+        -api_endpoint: str
+        +call_api(prompt, data): str
+        +categorize_transaction(description): str
+        +generate_insights(data): str
+        +get_budget_advice(budget_data): str
+        +answer_question(question, context): str
+    }
+
+    class MLEngine {
+        -model_lr: LinearRegression
+        -model_rf: RandomForestRegressor
+        -scaler: StandardScaler
+        +train_models(X_train, y_train): void
+        +predict(X_test): list
+        +evaluate_model(y_true, y_pred): dict
+        +get_feature_importance(): dict
+    }
+}
+
+'''''''' REPOSITORIES ''''''''
+package "Backend Repositories" {
+    interface Repository {
+        +create(data): void
+        +read(id): dict
+        +update(id, data): void
+        +delete(id): void
+    }
+
+    class UserRepository {
+        +find_by_email(email): User
+        +find_by_id(id): User
+        +save(user): void
+    }
+
+    class TransactionRepository {
+        +find_by_user(user_id): list
+        +find_by_category(user_id, category_id): list
+        +find_by_date_range(user_id, start, end): list
+        +bulk_insert(transactions): int
+    }
+
+    class CategoryRepository {
+        +get_all(): list
+        +find_by_name(name): Category
+    }
+
+    class BudgetRepository {
+        +find_by_user(user_id): list
+        +find_by_category(user_id, category_id): Budget
+    }
+
+    class SavingsGoalRepository {
+        +find_by_user(user_id): list
+        +find_by_id(id): SavingsGoal
+    }
+
+    Repository <|.. UserRepository
+    Repository <|.. TransactionRepository
+    Repository <|.. CategoryRepository
+    Repository <|.. BudgetRepository
+    Repository <|.. SavingsGoalRepository
+}
+
+'''''''' FRONTEND COMPONENTS ''''''''
+package "Frontend Components" {
+    class AuthComponent {
+        +RegisterPage: React.FC
+        +LoginPage: React.FC
+        +LogoutButton: React.FC
+        +ProtectedRoute: React.FC
+    }
+
+    class DashboardComponent {
+        +Dashboard: React.FC
+        +SummaryCards: React.FC
+        +PieChart: React.FC
+        +BarChart: React.FC
+        +LineChart: React.FC
+    }
+
+    class TransactionComponent {
+        +TransactionList: React.FC
+        +AddTransaction: React.FC
+        +EditTransaction: React.FC
+        +DeleteTransaction: React.FC
+    }
+
+    class BudgetComponent {
+        +BudgetPlanner: React.FC
+        +BudgetCard: React.FC
+        +ProgressBar: React.FC
+    }
+
+    class SavingsGoalComponent {
+        +SavingsGoals: React.FC
+        +GoalCard: React.FC
+        +GoalProgress: React.FC
+    }
+
+    class ChatbotComponent {
+        +Chatbot: React.FC
+        +ChatMessage: React.FC
+        +InputField: React.FC
+    }
+
+    class InsightsComponent {
+        +InsightsPage: React.FC
+        +InsightCard: React.FC
+    }
+
+    class UploadComponent {
+        +FileUpload: React.FC
+        +PreviewTable: React.FC
+        +UploadProgress: React.FC
+    }
+}
+
+'''''''' RELATIONSHIPS ''''''''
+User "1" --> "*" Transaction : has
+User "1" --> "*" Budget : creates
+User "1" --> "*" SavingsGoal : tracks
+User "1" --> "*" RecurringTransaction : tracks
+
+Category "1" --> "*" Transaction : categorizes
+Category "1" --> "*" Budget : limits
+
+Transaction "*" --> "1" Category : belongs_to
+Budget "*" --> "1" Category : for_category
+
+AuthenticationService --> User : authenticates
+TransactionService --> Transaction : manages
+CategorizationService --> Category : uses
+DashboardService --> Transaction : analyzes
+BudgetService --> Budget : manages
+SavingsGoalService --> SavingsGoal : manages
+FileUploadService --> Transaction : creates
+AiInsightsService --> Transaction : analyzes
+ForecastingService --> Transaction : predicts
+FinancialHealthService --> Budget : calculates
+ChatbotService --> LLMService : uses
+LLMService --> AiInsightsService : provides_insights
+MLEngine --> ForecastingService : predicts
+
+UserRepository --> User : stores
+TransactionRepository --> Transaction : stores
+CategoryRepository --> Category : stores
+BudgetRepository --> Budget : stores
+SavingsGoalRepository --> SavingsGoal : stores
+
+@enduml

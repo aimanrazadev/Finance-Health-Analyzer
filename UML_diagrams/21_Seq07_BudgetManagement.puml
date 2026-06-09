@@ -1,0 +1,179 @@
+@startuml Seq07_BudgetManagement
+!theme plain
+participant User
+participant "React Frontend" as Frontend
+participant "Budget API" as Backend
+participant "Budget\nService" as BudgetSvc
+participant "Notification\nService" as Notifier
+participant "MySQL DB" as DB
+
+autonumber
+
+Note over User,DB: **CREATE BUDGET**
+
+User -> Frontend: Navigate to Budget
+Frontend -> Frontend: Display budget management page
+User -> Frontend: Click "Create New Budget"
+
+Frontend -> Frontend: Show budget form
+Note over Frontend: Form fields:
+Note over Frontend: - Category selector
+Note over Frontend: - Amount
+Note over Frontend: - Period (monthly/yearly)
+Note over Frontend: - Alert threshold
+
+User -> Frontend: Enter: Food, ₹2000, Monthly, 80% alert
+
+Frontend -> Frontend: Validate input
+Frontend -> Backend: POST /budgets/create\n{category_id: 1, amount: 2000,\nperiod: "monthly", alert_threshold: 80}
+
+Backend -> BudgetSvc: create_budget(category_id, amount, period)
+
+BudgetSvc -> BudgetSvc: Validate category exists
+BudgetSvc -> BudgetSvc: Set creation_date = today
+BudgetSvc -> DB: INSERT INTO budgets\n(user_id, category_id, amount, period,\nalert_threshold, created_at)
+DB --> BudgetSvc: {budget_id}
+
+BudgetSvc --> Backend: {budget: {...}}
+Backend --> Frontend: {status: "success", budget}
+
+Frontend -> Frontend: Show success message
+Frontend -> Frontend: Add to budget list
+Frontend --> User: Budget created
+
+Note over User,DB: **VIEW ALL BUDGETS**
+
+User -> Frontend: View Budgets page
+Frontend -> Backend: GET /budgets
+
+Backend -> DB: SELECT * FROM budgets\nWHERE user_id=? AND is_active=true
+DB --> Backend: [budget1, budget2, ...]
+
+Backend -> DB: For each budget, SELECT SUM(amount)\nFROM transactions WHERE category_id\nAND date CURRENT_MONTH
+DB --> Backend: [actual_spent1, actual_spent2, ...]
+
+Backend -> Backend: Calculate budget status
+Backend -> Backend: Food: 1850/2000 (92.5%) - 80% threshold exceeded!
+Backend -> Backend: Transport: 850/1200 (70.8%) - OK
+Backend -> Backend: Bills: 1340/1500 (89.3%) - 80% threshold exceeded!
+
+Backend --> Frontend: {budgets: [{id, category, amount, spent,\npercentage, status}, ...]}
+
+Frontend -> Frontend: Render budget cards with progress bars
+
+Note over Frontend: Budget Card - Food:
+Note over Frontend: ₹1,850 / ₹2,000 (92.5%)
+Note over Frontend: Status: ⚠️ Warning (exceeded 80%)
+
+Note over Frontend: Budget Card - Transport:
+Note over Frontend: ₹850 / ₹1,200 (70.8%)
+Note over Frontend: Status: ✅ On Track
+
+Frontend --> User: Display all budgets
+
+Note over User,DB: **TRACK BUDGET SPENDING**
+
+Backend -> BudgetSvc: track_spending_by_budget()
+
+loop For Each Budget
+    BudgetSvc -> DB: SELECT SUM(amount) FROM transactions\nWHERE category_id=? AND\ndate BETWEEN period_start AND period_end
+    DB --> BudgetSvc: total_spent
+    
+    BudgetSvc -> BudgetSvc: percentage = (spent / amount) * 100
+    
+    alt Percentage >= Alert Threshold
+        Note over BudgetSvc: Alert threshold reached
+        BudgetSvc -> Notifier: trigger_alert(user_id, budget)
+    else Percentage >= 100
+        Note over BudgetSvc: Budget exceeded!
+        BudgetSvc -> Notifier: send_alert("Budget exceeded")
+    end
+end
+
+Notifier -> Notifier: Create notification
+Notifier -> DB: INSERT INTO notifications\n(user_id, message, type, created_at)
+DB --> Notifier: {notification_id}
+
+Notifier --> Frontend: Broadcast notification
+
+Frontend -> Frontend: Show toast/banner alert
+Note over Frontend: 🔔 "Food budget 92.5% used (₹1,850/₹2,000)"
+
+Frontend --> User: Display alert
+
+Note over User,DB: **BUDGET ALERTS & NOTIFICATIONS**
+
+alt Email Alert
+    Notifier -> Notifier: Send email to user
+    Notifier -> Notifier: "Your Food budget is at 80%"
+end
+
+alt In-App Notification
+    Notifier -> Frontend: WebSocket/API notification
+    Frontend -> Frontend: Show alert badge
+    Frontend -> Frontend: Display notification panel
+end
+
+alt Push Notification
+    Notifier -> Notifier: Send push notification
+    Notifier --> User: Browser push notification
+end
+
+Note over User,DB: **EDIT BUDGET**
+
+User -> Frontend: Click edit on budget
+Frontend -> Frontend: Show edit form with current values
+User -> Frontend: Change amount from 2000 to 2200
+User -> Frontend: Change alert_threshold to 75%
+User -> Frontend: Click "Save"
+
+Frontend -> Backend: PUT /budgets/{budget_id}\n{amount: 2200, alert_threshold: 75}
+
+Backend -> DB: UPDATE budgets\nSET amount=2200, alert_threshold=75\nWHERE id={budget_id}
+DB --> Backend: {success}
+
+Backend --> Frontend: {status: "success"}
+Frontend -> Frontend: Update budget list
+Frontend --> User: Budget updated
+
+Note over User,DB: **AI BUDGET RECOMMENDATIONS**
+
+User -> Frontend: Click "Get AI Recommendation"
+
+Frontend -> Backend: GET /budgets/recommend
+
+Backend -> Analytics: analyze_spending_patterns()
+Backend -> Analytics: Fetch historical spending by category
+
+Analytics -> DB: SELECT category_id, AVG(spent) as avg,\nSTDDEV(spent) as volatility\nFROM budgets (30 days)
+DB --> Analytics: spending_stats
+
+Analytics -> Analytics: Analyze spending variability
+Analytics -> Analytics: Food avg: 1850 ± 250 (13.5% volatility)
+Analytics -> Analytics: Bills avg: 1350 ± 50 (3.7% volatility - stable)
+
+Analytics -> Analytics: Recommend budgets (avg + 1.5 * stddev)
+Analytics -> Analytics: Food budget: 1850 + 375 = 2225
+Analytics -> Analytics: Bills budget: 1350 + 75 = 1425
+
+Backend --> Frontend: {recommendations: [{category: "Food",\nrecommended_amount: 2225},\n{category: "Bills", recommended_amount: 1425}]}
+
+Frontend -> Frontend: Show recommendation cards
+Frontend --> User: Display AI recommendations
+
+Note over User,DB: **DELETE BUDGET**
+
+User -> Frontend: Click delete on budget
+Frontend -> Frontend: Show confirmation dialog
+User -> Frontend: Confirm deletion
+
+Frontend -> Backend: DELETE /budgets/{budget_id}
+
+Backend -> DB: DELETE FROM budgets\nWHERE id={budget_id} AND user_id={user_id}
+DB --> Backend: {rows_deleted: 1}
+
+Backend --> Frontend: {status: "success"}
+Frontend -> Frontend: Remove from list
+Frontend --> User: Budget deleted
+
+@enduml

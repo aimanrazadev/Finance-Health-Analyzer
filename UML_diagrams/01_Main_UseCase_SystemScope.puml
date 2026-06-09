@@ -1,0 +1,71 @@
+@startuml Main_UseCase_Diagram
+!theme plain
+skinparam packageStyle rectangle
+skinparam actor {
+    BackgroundColor #FFD700
+    BorderColor #FF8C00
+}
+skinparam usecase {
+    BackgroundColor #87CEEB
+    BorderColor #4169E1
+}
+skinparam system {
+    BackgroundColor #F0F0F0
+    BorderColor #000000
+}
+
+actor User
+actor "LLM API\n(Gemini/Groq/OpenAI)" as AI
+actor "ML Engine\n(Scikit-learn)" as ML
+actor "MySQL Database" as DB
+actor "File Parser\n(Pandas/OpenPyXL)" as FileParser
+
+rectangle "AI-Powered Personal Finance Analyzer System" {
+    usecase "UC1: Register Account" as UC1
+    usecase "UC2: Login" as UC2
+    usecase "UC3: Add Manual Transaction" as UC3
+    usecase "UC4: Upload Bank Statement" as UC4
+    usecase "UC5: View Dashboard" as UC5
+    usecase "UC6: Categorize Expenses" as UC6
+    usecase "UC7: Create/Manage Budget" as UC7
+    usecase "UC8: View AI Spending Insights" as UC8
+    usecase "UC9: Create Savings Goals" as UC9
+    usecase "UC10: Expense Forecasting" as UC10
+    usecase "UC11: AI Finance Chatbot" as UC11
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC7
+User --> UC9
+User --> UC11
+
+UC2 .up.> UC1 : extends
+
+UC4 --> FileParser
+UC4 --> UC6
+
+UC3 --> UC6
+
+UC6 --> AI : unknown categories
+
+UC5 --> DB : fetch data
+
+UC8 --> UC5 : depends on
+UC8 --> AI : generate insights
+
+UC10 --> ML : predict expenses
+UC10 --> DB : historical data
+
+UC7 --> DB : save budgets
+
+UC9 --> DB : save goals
+
+UC11 --> UC5 : fetch financial data
+UC11 --> AI : generate responses
+UC11 --> DB : query data
+
+@enduml

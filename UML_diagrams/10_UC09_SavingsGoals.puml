@@ -1,0 +1,127 @@
+@startuml
+title UC09 - Savings Goals Use Case
+
+top to bottom direction
+
+skinparam linetype ortho
+skinparam ranksep 90
+skinparam nodesep 55
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "User" as User
+actor "AI Service\nGemini / Groq / OpenAI" as AI
+database "MySQL Database" as DB
+
+rectangle "Savings Goals Module" {
+
+usecase "Manage Savings Goals" as U1
+
+usecase "Create Savings Goal" as U2
+usecase "Enter Goal Name" as U3
+usecase "Enter Target Amount" as U4
+usecase "Enter Current Saved Amount" as U5
+usecase "Enter Monthly Contribution" as U6
+usecase "Validate Goal Data" as U7
+usecase "Save Savings Goal" as U8
+
+usecase "View Savings Goals" as U9
+usecase "Fetch Goal Data" as U10
+
+usecase "Track Goal Progress" as U11
+usecase "Calculate Remaining Amount" as U12
+usecase "Calculate Months Required" as U13
+usecase "Estimate Completion Date" as U14
+usecase "Show Goal Progress Bar" as U15
+
+usecase "Update Savings Goal" as U16
+usecase "Delete Savings Goal" as U17
+
+usecase "Generate Faster Saving Suggestion" as U18
+usecase "Analyze Current Spending" as U19
+usecase "Suggest Expense Reduction" as U20
+usecase "Show Improved Completion Time" as U21
+
+usecase "Show Invalid Goal Error" as U22
+usecase "Show Goal Completed Status" as U23
+
+}
+
+' Vertical Layout
+
+U1 -[hidden]down-> U2
+U2 -[hidden]down-> U3
+U3 -[hidden]down-> U4
+U4 -[hidden]down-> U5
+U5 -[hidden]down-> U6
+U6 -[hidden]down-> U7
+U7 -[hidden]down-> U8
+U8 -[hidden]down-> U9
+U9 -[hidden]down-> U10
+U10 -[hidden]down-> U11
+U11 -[hidden]down-> U12
+U12 -[hidden]down-> U13
+U13 -[hidden]down-> U14
+U14 -[hidden]down-> U15
+U15 -[hidden]down-> U16
+U16 -[hidden]down-> U17
+U17 -[hidden]down-> U18
+U18 -[hidden]down-> U19
+U19 -[hidden]down-> U20
+U20 -[hidden]down-> U21
+U21 -[hidden]down-> U22
+U22 -[hidden]down-> U23
+
+' User Actions
+
+User --> U1
+User --> U2
+User --> U9
+User --> U11
+User --> U16
+User --> U17
+User --> U18
+
+' Create Goal Flow
+
+U2 ..> U3 : <<include>>
+U2 ..> U4 : <<include>>
+U2 ..> U5 : <<include>>
+U2 ..> U6 : <<include>>
+U2 ..> U7 : <<include>>
+U2 ..> U8 : <<include>>
+
+' View Goal Flow
+
+U9 ..> U10 : <<include>>
+
+' Track Progress Flow
+
+U11 ..> U12 : <<include>>
+U11 ..> U13 : <<include>>
+U11 ..> U14 : <<include>>
+U11 ..> U15 : <<include>>
+
+' AI Faster Saving Flow
+
+U18 ..> U19 : <<include>>
+U18 ..> U20 : <<include>>
+U18 ..> U21 : <<include>>
+
+' Alternative Flows
+
+U7 ..> U22 : <<extend>>
+U11 ..> U23 : <<extend>>
+
+' External Systems
+
+DB --> U8
+DB --> U10
+DB --> U16
+DB --> U17
+
+AI --> U18
+AI --> U20
+AI --> U21
+
+@enduml

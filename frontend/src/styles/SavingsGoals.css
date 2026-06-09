@@ -1,0 +1,182 @@
+.savings-page {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 56px;
+}
+
+.savings-layout {
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.savings-form-panel,
+.savings-list-panel,
+.savings-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.savings-form-panel,
+.savings-list-panel {
+  padding: 18px;
+}
+
+.savings-form-panel h2,
+.savings-list-panel h2 {
+  margin: 0 0 14px;
+  color: var(--text);
+  font-size: 20px;
+}
+
+.savings-form {
+  display: grid;
+  gap: 12px;
+}
+
+.savings-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.savings-form input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--text);
+  outline: none;
+}
+
+.savings-form input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 115, 234, 0.12);
+}
+
+.savings-form-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.savings-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.savings-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.savings-card-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.savings-card h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 18px;
+}
+
+.savings-card p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-transform: capitalize;
+}
+
+.savings-card-header span {
+  color: var(--primary);
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.goal-progress {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf2f7;
+}
+
+.goal-progress div {
+  height: 100%;
+  border-radius: inherit;
+  background: #0073ea;
+}
+
+.goal-values,
+.goal-timeline {
+  display: grid;
+  gap: 8px;
+}
+
+.goal-values {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.goal-values span,
+.goal-timeline span {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.goal-timeline {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.goal-timeline strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.goal-suggestion {
+  padding: 12px;
+  border: 1px solid #b9ddff;
+  border-radius: 6px;
+  background: #f2f8ff;
+  color: #0b4f8a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.goal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 980px) {
+  .savings-layout,
+  .savings-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .savings-page {
+    width: min(100% - 24px, 1180px);
+    padding-top: 20px;
+  }
+
+  .goal-values,
+  .goal-timeline {
+    grid-template-columns: 1fr;
+  }
+}

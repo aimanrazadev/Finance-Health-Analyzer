@@ -1,0 +1,197 @@
+@startuml Seq08_ExpenseForecasting
+!theme plain
+participant User
+participant "React Frontend" as Frontend
+participant "Forecast API" as Backend
+participant "Feature\nEngineering" as FeatureEng
+participant "ML Model\n(Scikit-learn)" as MLModel
+participant "MySQL DB" as DB
+
+autonumber
+
+Note over User,DB: **REQUEST FORECAST**
+
+User -> Frontend: Navigate to Forecast
+Frontend -> Frontend: Display forecast page
+User -> Frontend: Select category: "Food"
+User -> Frontend: Select forecast period: "3 months"
+User -> Frontend: Click "Generate Forecast"
+
+Frontend -> Backend: GET /forecast/predict?category_id=1&months=3
+
+Backend -> DB: Fetch historical transactions
+Backend -> DB: SELECT date, amount FROM transactions\nWHERE user_id AND category_id=1\nORDER BY date
+DB --> Backend: [transaction_history]
+
+Note over Backend: Historical data:
+Note over Backend: Jan: 1850, Feb: 1920, Mar: 1780
+Note over Backend: Apr: 1950, May: 2100
+
+Backend --> Frontend: {status: "processing"}
+Frontend -> Frontend: Show loading state
+
+Note over User,DB: **FEATURE ENGINEERING**
+
+Backend -> FeatureEng: engineer_features(transaction_history)
+
+Note over FeatureEng: Feature Engineering:
+FeatureEng -> FeatureEng: Extract temporal features
+FeatureEng -> FeatureEng: - Month of year
+FeatureEng -> FeatureEng: - Day of month
+FeatureEng -> FeatureEng: - Seasonality indicators
+FeatureEng -> FeatureEng: - Day of week pattern
+
+FeatureEng -> FeatureEng: Calculate lag features
+FeatureEng -> FeatureEng: - Last 1 month average
+FeatureEng -> FeatureEng: - Last 3 month average
+FeatureEng -> FeatureEng: - Last 6 month average
+FeatureEng -> FeatureEng: - Trend direction
+
+FeatureEng -> FeatureEng: Calculate rolling statistics
+FeatureEng -> FeatureEng: - Rolling mean (30-day)
+FeatureEng -> FeatureEng: - Rolling std dev
+FeatureEng -> FeatureEng: - Momentum
+
+FeatureEng -> FeatureEng: Handle seasonality
+FeatureEng -> FeatureEng: - Detect seasonal patterns
+FeatureEng -> FeatureEng: - Extract seasonal indices
+
+Note over FeatureEng: Final Features Matrix:
+Note over FeatureEng: X = [[month, lag_1m, lag_3m, rolling_mean, ...],
+Note over FeatureEng:      [month, lag_1m, lag_3m, rolling_mean, ...],
+Note over FeatureEng:      ...]
+Note over FeatureEng: y = [1850, 1920, 1780, 1950, 2100]
+
+FeatureEng --> Backend: {X: features_matrix, y: target_values}
+
+Note over User,DB: **MODEL TRAINING**
+
+Backend -> MLModel: train_forecast_model(X, y)
+
+Note over MLModel: Model Options Available:
+Note over MLModel: 1. Linear Regression (baseline)
+Note over MLModel: 2. Random Forest (medium complexity)
+Note over MLModel: 3. Gradient Boosting (advanced)
+
+Note over MLModel: Using: Random Forest
+MLModel -> MLModel: Split data: 80% train, 20% test
+MLModel -> MLModel: Train on 80% historical data
+
+Note over MLModel: Random Forest Steps:
+MLModel -> MLModel: Build 100 decision trees
+MLModel -> MLModel: Each tree on random feature subset
+MLModel -> MLModel: Aggregate predictions
+
+MLModel -> MLModel: Evaluate on test set
+MLModel -> MLModel: Calculate metrics
+Note over MLModel: - Mean Absolute Error: 85
+Note over MLModel: - Root Mean Squared Error: 120
+Note over MLModel: - R² Score: 0.87 (87% variance explained)
+
+MLModel -> MLModel: Model trained and validated
+MLModel --> Backend: {model: trained_model, metrics: {...}}
+
+Note over User,DB: **GENERATE PREDICTIONS**
+
+Backend -> MLModel: predict_future(model, periods=3)
+
+Note over MLModel: Prediction Process:
+MLModel -> MLModel: Generate future feature vectors
+
+loop For Each Future Month (3 months)
+    MLModel -> MLModel: Create features for future date
+    MLModel -> MLModel: Use rolling statistics up to this point
+    MLModel -> MLModel: Use estimated previous predictions
+    
+    MLModel -> MLModel: Pass through trained model
+    MLModel -> MLModel: Get prediction
+end
+
+MLModel -> MLModel: June prediction: 2120 (±95 confidence interval)
+MLModel -> MLModel: July prediction: 2180 (±110)
+MLModel -> MLModel: August prediction: 2230 (±125)
+
+Note over MLModel: Confidence intervals widening
+Note over MLModel: as predictions go further in future
+
+MLModel --> Backend: {predictions: [{month: "Jun", amount: 2120,\nci_lower: 2025, ci_upper: 2215},\n{month: "Jul", amount: 2180,\nci_lower: 2070, ci_upper: 2290}]}
+
+Backend -> DB: INSERT INTO forecast_results\n(user_id, category_id, forecast_month,\npredicted_amount, confidence_lower,\nconfidence_upper, model_used, accuracy)
+DB --> Backend: {forecast_ids}
+
+Backend --> Frontend: {predictions: [...], accuracy: 0.87}
+
+Note over User,DB: **DISPLAY FORECAST CHART**
+
+Frontend -> Frontend: Prepare chart data
+
+Note over Frontend: Chart combines:
+Note over Frontend: - Historical data (line)
+Note over Frontend: - Future predictions (dashed line)
+Note over Frontend: - Confidence intervals (shaded area)
+
+Frontend -> Frontend: Render forecast chart
+Note over Frontend: X-axis: Months (Jan to Aug)
+Note over Frontend: Y-axis: Spending Amount (₹)
+Note over Frontend: Historical: Jan(1850)→May(2100)
+Note over Frontend: Predicted: Jun(2120)→Aug(2230)
+Note over Frontend: Shaded region: Confidence interval
+
+Frontend --> User: Display forecast chart
+
+Note over User,DB: **FORECAST INSIGHTS**
+
+Backend -> Backend: Analyze forecast trends
+
+Backend -> Backend: Trend analysis
+Backend -> Backend: Growth rate: +1.6% per month
+Backend -> Backend: Predicted avg (next 3 months): 2176
+Backend -> Backend: vs. Last 3 months avg: 1920
+Backend -> Backend: Increase: +256 (13.3%)
+
+Backend -> Backend: Seasonal analysis
+Backend -> Backend: June typically higher (pre-monsoon)
+Backend -> Backend: August spike confirmed by pattern
+
+Backend -> Backend: Generate insights
+
+Backend --> Frontend: {forecast_insights:
+Note over Backend: "1. Food spending trending upward (+1.6%/month)"
+Note over Backend: "2. Expect ₹2,230 by August (13% increase)"
+Note over Backend: "3. May need to increase Food budget to ₹2,250"
+Note over Backend: "4. Monitor for seasonal spike in June"
+}
+
+Frontend -> Frontend: Display insights cards
+Frontend --> User: Show forecast analysis
+
+Note over User,DB: **EXPORT FORECAST**
+
+User -> Frontend: Click "Export Forecast"
+Frontend -> Frontend: Generate forecast report
+
+Note over Frontend: Report includes:
+Note over Frontend: - Chart visualization
+Note over Frontend: - Numerical predictions
+Note over Frontend: - Confidence intervals
+Note over Frontend: - Insights and recommendations
+Note over Frontend: - Model accuracy metrics
+
+Frontend -> Frontend: Download as PDF/CSV
+Frontend --> User: Forecast report downloaded
+
+Note over User,DB: **RETRAINING & UPDATE**
+
+Note over Backend: Monthly Retraining:
+Note over Backend: - Every month, add new actual data
+Note over Backend: - Remove oldest data (keep 12-24 months)
+Note over Backend: - Retrain model with updated data
+Note over Backend: - Evaluate accuracy improvement
+Note over Backend: - Update predictions if accuracy improves
+
+Backend -> Backend: Scheduled job every month
+Backend -> MLModel: Retrain with latest data
+Backend -> DB: Update forecast_results
+Backend --> User: Notifications about updated forecasts
+
+@enduml

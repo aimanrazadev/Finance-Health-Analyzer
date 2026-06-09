@@ -1,0 +1,120 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+}
+
+.navbar-container {
+  width: min(1180px, calc(100% - 32px));
+  height: 64px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.brand-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: var(--primary);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.navbar-menu {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-link {
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background: #eaf4ff;
+  color: var(--primary);
+}
+
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 12px;
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
+}
+
+.user-email {
+  max-width: 210px;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-button {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: var(--surface-muted);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.logout-button:hover {
+  background: #e7ebf2;
+}
+
+@media (max-width: 760px) {
+  .navbar-container {
+    width: min(100% - 24px, 1180px);
+    height: auto;
+    padding: 12px 0;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .navbar-menu {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .nav-user {
+    width: 100%;
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+    justify-content: space-between;
+  }
+}

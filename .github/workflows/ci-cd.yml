@@ -2,56 +2,100 @@ name: CI/CD
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
-  build:
+  backend:
+    name: Backend checks
     runs-on: ubuntu-latest
+
     services:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: aimandaddy
-          MYSQL_DATABASE: finance_analyzer
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: finance_analyzer_test
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping --silent"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot --silent"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=3
+          --health-retries=10
+
+    env:
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: finance_analyzer_test
+      SECRET_KEY: ci-test-secret-key
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      REFRESH_TOKEN_EXPIRE_DAYS: 7
+      AI_PROVIDER: fallback
+      PYTHONPATH: ${{ github.workspace }}/backend
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
+          python-version: "3.11"
+          cache: pip
 
       - name: Install backend dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Compile backend
+        run: |
+          python -m compileall backend
+
+      - name: Import backend app
+        working-directory: backend
+        run: |
+          python -c "import main; print('backend import ok')"
+
+      - name: Run backend smoke tests
+        run: |
+          python backend/tests/smoke_modules_1_to_10.py
+          python backend/tests/test_rule_based_categorization.py
+
+      - name: Start backend and check health
+        working-directory: backend
+        run: |
+          uvicorn main:app --host 127.0.0.1 --port 8000 &
+          sleep 5
+          curl --fail --silent --show-error http://127.0.0.1:8000/
+
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
       - name: Install frontend dependencies
         working-directory: frontend
-        run: |
-          npm ci
+        run: npm ci
+
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
 
       - name: Build frontend
         working-directory: frontend
-        run: npm run build --if-present
-
-      - name: Start backend and smoke test
-        run: |
-          nohup uvicorn backend.main:app --host 0.0.0.0 --port 8000 &
-          sleep 3
-          curl -sS http://localhost:8000/ | jq || true
+        run: npm run build

@@ -2,11 +2,7 @@
 
 Local dev helper and quickstart
 
-Run local MySQL with Docker Compose:
-
-```bash
-docker-compose up -d
-```
+Install MySQL locally and make sure the database connection in `backend/.env` matches your local MySQL settings.
 
 Start backend (FastAPI):
 

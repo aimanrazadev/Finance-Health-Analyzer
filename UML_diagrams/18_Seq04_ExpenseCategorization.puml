@@ -1,0 +1,136 @@
+@startuml Seq04_ExpenseCategorization
+!theme plain
+participant User
+participant "Frontend" as Frontend
+participant "Backend\nCateg. API" as Backend
+participant "Rule Engine" as RuleEngine
+participant "User Learning\nDB" as LearningDB
+participant "LLM API" as LLM
+participant "MySQL DB" as DB
+
+autonumber
+
+Note over User,DB: **LEVEL 1: RULE-BASED CATEGORIZATION**
+
+Backend -> RuleEngine: categorize(description="McDonald's")
+
+RuleEngine -> RuleEngine: Load keyword rules
+Note over RuleEngine: food_keywords = ["mcdonalds", "kfc", "zomato", "restaurant"]
+
+RuleEngine -> RuleEngine: Check if description matches
+alt Match Found
+    RuleEngine -> RuleEngine: category_id = 1 (Food)
+    RuleEngine --> Backend: {category: "Food", method: "rule",\nconfidence: 0.95}
+else No Match
+    RuleEngine --> Backend: {category: null, method: "no_match"}
+end
+
+Backend -> Frontend: {suggested_category: "Food", confidence: 0.95}
+Frontend -> Frontend: Show suggestion
+Frontend --> User: Display "Food" as category
+
+Note over User,DB: **USER CORRECTION & LEARNING**
+
+alt Category Incorrect
+    User -> Frontend: Change category to "Education"
+    Frontend -> Frontend: Show category dropdown
+    User -> Frontend: Select Education
+    User -> Frontend: Click Save
+    
+    Frontend -> Backend: PUT /transactions/{id}\n{category_id: 3}
+    
+    Backend -> DB: UPDATE transactions\nSET category_id=3\nWHERE id={id}
+    DB --> Backend: {success}
+    
+    Note over Backend: **STORE LEARNING PATTERN**
+    Backend -> LearningDB: Learn correction
+    Backend -> Backend: Extract merchant from description
+    Backend -> LearningDB: INSERT INTO user_learning\n(user_id, merchant="Amazon",\ncategory_id=3, frequency=1)
+    
+    LearningDB --> Backend: {learned}
+    
+    Backend -> RuleEngine: Update merchant_to_category map
+    RuleEngine -> RuleEngine: Amazon Books → Education (user preference)
+    
+    Backend --> Frontend: {status: "category_updated"}
+    Frontend -> Frontend: Show success
+    Frontend --> User: Category updated & system learned
+end
+
+Note over User,DB: **LEVEL 3: AI FALLBACK (UNKNOWN TRANSACTION)**
+
+Backend -> RuleEngine: categorize(description="ALBAIK DMM BRANCH")
+
+RuleEngine -> RuleEngine: Check rules
+alt No Rule Match
+    RuleEngine --> Backend: {category: null}
+    
+    Note over Backend: **FALLBACK TO AI**
+    Backend -> LearningDB: Check user_learning for "ALBAIK"
+    LearningDB --> Backend: {found: false}
+    
+    Backend -> LLM: Send to LLM API
+    Backend -> LLM: Prompt: "Categorize: ALBAIK DMM BRANCH"
+    
+    LLM -> LLM: Process with LLM model
+    LLM --> Backend: {category: "Food", confidence: 0.87}
+    
+    Backend -> LearningDB: Cache AI result
+    Backend -> LearningDB: INSERT INTO user_learning\n(merchant="ALBAIK",\ncategory_id=1, frequency=1,\nconfidence=0.87)
+    
+    Backend -> Frontend: {suggested_category: "Food",\nmethod: "ai", confidence: 0.87}
+    
+    Frontend -> Frontend: Show AI suggestion
+    Frontend --> User: Suggested category: Food (AI)
+    
+    alt User Accepts
+        User -> Frontend: Accept Food
+        Frontend -> Backend: Confirm category
+        Backend -> LearningDB: Increment frequency for ALBAIK→Food
+        LearningDB -> LearningDB: frequency += 1
+    else User Corrects
+        User -> Frontend: Change to other category
+        Frontend -> Backend: Save correction
+        Backend -> LearningDB: Update learning with user correction
+    end
+end
+
+Note over User,DB: **BATCH CATEGORIZATION FOR UPLOAD**
+
+Backend -> Backend: categorize_transactions([])
+
+loop For Each Transaction in Batch
+    Backend -> RuleEngine: categorize(transaction.description)
+    alt Rule Match
+        RuleEngine --> Backend: {category, method: "rule"}
+    else Check Learning
+        Backend -> LearningDB: Query user_learning
+        LearningDB --> Backend: {category, frequency}
+        alt High Confidence
+            Backend -> Backend: Use learned category
+        else Low Confidence
+            Backend -> LLM: Use AI
+        end
+    end
+end
+
+Backend -> DB: Bulk insert categorized transactions
+DB --> Backend: {rows_inserted}
+
+Backend --> Frontend: Summary
+
+Note over User,DB: **PERFORMANCE OPTIMIZATION**
+
+Note over Backend: Caching Strategy:
+Note over Backend: - Cache rule keywords in memory
+Note over Backend: - Cache learning DB locally
+Note over Backend: - Batch LLM calls (every 5 unknowns)
+Note over Backend: - Cache LLM results
+
+Backend -> Backend: Monitor API costs
+Note over Backend: Cost Reduction:
+Note over Backend: - 80% from rules (free)
+Note over Backend: - 15% from learning (cached)
+Note over Backend: - 5% from AI (paid)
+
+@enduml

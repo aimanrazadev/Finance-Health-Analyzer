@@ -1,0 +1,101 @@
+@startuml
+title UC01 - Authentication Use Case
+
+top to bottom direction
+
+skinparam linetype ortho
+skinparam ranksep 90
+skinparam nodesep 55
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "User" as User
+database "MySQL Database" as DB
+
+rectangle "Authentication Module" {
+
+usecase "Register Account" as U1
+usecase "Enter Name,\nEmail & Password" as U2
+usecase "Validate Registration Input" as U3
+usecase "Check Existing Email" as U4
+usecase "Hash Password" as U5
+usecase "Create User Record" as U6
+usecase "Redirect to Login" as U7
+
+usecase "Login" as U8
+usecase "Enter Email\n& Password" as U9
+usecase "Validate Login Input" as U10
+usecase "Verify Credentials" as U11
+usecase "Generate JWT Token" as U12
+usecase "Store Token in Browser" as U13
+usecase "Access Protected Routes" as U14
+
+usecase "View Own Profile" as U15
+usecase "Verify JWT Token" as U16
+usecase "Fetch Current User" as U17
+
+usecase "Logout" as U18
+usecase "Clear JWT Token" as U19
+usecase "End User Session" as U20
+
+usecase "Show Error Message" as U21
+}
+
+' force vertical order
+U1 -[hidden]down-> U2
+U2 -[hidden]down-> U3
+U3 -[hidden]down-> U4
+U4 -[hidden]down-> U5
+U5 -[hidden]down-> U6
+U6 -[hidden]down-> U7
+U7 -[hidden]down-> U8
+U8 -[hidden]down-> U9
+U9 -[hidden]down-> U10
+U10 -[hidden]down-> U11
+U11 -[hidden]down-> U12
+U12 -[hidden]down-> U13
+U13 -[hidden]down-> U14
+U14 -[hidden]down-> U15
+U15 -[hidden]down-> U16
+U16 -[hidden]down-> U17
+U17 -[hidden]down-> U18
+U18 -[hidden]down-> U19
+U19 -[hidden]down-> U20
+U20 -[hidden]down-> U21
+
+User --> U1
+User --> U8
+User --> U15
+User --> U18
+
+U1 ..> U2 : <<include>>
+U1 ..> U3 : <<include>>
+U1 ..> U4 : <<include>>
+U1 ..> U5 : <<include>>
+U1 ..> U6 : <<include>>
+U1 ..> U7 : <<include>>
+
+U8 ..> U9 : <<include>>
+U8 ..> U10 : <<include>>
+U8 ..> U11 : <<include>>
+U8 ..> U12 : <<include>>
+U8 ..> U13 : <<include>>
+U8 ..> U14 : <<include>>
+
+U15 ..> U16 : <<include>>
+U15 ..> U17 : <<include>>
+
+U18 ..> U19 : <<include>>
+U18 ..> U20 : <<include>>
+
+U3 ..> U21 : <<extend>>
+U4 ..> U21 : <<extend>>
+U11 ..> U21 : <<extend>>
+U16 ..> U21 : <<extend>>
+
+DB --> U4
+DB --> U6
+DB --> U11
+DB --> U17
+
+@enduml
