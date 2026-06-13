@@ -63,8 +63,7 @@ jobs:
 
       - name: Run backend smoke tests
         run: |
-          python backend/tests/smoke_modules_1_to_10.py
-          python backend/tests/test_rule_based_categorization.py
+          python -m unittest discover backend/tests
 
       - name: Start backend and check health
         working-directory: backend
