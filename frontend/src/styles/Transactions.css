@@ -1,7 +1,9 @@
 .transactions-page {
-  width: min(1180px, calc(100% - 32px));
-  margin: 0 auto;
-  padding: 28px 0 56px;
+  width: 100%;
+  max-width: 1480px;
+  margin: 0;
+  padding: 32px 32px 56px;
+  box-sizing: border-box;
 }
 
 .transactions-header {
@@ -11,7 +13,7 @@
 .transactions-header h1 {
   font-size: 30px;
   line-height: 1.18;
-  font-weight: 750;
+  font-weight: var(--font-thin);
 }
 
 .transactions-header p {
@@ -22,7 +24,7 @@
 
 .transactions-main {
   display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
@@ -40,13 +42,14 @@
 }
 
 .transaction-list-panel {
+  min-width: 0;
   overflow: hidden;
 }
 
 .transaction-form-panel h2 {
   margin-bottom: 16px;
   font-size: 18px;
-  font-weight: 750;
+  font-weight: var(--font-thin);
 }
 
 .transaction-form {
@@ -59,7 +62,7 @@
   gap: 7px;
   color: var(--text);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: var(--font-thin);
 }
 
 .transaction-form input,
@@ -71,7 +74,7 @@
   padding: 0 12px;
   border: 1px solid var(--border-strong);
   border-radius: 6px;
-  background: #ffffff;
+  background: rgb(23, 23, 23);
   color: var(--text);
   outline: none;
 }
@@ -101,7 +104,7 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 13px;
-  font-weight: 750;
+  font-weight: var(--font-thin);
 }
 
 .primary-button {
@@ -123,12 +126,12 @@
 .table-button {
   margin-right: 6px;
   padding: 0 10px;
-  background: #eef6ff;
+  background: rgba(79, 140, 255, 0.12);
   color: var(--primary);
 }
 
 .table-button.danger {
-  background: #fff0ee;
+  background: rgba(255, 77, 94, 0.10);
   color: var(--danger);
 }
 
@@ -138,7 +141,7 @@
   gap: 10px;
   padding: 14px;
   border-bottom: 1px solid var(--border);
-  background: #fbfcfe;
+  background: rgb(23, 23, 23);
 }
 
 .transaction-table-wrapper {
@@ -148,7 +151,7 @@
 .transaction-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 980px;
+  min-width: 1040px;
 }
 
 .transaction-table th,
@@ -161,21 +164,21 @@
 }
 
 .transaction-table th {
-  background: #fbfcfe;
+  background: rgb(23, 23, 23);
   color: var(--text-muted);
-  font-weight: 800;
+  font-weight: var(--font-thin);
 }
 
 .transaction-table tbody tr:hover {
-  background: #f8fbff;
+  background: rgb(23, 23, 23);
 }
 
-.transaction-table td:nth-child(5) {
+.transaction-table td:nth-child(4) {
   text-transform: capitalize;
 }
 
-.transaction-table td:nth-child(6) {
-  font-weight: 750;
+.transaction-table td:nth-child(5) {
+  font-weight: var(--font-thin);
 }
 
 .category-correction {
@@ -189,7 +192,7 @@
   padding: 0 10px;
   border: 1px solid var(--border-strong);
   border-radius: 6px;
-  background: #ffffff;
+  background: rgb(23, 23, 23);
   color: var(--text);
   font-size: 12px;
 }
@@ -200,12 +203,12 @@
   padding: 10px 12px;
   border-radius: 6px;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: var(--font-thin);
 }
 
 .form-error {
   border: 1px solid #fecdca;
-  background: #fff4f2;
+  background: rgba(255, 77, 94, 0.10);
   color: var(--danger);
 }
 
@@ -223,8 +226,7 @@
 
 @media (max-width: 720px) {
   .transactions-page {
-    width: min(100% - 24px, 1180px);
-    padding-top: 20px;
+    padding: 20px 14px 40px;
   }
 
   .transactions-header h1 {
@@ -235,3 +237,4 @@
     grid-template-columns: 1fr;
   }
 }
+

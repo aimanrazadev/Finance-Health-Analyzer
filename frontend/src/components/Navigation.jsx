@@ -2,6 +2,23 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import '../styles/Navigation.css';
 
+const primaryLinks = [
+  { label: 'Dashboard', path: '/dashboard', icon: 'D', accent: 'blue' },
+  { label: 'Transactions', path: '/transactions', icon: 'T', accent: 'gray' },
+  { label: 'Categories', path: '/categories', icon: 'C', accent: 'pink' },
+  { label: 'Upload', path: '/upload', icon: 'U', accent: 'purple' },
+  { label: 'Friends', path: '/friends', icon: 'F', accent: 'green' },
+];
+
+const intelligenceLinks = [
+  { label: 'Budgets', path: '/budgets', icon: 'B', accent: 'purple' },
+  { label: 'Investments', path: '/investments', icon: 'I', accent: 'green' },
+  { label: 'Health', path: '/financial-health', icon: 'H', accent: 'blue' },
+  { label: 'Forecast', path: '/forecast', icon: 'F', accent: 'orange' },
+  { label: 'Subscriptions', path: '/subscriptions', icon: 'S', accent: 'pink' },
+  { label: 'Insights', path: '/insights', icon: 'AI', accent: 'orange' },
+];
+
 const Navigation = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -12,33 +29,37 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="navbar">
-      <div className="navbar-container">
-        <Link to="/" className="navbar-brand">
-          <span className="brand-mark">F</span>
-          <span>FinSight AI</span>
-        </Link>
+    <aside className="app-sidebar">
+      <Link to="/" className="navbar-brand">
+        <span className="brand-mark">F</span>
+        <span>FinSight AI</span>
+      </Link>
 
-        <div className="navbar-menu">
-          <NavLink to="/dashboard" className="nav-link">Dashboard</NavLink>
-          <NavLink to="/transactions" className="nav-link">Transactions</NavLink>
-          <NavLink to="/friends" className="nav-link">Friends</NavLink>
-          <NavLink to="/needs-review" className="nav-link">Needs Review</NavLink>
-          <NavLink to="/upload" className="nav-link">Upload</NavLink>
-          <NavLink to="/budgets" className="nav-link">Budgets</NavLink>
-          <NavLink to="/recommendations" className="nav-link">Recommendations</NavLink>
-          <NavLink to="/savings-goals" className="nav-link">Goals</NavLink>
-          <NavLink to="/insights" className="nav-link">Insights</NavLink>
+      <nav className="sidebar-nav" aria-label="Main navigation">
+        <span className="nav-section-label">Workspace</span>
+        {primaryLinks.map((item) => (
+          <NavLink to={item.path} className={`nav-link accent-${item.accent}`} key={item.path}>
+            <span className="nav-icon" aria-hidden>{item.icon}</span>
+            <span className="nav-label">{item.label}</span>
+          </NavLink>
+        ))}
 
-          <div className="nav-user">
-            <span className="user-email">{user?.email}</span>
-            <button onClick={handleLogout} className="logout-button">
-              Logout
-            </button>
-          </div>
-        </div>
+        <span className="nav-section-label">Intelligence</span>
+        {intelligenceLinks.map((item) => (
+          <NavLink to={item.path} className={`nav-link accent-${item.accent}`} key={item.path}>
+            <span className="nav-icon" aria-hidden>{item.icon}</span>
+            <span className="nav-label">{item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
+
+      <div className="nav-user">
+        <span className="user-email">{user?.email}</span>
+        <button onClick={handleLogout} className="logout-button">
+          Logout
+        </button>
       </div>
-    </nav>
+    </aside>
   );
 };
 

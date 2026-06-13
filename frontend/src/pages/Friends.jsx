@@ -77,7 +77,7 @@ const Friends = () => {
 
   const deleteFriend = async (friendId, event) => {
     event.stopPropagation();
-    if (!window.confirm('Delete this friend from the active list? Transactions and debt history will stay safe.')) return;
+    if (!window.confirm('Delete this friend from the active list? Linked transactions will stay safe.')) return;
     await api.delete(`/friends/${friendId}`, { headers });
     if (selectedFriendId === friendId) {
       setSelectedFriendId(null);
@@ -95,9 +95,9 @@ const Friends = () => {
       <main className="friends-page">
         <div className="page-heading">
           <div>
-            <p className="eyebrow">Friends / Debt Tracking</p>
+            <p className="eyebrow">Friends</p>
             <h1>Friends</h1>
-            <p>Group bank transactions by friend names and keep them out of Needs Review.</p>
+            <p>Group bank transactions by friend names and keep them out of the Categories correction queue.</p>
           </div>
         </div>
 
@@ -143,7 +143,7 @@ const Friends = () => {
 
           <section className="friend-detail-panel">
             {!selectedFriend ? (
-              <div className="empty-state">Select a friend to view debt history.</div>
+              <div className="empty-state">Select a friend to view linked transactions.</div>
             ) : (
               <>
                 <div className="friend-detail-header">

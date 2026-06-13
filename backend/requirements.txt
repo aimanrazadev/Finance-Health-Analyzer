@@ -1,0 +1,38 @@
+# Universal Python requirements for the backend
+# Core web framework and ASGI server
+fastapi
+uvicorn[standard]
+
+# Database and ORM
+sqlalchemy
+pymysql  # MySQL driver; replace with mysqlclient if you prefer
+alembic
+
+# Validation / security
+pydantic
+email-validator
+python-jose[cryptography]  # for JWT handling
+passlib[bcrypt]  # for password hashing
+
+# File uploads / static files
+python-multipart
+aiofiles
+
+# Data processing and ML
+pandas
+scikit-learn
+rapidfuzz
+joblib
+
+# PDF and Excel processing
+pdfplumber
+openpyxl
+
+# Environment and external APIs
+python-dotenv
+openai  # optional: LLM integration (OpenAI)
+
+# Notes:
+# - Use `pymysql` as a pure-Python MySQL driver for ease of setup.
+# - `python-jose[cryptography]` provides JWT support for authentication flows.
+# - Add or pin versions as needed for production stability

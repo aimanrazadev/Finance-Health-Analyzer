@@ -194,6 +194,7 @@ const UploadStatement = () => {
   const confidencePercent = (value) => `${Math.round((value ?? 0.3) * 100)}%`;
   const methodLabel = (method) => ({
     rule_based: 'Rule',
+    learned: 'Learned',
     user_learned: 'Learned',
     ml_model: 'ML',
     ai_fallback: 'AI',

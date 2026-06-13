@@ -1,20 +1,42 @@
 :root {
-  --bg: #f6f7fb;
-  --surface: #ffffff;
-  --surface-muted: #f3f5f9;
-  --text: #1f2937;
-  --text-muted: #667085;
-  --text-soft: #98a2b3;
-  --border: #dfe3eb;
-  --border-strong: #cbd3df;
-  --primary: #0073ea;
-  --primary-hover: #0060c4;
-  --success: #00a36c;
-  --warning: #f59f00;
-  --danger: #d92d20;
-  --shadow: 0 10px 30px rgba(16, 24, 40, 0.08);
-  --radius: 8px;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --bg: rgb(10, 10, 10);
+  --background: rgb(10, 10, 10);
+  --surface: rgb(23, 23, 23);
+  --surface-muted: rgb(17, 17, 17);
+  --text: #f5f7fb;
+  --text-muted: #a8b0bf;
+  --text-soft: #747d8d;
+  --border: rgb(43, 44, 44);
+  --border-strong: rgb(58, 59, 59);
+  --primary: #4f8cff;
+  --primary-hover: #72a4ff;
+  --accent: #4f8cff;
+  --success: #00e676;
+  --warning: #f5a524;
+  --danger: #ff4d5e;
+  --shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
+  --radius: 24px;
+  --radius-sm: 16px;
+  --radius-xs: 12px;
+  --accent-dashboard: #1d9bf0;
+  --accent-savings: #16a34a;
+  --accent-budget: #a855f7;
+  --accent-insights: #f97316;
+  --accent-categories: #ec4899;
+  --accent-neutral: #64748b;
+  --app-font: Inter, "Segoe UI", Roboto, Helvetica, Arial, ui-sans-serif, system-ui, sans-serif;
+  --font-thin: 300;
+  --font-regular: 350;
+  --font-medium: 420;
+  --motion-fast: 140ms ease;
+  --motion-standard: 220ms ease;
+  --app-card-bg: rgb(23, 23, 23);
+  --app-card-border: rgb(43, 44, 44);
+  --app-control-bg: rgb(10, 10, 10);
+  --app-row-bg: rgb(17, 17, 17);
+  --app-card-radius: 12px;
+  --app-card-padding: 28px;
+  font-family: var(--app-font);
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -27,23 +49,57 @@
   box-sizing: border-box;
 }
 
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  scrollbar-color: rgba(0, 115, 234, 0.28) transparent;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(0, 115, 234, 0.24);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 115, 234, 0.38);
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background:
-    linear-gradient(180deg, rgba(0, 115, 234, 0.05), rgba(0, 115, 234, 0) 260px),
-    var(--bg);
+  background: var(--bg);
+  font-family: var(--app-font);
 }
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
 button {
   border: 0;
+  transition:
+    transform var(--motion-fast),
+    box-shadow var(--motion-fast),
+    background-color var(--motion-fast),
+    border-color var(--motion-fast),
+    color var(--motion-fast);
 }
 
 a {
@@ -71,13 +127,14 @@ p {
 
 .page-heading {
   margin-bottom: 24px;
+  animation: page-enter 260ms ease both;
 }
 
 .page-heading h1 {
   margin-top: 4px;
-  font-size: 30px;
+  font-size: 34px;
   line-height: 1.18;
-  font-weight: 700;
+  font-weight: var(--font-thin);
   letter-spacing: 0;
 }
 
@@ -88,9 +145,9 @@ p {
 }
 
 .eyebrow {
-  color: var(--primary);
+  color: var(--text-muted);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: var(--font-regular);
   text-transform: uppercase;
 }
 
@@ -105,7 +162,7 @@ p {
 
 .surface-message.error {
   border-color: #fecdca;
-  background: #fff4f2;
+  background: rgba(255, 77, 94, 0.10);
   color: var(--danger);
 }
 
@@ -118,6 +175,118 @@ p {
   border-radius: var(--radius);
 }
 
+section,
+article,
+aside,
+.metric-card,
+.chart-panel,
+.analytics-section,
+.transaction-form-panel,
+.transaction-list-panel,
+.friend-detail-panel,
+.friends-panel,
+.subscription-card,
+.subscription-chart-panel,
+.budget-form-panel,
+.budget-list-panel,
+.budget-planning-section,
+.planning-card,
+.investment-form-panel,
+.investment-list-panel,
+.friends-card,
+.upload-card,
+.recommendation-card,
+.insight-card,
+.score-card,
+.forecast-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+
+section::before,
+article::before,
+aside::before,
+.metric-card::before,
+.chart-panel::before,
+.analytics-section::before,
+.transaction-form-panel::before,
+.transaction-list-panel::before,
+.friend-detail-panel::before,
+.friends-panel::before,
+.subscription-card::before,
+.subscription-chart-panel::before,
+.budget-form-panel::before,
+.budget-list-panel::before,
+.budget-planning-section::before,
+.planning-card::before,
+.investment-form-panel::before,
+.investment-list-panel::before,
+.friends-card::before,
+.upload-card::before,
+.recommendation-card::before,
+.insight-card::before,
+.score-card::before,
+.forecast-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: transparent;
+  pointer-events: none;
+}
+
+section > *,
+article > *,
+aside > *,
+.metric-card > *,
+.chart-panel > *,
+.analytics-section > *,
+.transaction-form-panel > *,
+.transaction-list-panel > *,
+.friend-detail-panel > *,
+.friends-panel > *,
+.subscription-card > *,
+.subscription-chart-panel > *,
+.budget-form-panel > *,
+.budget-list-panel > *,
+.budget-planning-section > *,
+.planning-card > *,
+.investment-form-panel > *,
+.investment-list-panel > *,
+.friends-card > *,
+.upload-card > *,
+.recommendation-card > *,
+.insight-card > *,
+.score-card > *,
+.forecast-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 @media (max-width: 720px) {
   .page-heading,
   .section-heading {
@@ -128,3 +297,326 @@ p {
     font-size: 24px;
   }
 }
+
+/* Fixed black theme across the app */
+html,
+body,
+#root {
+  background: rgb(10, 10, 10) !important;
+  color: var(--text);
+}
+
+main,
+.app-shell {
+  background: rgb(10, 10, 10);
+}
+
+section,
+article,
+aside,
+.metric-card,
+.chart-panel,
+.analytics-section,
+.transaction-form-panel,
+.transaction-list-panel,
+.friend-detail-panel,
+.friends-panel,
+.subscription-card,
+.subscription-chart-panel,
+.budget-form-panel,
+.budget-list-panel,
+.budget-planning-section,
+.planning-card,
+.investment-form-panel,
+.investment-list-panel,
+.friends-card,
+.upload-card,
+.preview-panel,
+.upload-panel,
+.recommendation-card,
+.insight-card,
+.score-card,
+.forecast-card,
+.empty-state {
+  border-color: rgb(43, 44, 44) !important;
+  background-color: rgb(23, 23, 23) !important;
+  color: var(--text);
+}
+
+.review-panel,
+.review-row,
+.bulk-review-actions,
+.transaction-form-panel,
+.transaction-list-panel,
+.transaction-filters,
+.transaction-table th,
+.transaction-table tbody tr,
+.budget-card,
+.budget-values span,
+.planning-goal-row,
+.history-item,
+.upload-summary div,
+.failed-row,
+.forecast-feature-grid div,
+.category-forecast-row,
+.health-breakdown-row,
+.health-tip,
+.subscription-summary div,
+.subscription-meta span,
+.subscription-meta b,
+.insight-summary div,
+.recommendation-card,
+.investment-goal-card,
+.investment-insight,
+.friends-list-item,
+.friend-transaction-row,
+.assistant-message,
+.assistant-action-preview,
+.assistant-confirm-bar,
+.assistant-input {
+  border-color: rgb(43, 44, 44) !important;
+  background: rgb(23, 23, 23) !important;
+  color: var(--text) !important;
+}
+
+.review-row strong,
+.transaction-table td,
+.transaction-table th,
+.budget-card h3,
+.planning-goal-row strong,
+.history-item strong,
+.failed-row strong,
+.forecast-feature-grid strong,
+.category-forecast-row strong,
+.subscription-card h3,
+.recommendation-card h2,
+.insight-card p,
+.investment-goal-card h3,
+.friends-list-item strong,
+.assistant-message p {
+  color: var(--text) !important;
+}
+
+.review-row span,
+.review-count,
+.transaction-table span,
+.budget-card p,
+.planning-goal-row span,
+.history-item span,
+.history-item b,
+.failed-row span,
+.failed-row code,
+.forecast-feature-grid span,
+.category-forecast-row span,
+.subscription-card p,
+.subscription-meta span,
+.recommendation-card p,
+.insight-card small,
+.investment-goal-card p,
+.friends-list-item span {
+  color: var(--text-muted) !important;
+}
+
+input,
+select,
+textarea,
+button {
+  border-color: rgb(43, 44, 44);
+}
+
+input,
+select,
+textarea {
+  background: rgb(17, 17, 17) !important;
+  color: var(--text) !important;
+}
+
+/* Reference-inspired product UI system */
+section,
+article,
+aside,
+.metric-card,
+.chart-panel,
+.analytics-section,
+.transaction-form-panel,
+.transaction-list-panel,
+.friend-detail-panel,
+.friends-panel,
+.subscription-card,
+.subscription-chart-panel,
+.budget-form-panel,
+.budget-list-panel,
+.budget-planning-section,
+.planning-card,
+.investment-form-panel,
+.investment-list-panel,
+.investment-connect-panel,
+.investment-goal-card,
+.friends-card,
+.upload-card,
+.preview-panel,
+.upload-panel,
+.recommendation-card,
+.insight-card,
+.score-card,
+.forecast-card,
+.review-panel,
+.review-row,
+.budget-card,
+.planning-goal-row,
+.history-item,
+.upload-summary div,
+.failed-row,
+.forecast-main-card,
+.forecast-metric-card,
+.forecast-panel,
+.category-forecast-row,
+.health-score-card,
+.health-breakdown-panel,
+.health-tips-panel,
+.health-breakdown-row,
+.health-tip,
+.subscription-summary div,
+.insight-summary div,
+.investment-summary-grid article,
+.friend-row,
+.debt-table-wrapper {
+  border: 1px solid var(--app-card-border) !important;
+  border-radius: var(--app-card-radius) !important;
+  background: var(--app-card-bg) !important;
+  box-shadow: none !important;
+}
+
+.transaction-form-panel,
+.transaction-list-panel,
+.friend-detail-panel,
+.friends-panel,
+.subscription-card,
+.subscription-chart-panel,
+.budget-form-panel,
+.budget-list-panel,
+.budget-planning-section,
+.planning-card,
+.investment-form-panel,
+.investment-list-panel,
+.investment-connect-panel,
+.upload-card,
+.preview-panel,
+.upload-panel,
+.recommendation-card,
+.insight-card,
+.score-card,
+.forecast-card,
+.review-panel,
+.forecast-panel,
+.health-score-card,
+.health-breakdown-panel,
+.health-tips-panel,
+.insights-section {
+  padding: var(--app-card-padding) !important;
+}
+
+input,
+select,
+textarea,
+.category-select,
+.preview-category-select,
+.review-row select,
+.bulk-review-actions input,
+.bulk-review-actions select,
+.transaction-form input,
+.transaction-form select,
+.transaction-filters input,
+.transaction-filters select,
+.budget-form input,
+.budget-form select,
+.budget-filters select,
+.investment-form input,
+.investment-form select,
+.health-actions select,
+.insights-actions select {
+  min-height: 40px;
+  border: 1px solid var(--app-card-border) !important;
+  border-radius: 10px !important;
+  background: var(--app-control-bg) !important;
+  color: var(--text) !important;
+}
+
+button,
+.primary-button,
+.secondary-button,
+.danger-button,
+.table-button,
+.logout-button,
+.history-delete-button,
+.assistant-suggestions button {
+  min-height: 40px;
+  border: 1px solid var(--app-card-border) !important;
+  border-radius: 10px !important;
+  background: var(--app-control-bg) !important;
+  color: var(--text) !important;
+  font-weight: 650;
+}
+
+.primary-button,
+.auth-button {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #ffffff !important;
+}
+
+table,
+.transaction-table,
+.preview-table,
+.holdings-table,
+.debt-table {
+  background: var(--app-card-bg);
+  color: var(--text);
+}
+
+table th,
+.transaction-table th,
+.preview-table th,
+.holdings-table th,
+.debt-table th {
+  background: var(--app-row-bg) !important;
+  color: var(--text-muted) !important;
+}
+
+table td,
+.transaction-table td,
+.preview-table td,
+.holdings-table td,
+.debt-table td {
+  border-color: var(--app-card-border) !important;
+  color: var(--text) !important;
+}
+
+.page-heading h1,
+.section-heading h2,
+.transaction-form-panel h2,
+.budget-form-panel h2,
+.budget-list-panel h2,
+.investment-form-panel h2,
+.investment-list-panel h2,
+.investment-connect-panel h2,
+.forecast-main-card strong,
+.forecast-metric-card strong,
+.health-score-card strong,
+.subscription-summary strong,
+.insight-summary strong,
+.investment-summary-grid strong,
+.friends-summary strong {
+  color: #ffffff !important;
+  font-weight: 650 !important;
+}
+
+.page-heading p,
+.section-heading p,
+.eyebrow,
+label,
+small,
+.user-email {
+  color: var(--text-muted) !important;
+}
+

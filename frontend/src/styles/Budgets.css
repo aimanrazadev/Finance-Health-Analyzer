@@ -1,17 +1,54 @@
 .budgets-page {
-  width: min(1180px, calc(100% - 32px));
+  width: min(1240px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 28px 0 56px;
+  padding: 28px 0 64px;
 }
 
 .budget-filters {
   display: flex;
   align-items: end;
   gap: 10px;
-  padding: 10px;
+  padding: 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.budget-explainer {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #fedf89;
+  border-radius: 8px;
+  background: rgba(245, 165, 36, 0.10);
+}
+
+.budget-explainer-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: #dc6803;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: var(--font-thin);
+}
+
+.budget-explainer strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #7a3b00;
+  font-size: 15px;
+}
+
+.budget-explainer p {
+  margin: 0;
+  color: #7a3b00;
+  line-height: 1.5;
 }
 
 .budget-filters label,
@@ -20,7 +57,7 @@
   gap: 7px;
   color: var(--text);
   font-size: 13px;
-  font-weight: 750;
+  font-weight: var(--font-thin);
 }
 
 .budget-filters label {
@@ -36,7 +73,7 @@
   padding: 0 12px;
   border: 1px solid var(--border-strong);
   border-radius: 6px;
-  background: #ffffff;
+  background: rgb(23, 23, 23);
   color: var(--text);
   outline: none;
 }
@@ -50,9 +87,124 @@
 
 .budgets-layout {
   display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
-  gap: 16px;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 20px;
   align-items: start;
+}
+
+.budget-planning-section {
+  margin-bottom: 24px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.planning-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.planning-summary-grid article {
+  min-height: 104px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgb(23, 23, 23) 0%, rgb(17, 17, 17) 100%);
+}
+
+.planning-summary-grid span {
+  color: #005c3f;
+  font-size: 12px;
+  font-weight: var(--font-thin);
+}
+
+.planning-summary-grid strong {
+  display: block;
+  margin-top: 10px;
+  color: #005c3f;
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+.planning-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1.2fr);
+  grid-template-areas:
+    "savings goals";
+  gap: 18px;
+  align-items: start;
+}
+
+.planning-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgb(23, 23, 23);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.savings-form-card {
+  grid-area: savings;
+}
+
+.planning-card h3 {
+  margin: 0 0 14px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: var(--font-thin);
+}
+
+.planning-goals-card {
+  grid-area: goals;
+  background: #fbfdff;
+}
+
+.planning-goals-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.planning-goal-row {
+  display: grid;
+  gap: 10px;
+  align-content: space-between;
+  min-height: 142px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgb(23, 23, 23);
+}
+
+.planning-goal-row strong {
+  display: block;
+  color: var(--text);
+}
+
+.planning-goal-row span {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: var(--font-thin);
+}
+
+.planning-goal-progress {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7ebf2;
+}
+
+.planning-goal-progress div {
+  height: 100%;
+  border-radius: inherit;
+  background: #1f845a;
 }
 
 .budget-form-panel,
@@ -64,39 +216,67 @@
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
 }
 
+.budget-form-panel {
+  border-top: 4px solid #dc6803;
+  position: sticky;
+  top: 20px;
+}
+
 .budget-form-panel h2,
 .budget-list-panel h2 {
   margin-bottom: 16px;
   font-size: 18px;
-  font-weight: 750;
+  font-weight: var(--font-thin);
 }
 
 .budget-form {
   display: grid;
-  gap: 14px;
+  gap: 13px;
+}
+
+.budget-smart-note {
+  border: 1px solid #b3d4ff;
+  border-radius: 8px;
+  background: rgba(79, 140, 255, 0.10);
+  color: #0756a3;
+  padding: 11px 12px;
+  font-size: 13px;
+  font-weight: var(--font-thin);
+  line-height: 1.45;
 }
 
 .budget-card-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 14px;
 }
 
 .budget-card {
+  display: grid;
+  gap: 12px;
+  min-height: 246px;
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: #fbfcfe;
+  background: rgb(23, 23, 23);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
 }
 
 .budget-card.over_budget {
   border-color: #fecdca;
-  background: #fff7f5;
+  background: rgba(255, 77, 94, 0.08);
 }
 
-.budget-card.alert {
+.budget-card.half_used,
+.budget-card.watch {
   border-color: #fedf89;
-  background: #fffbeb;
+  background: rgba(245, 165, 36, 0.10);
+}
+
+.budget-card.warning,
+.budget-card.critical {
+  border-color: #ffbdad;
+  background: rgba(255, 77, 94, 0.08);
 }
 
 .budget-card-header {
@@ -108,7 +288,7 @@
 
 .budget-card h3 {
   font-size: 16px;
-  font-weight: 800;
+  font-weight: var(--font-thin);
 }
 
 .budget-card p {
@@ -121,12 +301,35 @@
 .budget-card-header span {
   color: var(--text);
   font-size: 18px;
-  font-weight: 800;
+  font-weight: var(--font-thin);
+}
+
+.budget-milestones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.budget-milestones span {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgb(23, 23, 23);
+  color: var(--text-muted);
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: var(--font-thin);
+}
+
+.budget-milestones span.reached {
+  border-color: #0073ea;
+  background: #eaf4ff;
+  color: #0055b8;
 }
 
 .budget-progress {
   height: 10px;
-  margin: 16px 0;
+  margin: 2px 0;
   overflow: hidden;
   border-radius: 999px;
   background: #e7ebf2;
@@ -138,19 +341,47 @@
   background: var(--success);
 }
 
-.budget-card.alert .budget-progress div {
+.budget-card.half_used .budget-progress div,
+.budget-card.watch .budget-progress div {
   background: var(--warning);
 }
 
+.budget-card.warning .budget-progress div,
+.budget-card.critical .budget-progress div,
 .budget-card.over_budget .budget-progress div {
   background: var(--danger);
 }
 
 .budget-values {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   color: var(--text-muted);
   font-size: 13px;
+}
+
+.budget-values span {
+  display: grid;
+  gap: 3px;
+  padding: 8px;
+  border-radius: 6px;
+  background: rgb(23, 23, 23);
+}
+
+
+
+.budget-empty-state {
+  display: grid;
+  gap: 6px;
+}
+
+.budget-empty-state strong {
+  color: var(--text);
+}
+
+.budget-empty-state span {
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 .budget-alert {
@@ -160,24 +391,37 @@
   background: rgba(245, 159, 0, 0.1);
   color: #9a6700;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: var(--font-thin);
 }
 
 .budget-card.over_budget .budget-alert {
-  background: #fff0ee;
+  background: rgba(255, 77, 94, 0.10);
   color: var(--danger);
 }
 
 .budget-actions {
   display: flex;
   gap: 8px;
-  margin-top: 14px;
+  align-self: end;
+  margin-top: auto;
 }
 
 @media (max-width: 1040px) {
   .budgets-layout,
+  .planning-summary-grid,
+  .planning-layout,
   .budget-card-grid {
     grid-template-columns: 1fr;
+  }
+
+  .planning-layout {
+    grid-template-areas:
+      "savings"
+      "goals";
+  }
+
+  .budget-form-panel {
+    position: static;
   }
 }
 
@@ -192,4 +436,15 @@
     align-items: stretch;
     flex-direction: column;
   }
+
+  .budget-planning-section,
+  .budget-form-panel,
+  .budget-list-panel {
+    padding: 16px;
+  }
+
+  .budget-values {
+    grid-template-columns: 1fr;
+  }
 }
+

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../utils/api';
+import { getCategoryColor } from '../utils/categoryDisplay';
 import '../styles/CategoryDropdown.css';
 
 const CategoryDropdown = ({ value, onChange, label = 'Category' }) => {
@@ -30,22 +31,30 @@ const CategoryDropdown = ({ value, onChange, label = 'Category' }) => {
     return <p className="category-error">{error}</p>;
   }
 
+  const selectedCategory = categories.find((category) => String(category.id) === String(value));
+
   return (
     <div className="category-dropdown">
       <label htmlFor="category-dropdown">{label}</label>
-      <select
-        id="category-dropdown"
-        value={value}
-        onChange={onChange}
-        className="category-select"
+      <div
+        className="category-select-shell"
+        style={{ '--category-color': getCategoryColor(selectedCategory) }}
       >
-        <option value="">Select category</option>
-        {categories.map((category) => (
-          <option key={category.id} value={category.id}>
-            {category.name}
-          </option>
-        ))}
-      </select>
+        <span className="category-select-dot" aria-hidden="true" />
+        <select
+          id="category-dropdown"
+          value={value}
+          onChange={onChange}
+          className="category-select"
+        >
+          <option value="">Select category</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 };

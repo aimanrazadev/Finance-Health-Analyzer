@@ -1,7 +1,10 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { UIProvider } from './context/UIContext';
+import ConfirmModal from './components/ConfirmModal';
 import ProtectedRoute from './components/ProtectedRoute';
+import ToastHost from './components/ToastHost';
 import './App.css';
 
 const Login = lazy(() => import('./pages/Login'));
@@ -10,18 +13,21 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Transactions = lazy(() => import('./pages/Transactions'));
 const UploadStatement = lazy(() => import('./pages/UploadStatement'));
 const Budgets = lazy(() => import('./pages/Budgets'));
-const BudgetRecommendations = lazy(() => import('./pages/BudgetRecommendations'));
-const SavingsGoals = lazy(() => import('./pages/SavingsGoals'));
+const Investments = lazy(() => import('./pages/Investments'));
+const FinancialHealth = lazy(() => import('./pages/FinancialHealth'));
+const Forecast = lazy(() => import('./pages/Forecast'));
+const Subscriptions = lazy(() => import('./pages/Subscriptions'));
 const Insights = lazy(() => import('./pages/Insights'));
-const NeedsReview = lazy(() => import('./pages/NeedsReview'));
+const Categories = lazy(() => import('./pages/Categories'));
 const Friends = lazy(() => import('./pages/Friends'));
 
 function App() {
   return (
     <Router>
       <AuthProvider>
-        <Suspense fallback={<div className="app-loading">Loading...</div>}>
-          <Routes>
+        <UIProvider>
+          <Suspense fallback={<div className="app-loading">Loading...</div>}>
+            <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -60,13 +66,14 @@ function App() {
               }
             />
             <Route
-              path="/needs-review"
+              path="/categories"
               element={
                 <ProtectedRoute>
-                  <NeedsReview />
+                  <Categories />
                 </ProtectedRoute>
               }
             />
+            <Route path="/needs-review" element={<Navigate to="/categories" replace />} />
             <Route
               path="/budgets"
               element={
@@ -75,22 +82,42 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/recommendations" element={<Navigate to="/insights" replace />} />
+            <Route path="/savings-goals" element={<Navigate to="/investments" replace />} />
+            <Route path="/savings" element={<Navigate to="/investments" replace />} />
             <Route
-              path="/recommendations"
+              path="/investments"
               element={
                 <ProtectedRoute>
-                  <BudgetRecommendations />
+                  <Investments />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/savings-goals"
+              path="/financial-health"
               element={
                 <ProtectedRoute>
-                  <SavingsGoals />
+                  <FinancialHealth />
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/forecast"
+              element={
+                <ProtectedRoute>
+                  <Forecast />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/subscriptions"
+              element={
+                <ProtectedRoute>
+                  <Subscriptions />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/assistant" element={<Navigate to="/dashboard" replace />} />
             <Route
               path="/insights"
               element={
@@ -102,8 +129,11 @@ function App() {
 
             {/* Redirect */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </Suspense>
+            </Routes>
+          </Suspense>
+          <ToastHost />
+          <ConfirmModal />
+        </UIProvider>
       </AuthProvider>
     </Router>
   );

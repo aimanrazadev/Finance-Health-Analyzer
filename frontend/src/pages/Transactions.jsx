@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import CategoryBadge from '../components/CategoryBadge';
 import Navigation from '../components/Navigation';
+import Skeleton from '../components/Skeleton';
+import { useUI } from '../hooks/useUI';
 import api, { getAuthHeaders } from '../utils/api';
 import '../styles/Transactions.css';
 
@@ -17,6 +20,7 @@ const defaultFormState = {
 
 const Transactions = () => {
   const { token } = useAuth();
+  const { confirm, showToast } = useUI();
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState(defaultFormState);
@@ -137,11 +141,13 @@ const Transactions = () => {
           headers: authHeaders,
         });
         setSuccess('Transaction updated.');
+        showToast('Transaction updated.');
       } else {
         await api.post('/transactions', payload, {
           headers: authHeaders,
         });
         setSuccess('Transaction added.');
+        showToast('Transaction added.');
       }
       resetForm();
       loadTransactions();
@@ -166,7 +172,12 @@ const Transactions = () => {
   };
 
   const handleDelete = async (id) => {
-    const confirmed = window.confirm('Delete this transaction?');
+    const confirmed = await confirm({
+      title: 'Delete transaction',
+      message: 'This transaction will be removed from your account.',
+      confirmLabel: 'Delete',
+      danger: true,
+    });
     if (!confirmed) return;
 
     try {
@@ -174,6 +185,7 @@ const Transactions = () => {
         headers: authHeaders,
       });
       setSuccess('Transaction deleted.');
+      showToast('Transaction deleted.');
       loadTransactions();
     } catch (err) {
       console.error(err);
@@ -203,6 +215,7 @@ const Transactions = () => {
         headers: authHeaders,
       });
       setSuccess(response.data.message || 'Category updated. Learning rule saved.');
+      showToast(response.data.message || 'Category updated. Learning rule saved.');
       setCorrections((prev) => {
         const next = { ...prev };
         delete next[transactionId];
@@ -215,7 +228,6 @@ const Transactions = () => {
     }
   };
 
-  const confidencePercent = (value) => `${Math.round((value ?? 0.3) * 100)}%`;
   const getCategoriesForType = (transactionType) => (
     transactionType === 'income'
       ? categories.filter((category) => INCOME_CATEGORY_NAMES.includes(category.name))
@@ -245,7 +257,7 @@ const Transactions = () => {
             {mlLearnedCount > 0 && (
               <div className="form-success">
                 ML has successfully learned {mlLearnedCount} transaction pattern{mlLearnedCount === 1 ? '' : 's'}.
-                Confident ML categories are locked here; use Needs Review with Include learned to change them later.
+                Confident ML categories are locked here; use Categories with Include learned to change them later.
               </div>
             )}
 
@@ -367,7 +379,6 @@ const Transactions = () => {
                     <th>Date</th>
                     <th>Description</th>
                     <th>Category</th>
-                    <th>Confidence</th>
                     <th>Type</th>
                     <th>Amount</th>
                     <th>Merchant</th>
@@ -377,12 +388,12 @@ const Transactions = () => {
                 <tbody>
                   {loading && (
                     <tr>
-                      <td colSpan="8">Loading transactions...</td>
+                      <td colSpan="7"><Skeleton rows={4} /></td>
                     </tr>
                   )}
                   {!loading && transactions.length === 0 && (
                     <tr>
-                      <td colSpan="8">No transactions found.</td>
+                      <td colSpan="7">No transactions found.</td>
                     </tr>
                   )}
                   {!loading && transactions.map((transaction) => {
@@ -396,7 +407,7 @@ const Transactions = () => {
                         <td>{transaction.description}</td>
                         <td>
                           <div className="category-correction">
-                            <span>{category?.name || '-'}</span>
+                            <CategoryBadge category={category} name={category?.name || 'Uncategorized'} />
                             {needsReview && (
                               <>
                                 <select
@@ -416,10 +427,9 @@ const Transactions = () => {
                             )}
                           </div>
                         </td>
-                        <td>{confidencePercent(transaction.category_confidence)}</td>
                         <td>{transaction.transaction_type}</td>
                         <td>{transaction.amount.toFixed(2)}</td>
-                        <td>{transaction.merchant || '—'}</td>
+                        <td>{transaction.extracted_merchant || transaction.merchant || '-'}</td>
                         <td>
                           <button className="table-button" onClick={() => handleEdit(transaction)}>
                             Edit

@@ -23,7 +23,7 @@
 .friends-summary span {
   color: var(--text-muted);
   font-size: 12px;
-  font-weight: 750;
+  font-weight: var(--font-thin);
 }
 
 .friends-summary strong {
@@ -59,7 +59,7 @@
   padding: 0 12px;
   border: 1px solid var(--border-strong);
   border-radius: 6px;
-  background: #ffffff;
+  background: rgb(23, 23, 23);
   color: var(--text);
 }
 
@@ -80,7 +80,7 @@
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: #fbfcfe;
+  background: rgb(23, 23, 23);
   text-align: left;
   cursor: pointer;
 }
@@ -94,11 +94,11 @@
   transform: translateY(-50%);
   border: 1px solid #fecdca;
   border-radius: 999px;
-  background: #fff4f2;
+  background: rgba(255, 77, 94, 0.10);
   color: var(--danger);
   cursor: pointer;
   font-size: 16px;
-  font-weight: 900;
+  font-weight: var(--font-thin);
   line-height: 1;
   opacity: 0;
   pointer-events: none;
@@ -113,12 +113,12 @@
 
 .friend-row.active {
   border-color: var(--primary);
-  background: #eef6ff;
+  background: rgba(79, 140, 255, 0.12);
 }
 
 .friend-row span {
   color: var(--text);
-  font-weight: 800;
+  font-weight: var(--font-thin);
 }
 
 .friend-row b,
@@ -170,7 +170,7 @@
 }
 
 .debt-table th {
-  background: #fbfcfe;
+  background: rgb(23, 23, 23);
   color: var(--text-muted);
 }
 
@@ -180,3 +180,4 @@
     grid-template-columns: 1fr;
   }
 }
+

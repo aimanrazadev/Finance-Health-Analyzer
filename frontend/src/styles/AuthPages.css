@@ -21,7 +21,7 @@
   color: var(--text);
   font-size: 26px;
   line-height: 1.2;
-  font-weight: 780;
+  font-weight: var(--font-thin);
   text-align: center;
 }
 
@@ -37,10 +37,10 @@
   padding: 11px 12px;
   border: 1px solid #fecdca;
   border-radius: 6px;
-  background: #fff4f2;
+  background: rgba(255, 77, 94, 0.10);
   color: var(--danger);
   font-size: 13px;
-  font-weight: 650;
+  font-weight: var(--font-thin);
 }
 
 .auth-form {
@@ -57,7 +57,7 @@
 .form-group label {
   color: var(--text);
   font-size: 13px;
-  font-weight: 750;
+  font-weight: var(--font-thin);
 }
 
 .form-group input {
@@ -77,13 +77,13 @@
 
 .form-group input.input-error {
   border-color: #f97066;
-  background: #fffafa;
+  background: rgba(255, 77, 94, 0.08);
 }
 
 .field-error {
   color: var(--danger);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: var(--font-thin);
 }
 
 .auth-button {
@@ -95,7 +95,7 @@
   color: #ffffff;
   cursor: pointer;
   font-size: 14px;
-  font-weight: 800;
+  font-weight: var(--font-thin);
 }
 
 .auth-button:hover:not(:disabled) {
@@ -116,7 +116,7 @@
 
 .auth-footer a {
   color: var(--primary);
-  font-weight: 750;
+  font-weight: var(--font-thin);
   text-decoration: none;
 }
 
@@ -153,3 +153,4 @@
     padding: 22px;
   }
 }
+
