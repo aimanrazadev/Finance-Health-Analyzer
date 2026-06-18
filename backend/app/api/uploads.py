@@ -12,7 +12,10 @@ from app.schemas.schemas import (
     UploadPreviewResponse,
 )
 from app.services.file_parser_service import detect_file_type, parse_statement_file, validate_statement_file
+from app.services.friend_service import auto_attach_transaction_if_friend
+from app.services.import_profile_service import save_import_profile_from_columns
 from app.services.merchant_extractor_service import extract_transaction_merchant
+from app.services.transaction_type_service import normalize_transaction_type
 
 router = APIRouter(tags=["statement upload"])
 
@@ -27,10 +30,15 @@ async def preview_statement_upload(
     content = await file.read()
     file_name = file.filename or "statement"
     parsed = parse_statement_file(file_name, content, db, user_id=current_user.id)
+    import_profile = parsed.get("import_profile") or {}
     return UploadPreviewResponse(
         file_name=file_name,
         file_size=len(content),
         file_type=parsed["file_type"],
+        import_profile_id=import_profile.get("id"),
+        import_profile_name=import_profile.get("name"),
+        import_confidence=import_profile.get("confidence") or 0,
+        column_mapping=import_profile.get("column_mapping") or {},
         total_rows=parsed["total_rows"],
         successful_rows=parsed["successful_rows"],
         valid_rows=parsed["successful_rows"],
@@ -65,6 +73,14 @@ def confirm_statement_upload(
 ):
     validate_statement_file(upload_data.file_name, upload_data.file_size)
     file_type = upload_data.file_type or detect_file_type(upload_data.file_name)
+    if upload_data.column_mapping and file_type in {"csv", "excel"}:
+        save_import_profile_from_columns(
+            db,
+            current_user.id,
+            upload_data.bank_name or upload_data.file_name,
+            file_type,
+            list(upload_data.column_mapping.keys()),
+        )
 
     uploaded_file = UploadedFile(
         user_id=current_user.id,
@@ -89,6 +105,8 @@ def confirm_statement_upload(
             continue
         merchant_name = extract_transaction_merchant(row.description, row.extracted_merchant or row.merchant or row.merchant_name)
 
+        final_transaction_type = normalize_transaction_type(db, row.transaction_type, row.category_id)
+
         transactions.append(
             Transaction(
                 user_id=current_user.id,
@@ -101,12 +119,11 @@ def confirm_statement_upload(
                 withdrawal_amount=row.withdrawal_amount,
                 deposit_amount=row.deposit_amount,
                 balance=row.balance,
-                transaction_type=row.transaction_type,
+                transaction_type=final_transaction_type,
                 date=row.date or row.transaction_date,
                 uploaded_file_id=uploaded_file.id,
                 source=row.source or file_type,
                 payment_method=None,
-                is_recurring=False,
                 category_confidence=row.category_confidence or 0.30,
                 categorization_method=row.categorization_method or "needs_review",
                 review_status="approved" if (row.category_confidence or 0.30) >= 0.80 and (row.categorization_method or "needs_review") != "needs_review" else "needs_review",
@@ -116,6 +133,9 @@ def confirm_statement_upload(
 
     if transactions:
         db.add_all(transactions)
+        db.flush()
+        for transaction in transactions:
+            auto_attach_transaction_if_friend(db, current_user.id, transaction)
     uploaded_file.transaction_count = len(transactions)
     uploaded_file.successful_rows = len(transactions)
     db.commit()

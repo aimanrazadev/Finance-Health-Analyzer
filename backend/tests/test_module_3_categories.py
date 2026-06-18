@@ -33,6 +33,7 @@ class CategoryServiceTestCase(unittest.TestCase):
         names = {category.name for category in self.session.query(Category).all()}
         for name in ["Food", "Transport", "Shopping", "Rent", "Bills", "Entertainment", "Salary", "Other"]:
             self.assertIn(name, names)
+        self.assertNotIn("Needs Review", names)
 
         food = self.session.query(Category).filter(Category.name == "Food").one()
         self.assertEqual(food.color, "#fca5a5")

@@ -12,7 +12,7 @@ from app.db.database import Base
 from app.models.models import Category, Friend, FriendMerchantLearning, FriendTransactionLink, Transaction
 from app.services.category_service import seed_default_categories
 from app.services.friend_detection_service import detect_friend_for_transaction
-from app.services.friend_service import auto_attach_matching_transactions, normalize_friend_name
+from app.services.friend_service import auto_attach_matching_transactions, normalize_friend_name, sync_friends_category_transactions
 
 
 class FriendTrackingTestCase(unittest.TestCase):
@@ -94,6 +94,22 @@ class FriendTrackingTestCase(unittest.TestCase):
         learned = self.session.query(FriendMerchantLearning).filter(FriendMerchantLearning.friend_id == friend.id).all()
         self.assertEqual(len(links), 2)
         self.assertEqual(len(learned), 2)
+
+    def test_sync_repairs_friends_category_transactions_missing_friend_link(self):
+        transaction = self.add_transaction("UPI/RAJPAL/778899/Payment from Ph")
+        transaction.category_id = self.friends_category_id()
+        transaction.review_status = "approved"
+        transaction.is_needs_review = False
+        self.session.commit()
+
+        repaired_count = sync_friends_category_transactions(self.session)
+        self.session.refresh(transaction)
+
+        self.assertEqual(repaired_count, 1)
+        self.assertIsNotNone(transaction.friend_id)
+        self.assertTrue(transaction.is_friend_transaction)
+        self.assertEqual(transaction.categorization_method, "friend_match")
+        self.assertEqual(transaction.category_confidence, 0.95)
 
 
 if __name__ == "__main__":

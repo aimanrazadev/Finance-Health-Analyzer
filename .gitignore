@@ -10,11 +10,16 @@ backend/venv/
 backend/.venv/
 *.sqlite3
 *.db
+backend/.venv/
+frontend/node_modules/
+frontend/dist/
+__pycache__/
 
 # Node
 node_modules/
 dist/
 .env
+.sixth/
 
 # Logs
 logs
@@ -28,3 +33,4 @@ pnpm-debug.log*
 .vscode/
 .idea/
 .DS_Store
+.AUTHENTICATION_SETUP.md

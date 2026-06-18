@@ -1,6 +1,5 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import FloatingAssistant from './FloatingAssistant';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -18,12 +17,7 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  return (
-    <div className="app-shell">
-      {children}
-      <FloatingAssistant />
-    </div>
-  );
+  return <div className="app-shell">{children}</div>;
 };
 
 export default ProtectedRoute;

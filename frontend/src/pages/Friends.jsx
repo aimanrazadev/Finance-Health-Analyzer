@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Navigation from '../components/Navigation';
 import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
@@ -13,81 +13,83 @@ const moneyFormatter = new Intl.NumberFormat('en-IN', {
 const Friends = () => {
   const { token } = useAuth();
   const headers = useMemo(() => getAuthHeaders(token), [token]);
-  const [dashboard, setDashboard] = useState({ friends: [] });
-  const [selectedFriendId, setSelectedFriendId] = useState(null);
-  const [detail, setDetail] = useState(null);
-  const [friendName, setFriendName] = useState('');
+  const [friends, setFriends] = useState([]);
+  const [dashboard, setDashboard] = useState(null);
+  const [selectedFriend, setSelectedFriend] = useState(null);
   const [search, setSearch] = useState('');
+  const [name, setName] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const loadFriends = useCallback(async () => {
+  const loadFriends = async () => {
+    setLoading(true);
+    setError('');
     try {
-      const response = await api.get('/friends', { headers, params: { search } });
-      setDashboard(response.data);
-      if (!selectedFriendId && response.data.friends.length > 0) {
-        setSelectedFriendId(response.data.friends[0].id);
-      }
+      const [friendsResponse, dashboardResponse] = await Promise.all([
+        api.get('/friends', { headers }),
+        api.get('/friends/dashboard', { headers }),
+      ]);
+      setFriends(friendsResponse.data);
+      setDashboard(dashboardResponse.data);
     } catch (err) {
       console.error(err);
       setError('Unable to load friends.');
+    } finally {
+      setLoading(false);
     }
-  }, [headers, search, selectedFriendId]);
+  };
 
-  const loadDetail = useCallback(async (friendId) => {
-    if (!friendId) return;
+  useEffect(() => {
+    if (token) {
+      loadFriends();
+    }
+  }, [token]);
+
+  const addFriend = async (event) => {
+    event.preventDefault();
+    if (!name.trim()) return;
+    setError('');
+    setMessage('');
+    try {
+      await api.post('/friends', { name: name.trim() }, { headers });
+      setName('');
+      setMessage('Friend saved. Matching transactions were linked automatically.');
+      await loadFriends();
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.detail || 'Unable to save friend.');
+    }
+  };
+
+  const hideFriend = async (friendId) => {
+    setError('');
+    setMessage('');
+    try {
+      await api.delete(`/friends/${friendId}`, { headers });
+      setMessage('Friend hidden. Existing transaction history is kept safe.');
+      setSelectedFriend(null);
+      await loadFriends();
+    } catch (err) {
+      console.error(err);
+      setError('Unable to hide friend.');
+    }
+  };
+
+  const openFriend = async (friendId) => {
+    setError('');
     try {
       const response = await api.get(`/friends/${friendId}`, { headers });
-      setDetail(response.data);
+      setSelectedFriend(response.data);
     } catch (err) {
       console.error(err);
       setError('Unable to load friend details.');
     }
-  }, [headers]);
-
-  useEffect(() => {
-    if (token) {
-      queueMicrotask(() => {
-        loadFriends();
-      });
-    }
-  }, [loadFriends, token]);
-
-  useEffect(() => {
-    if (selectedFriendId) {
-      queueMicrotask(() => {
-        loadDetail(selectedFriendId);
-      });
-    }
-  }, [loadDetail, selectedFriendId]);
-
-  const addFriend = async (event) => {
-    event.preventDefault();
-    if (!friendName.trim()) return;
-    try {
-      await api.post('/friends', { name: friendName.trim() }, { headers });
-      setFriendName('');
-      setMessage('Friend added.');
-      await loadFriends();
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.detail || 'Unable to add friend.');
-    }
   };
 
-  const deleteFriend = async (friendId, event) => {
-    event.stopPropagation();
-    if (!window.confirm('Delete this friend from the active list? Linked transactions will stay safe.')) return;
-    await api.delete(`/friends/${friendId}`, { headers });
-    if (selectedFriendId === friendId) {
-      setSelectedFriendId(null);
-      setDetail(null);
-    }
-    setMessage('Friend deleted from active list.');
-    await loadFriends();
-  };
-
-  const selectedFriend = detail?.friend;
+  const filteredFriends = friends.filter((friend) => (
+    friend.name.toLowerCase().includes(search.trim().toLowerCase())
+  ));
 
   return (
     <div>
@@ -95,9 +97,9 @@ const Friends = () => {
       <main className="friends-page">
         <div className="page-heading">
           <div>
-            <p className="eyebrow">Friends</p>
+            <p className="eyebrow">Friend tracking</p>
             <h1>Friends</h1>
-            <p>Group bank transactions by friend names and keep them out of the Categories correction queue.</p>
+            <p>Save friend names so matching transactions are grouped and removed from category review.</p>
           </div>
         </div>
 
@@ -105,78 +107,85 @@ const Friends = () => {
         {error && <div className="surface-message error">{error}</div>}
 
         <section className="friends-summary">
-          <div><span>Total friends</span><strong>{dashboard.total_friends || 0}</strong></div>
-          <div><span>Linked people</span><strong>{dashboard.friends?.length || 0}</strong></div>
-          <div><span>Selected transactions</span><strong>{detail?.transactions?.length || 0}</strong></div>
+          <div>
+            <span>Active friends</span>
+            <strong>{dashboard?.active_friends ?? 0}</strong>
+          </div>
+          <div>
+            <span>Linked transactions</span>
+            <strong>{dashboard?.linked_transactions ?? 0}</strong>
+          </div>
         </section>
 
         <section className="friends-layout">
-          <aside className="friends-panel">
-            <form onSubmit={addFriend} className="friend-form">
-              <input value={friendName} onChange={(event) => setFriendName(event.target.value)} placeholder="Add friend name" />
-              <button className="primary-button" type="submit">Add</button>
+          <div className="friends-panel">
+            <form className="friend-form" onSubmit={addFriend}>
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Friend name"
+              />
+              <button className="primary-button" type="submit">Add Friend</button>
             </form>
-            <input className="friend-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search friends" />
-            <div className="friend-list">
-              {dashboard.friends?.map((friend) => (
-                <button
-                  type="button"
-                  className={`friend-row ${selectedFriendId === friend.id ? 'active' : ''}`}
-                  key={friend.id}
-                  onClick={() => setSelectedFriendId(friend.id)}
-                >
-                  <button
-                    type="button"
-                    className="friend-delete-x"
-                    onClick={(event) => deleteFriend(friend.id, event)}
-                    aria-label={`Delete ${friend.name}`}
-                  >
-                    x
-                  </button>
-                  <span>{friend.name}</span>
-                  <b>{friend.last_transaction_date ? new Date(friend.last_transaction_date).toLocaleDateString() : 'No transactions yet'}</b>
-                  <small>View linked transactions</small>
-                </button>
-              ))}
-            </div>
-          </aside>
+            <input
+              className="friend-search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search friends"
+            />
 
-          <section className="friend-detail-panel">
+            {loading ? (
+              <div className="empty-state">Loading friends...</div>
+            ) : filteredFriends.length === 0 ? (
+              <div className="empty-state">No friends saved yet.</div>
+            ) : (
+              <div className="friends-list">
+                {filteredFriends.map((friend) => (
+                  <div className="friend-row" key={friend.id}>
+                    <button type="button" onClick={() => openFriend(friend.id)}>
+                      <strong>{friend.name}</strong>
+                      <span>{friend.normalized_name}</span>
+                    </button>
+                    <button className="table-button danger" onClick={() => hideFriend(friend.id)}>
+                      Hide
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="friend-detail-panel">
             {!selectedFriend ? (
-              <div className="empty-state">Select a friend to view linked transactions.</div>
+              <div className="empty-state">Select a friend to see linked transactions.</div>
             ) : (
               <>
-                <div className="friend-detail-header">
+                <div className="section-heading">
                   <div>
                     <h2>{selectedFriend.name}</h2>
-                    <p>{detail.transactions.length} linked bank transaction{detail.transactions.length === 1 ? '' : 's'}</p>
+                    <p>
+                      {selectedFriend.summary.transaction_count} linked transaction
+                      {selectedFriend.summary.transaction_count === 1 ? '' : 's'}
+                    </p>
                   </div>
+                  <strong>{moneyFormatter.format(selectedFriend.summary.net_amount)}</strong>
                 </div>
-
-                <div className="debt-table-wrapper">
-                  <h3>Linked bank transactions</h3>
-                  <table className="debt-table">
-                    <thead>
-                      <tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th>Merchant</th></tr>
-                    </thead>
-                    <tbody>
-                      {detail.transactions.length === 0 ? (
-                        <tr><td colSpan="5">No linked bank transactions yet.</td></tr>
-                      ) : detail.transactions.map((transaction) => (
-                        <tr key={transaction.id}>
-                          <td>{new Date(transaction.date).toLocaleDateString()}</td>
-                          <td>{transaction.description}</td>
-                          <td>{transaction.transaction_type}</td>
-                          <td>{moneyFormatter.format(transaction.amount)}</td>
-                          <td>{transaction.merchant || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="friend-transaction-list">
+                  {selectedFriend.transactions.length === 0 ? (
+                    <div className="empty-state">No linked transactions yet.</div>
+                  ) : selectedFriend.transactions.map((transaction) => (
+                    <div className="friend-transaction-row" key={transaction.id}>
+                      <div>
+                        <strong>{transaction.description}</strong>
+                        <span>{new Date(transaction.date).toLocaleDateString()} - {transaction.transaction_type}</span>
+                      </div>
+                      <b>{moneyFormatter.format(transaction.amount)}</b>
+                    </div>
+                  ))}
                 </div>
               </>
             )}
-          </section>
+          </div>
         </section>
       </main>
     </div>

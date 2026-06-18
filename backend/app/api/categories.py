@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.db.database import get_db
-from app.models.models import Category, CategoryCorrection, CategoryLearningRule, FriendTransactionLink, Transaction, User
+from app.models.models import Category, CategoryCorrection, CategoryLearningRule, Transaction, User
 from app.schemas.schemas import (
     CategorizationRequest,
     CategorizationResponse,
@@ -23,13 +23,44 @@ from app.api.auth import get_current_user
 from app.services.categorization import categorize_transaction as smart_categorize_transaction
 from app.services.category_service import create_category as create_category_service
 from app.services.category_service import get_visible_categories
-from app.services.friend_detection_service import detect_friend_for_transaction
 from app.services.learning_service import save_category_correction
 from app.services.merchant_extractor_service import normalize_merchant_name
 from app.services.merchant_extractor_service import extract_merchant_name
+from app.services.merchant_extractor_service import extract_transaction_merchant
 from app.services.ml_categorization_service import MIN_TRAINING_LABELS, retrain_after_correction, train_user_category_model
+from app.services.transaction_type_service import normalize_transaction_type
+from app.services.friend_service import attach_transaction_to_friend, create_friend
 
 router = APIRouter(prefix="/categories", tags=["categories"])
+
+
+def _is_friends_category(category: Category | None) -> bool:
+    return bool(category and category.name and category.name.strip().lower() == "friends")
+
+
+def _sync_friend_after_category_correction(
+    db: Session,
+    user_id: int,
+    transaction: Transaction,
+    category: Category,
+) -> None:
+    """When a row is corrected to Friends, create/link the friend immediately."""
+    if not _is_friends_category(category):
+        return
+
+    friend_name = extract_transaction_merchant(transaction.description, None)
+    if not friend_name:
+        friend_name = extract_transaction_merchant(
+            transaction.description,
+            transaction.extracted_merchant or transaction.merchant,
+        )
+    if not friend_name:
+        friend_name = transaction.extracted_merchant or transaction.merchant or transaction.description
+    if not friend_name:
+        return
+
+    friend = create_friend(db, user_id, friend_name)
+    attach_transaction_to_friend(db, user_id, friend, transaction)
 
 @router.get("/", response_model=List[CategoryResponse])
 def get_categories(db: Session = Depends(get_db)):
@@ -106,40 +137,18 @@ def correct_transaction_category(
         request.new_category_id,
     )
     transaction.category_id = request.new_category_id
+    transaction.transaction_type = normalize_transaction_type(
+        db,
+        transaction.transaction_type,
+        request.new_category_id,
+    )
     transaction.category_confidence = 1.0
     transaction.categorization_method = "manual"
     transaction.extracted_merchant = correction.merchant
     transaction.review_status = "approved"
     transaction.merchant = transaction.merchant or correction.merchant
     transaction.is_needs_review = False
-
-    if category.name == "Friends":
-        transaction.is_friend_transaction = True
-        transaction.debt_type = transaction.debt_type or "unclassified_friend"
-        transaction.debt_direction = transaction.debt_direction or "no_debt"
-
-        suggestion = detect_friend_for_transaction(db, current_user.id, transaction)
-        if suggestion and suggestion.get("confidence", 0) >= 0.80:
-            transaction.friend_id = suggestion["friend_id"]
-            existing_link = (
-                db.query(FriendTransactionLink)
-                .filter(
-                    FriendTransactionLink.user_id == current_user.id,
-                    FriendTransactionLink.transaction_id == transaction.id,
-                    FriendTransactionLink.friend_id == suggestion["friend_id"],
-                )
-                .first()
-            )
-            if not existing_link:
-                db.add(FriendTransactionLink(
-                    user_id=current_user.id,
-                    friend_id=suggestion["friend_id"],
-                    transaction_id=transaction.id,
-                    debt_id=None,
-                ))
-    else:
-        transaction.is_friend_transaction = False
-        transaction.friend_id = None
+    _sync_friend_after_category_correction(db, current_user.id, transaction, category)
 
     retrain_after_correction(current_user.id)
     db.commit()
@@ -180,12 +189,18 @@ def bulk_correct_transaction_categories(
             correction_source="bulk",
         )
         transaction.category_id = item.new_category_id
+        transaction.transaction_type = normalize_transaction_type(
+            db,
+            transaction.transaction_type,
+            item.new_category_id,
+        )
         transaction.category_confidence = 1.0
         transaction.categorization_method = "manual"
         transaction.extracted_merchant = correction.merchant
         transaction.merchant = transaction.merchant or correction.merchant
         transaction.review_status = "approved"
         transaction.is_needs_review = False
+        _sync_friend_after_category_correction(db, current_user.id, transaction, category)
         updated_count += 1
 
     retrain_after_correction(current_user.id)
@@ -207,18 +222,14 @@ def get_needs_review_transactions(
     if include_learned:
         return query.order_by(Transaction.date.desc()).all()
 
-    needs_review_category = db.query(Category).filter(Category.name == "Needs Review").first()
     filters = [
         Transaction.category_confidence.is_(None),
         Transaction.category_confidence < 0.80,
+        Transaction.review_status == "needs_review",
+        Transaction.is_needs_review == True,  # noqa: E712
+        Transaction.category_id.is_(None),
     ]
-    if needs_review_category:
-        filters.append(Transaction.category_id == needs_review_category.id)
-    query = query.filter(
-        or_(Transaction.is_friend_transaction == False, Transaction.is_friend_transaction.is_(None)),  # noqa: E712
-        Transaction.friend_id.is_(None),
-        or_(*filters),
-    )
+    query = query.filter(or_(*filters))
     return query.order_by(Transaction.date.desc()).all()
 
 

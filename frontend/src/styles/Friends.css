@@ -1,60 +1,77 @@
 .friends-page {
-  width: min(1180px, calc(100% - 32px));
-  margin: 0 auto;
-  padding: 28px 0 56px;
+  width: 100%;
+  max-width: 1480px;
+  margin: 0;
+  padding: 32px 32px 56px;
+  box-sizing: border-box;
 }
 
 .friends-summary {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 14px;
+  margin: 20px 0;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
-.friends-summary div {
-  display: grid;
-  gap: 6px;
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-}
-
-.friends-summary span {
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: var(--font-thin);
-}
-
-.friends-summary strong {
-  color: var(--text);
-  font-size: 20px;
-}
-
-.friends-layout {
-  display: grid;
-  grid-template-columns: 340px minmax(0, 1fr);
-  gap: 16px;
-  align-items: start;
-}
-
+.friends-summary div,
 .friends-panel,
 .friend-detail-panel {
-  padding: 18px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
 }
 
+.friends-summary div {
+  padding: 18px;
+}
+
+.friends-summary span,
+.friend-row span,
+.friend-transaction-row span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.friends-summary strong {
+  display: block;
+  margin-top: 10px;
+  font-size: 28px;
+  font-weight: var(--font-thin);
+  color: var(--text);
+}
+
+.friends-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 390px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.friends-panel,
+.friend-detail-panel {
+  padding: 18px;
+}
+
 .friend-form {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  margin-bottom: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
 }
 
 .friend-form input,
 .friend-search {
+  width: 100%;
   height: 40px;
   padding: 0 12px;
   border: 1px solid var(--border-strong);
@@ -64,120 +81,93 @@
 }
 
 .friend-search {
-  width: 100%;
-  margin-bottom: 12px;
+  margin: 14px 0;
 }
 
-.friend-list {
+.friends-list,
+.friend-transaction-list {
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 
 .friend-row {
-  position: relative;
   display: grid;
-  gap: 4px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  background: rgb(23, 23, 23);
-  text-align: left;
-  cursor: pointer;
+  border-radius: 8px;
+  background: rgb(18, 18, 18);
 }
 
-.friend-delete-x {
-  position: absolute;
-  top: 50%;
-  right: 10px;
-  width: 28px;
-  height: 28px;
-  transform: translateY(-50%);
-  border: 1px solid #fecdca;
-  border-radius: 999px;
-  background: rgba(255, 77, 94, 0.10);
-  color: var(--danger);
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: var(--font-thin);
-  line-height: 1;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 120ms ease;
-}
-
-.friend-row:hover .friend-delete-x,
-.friend-delete-x:focus {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.friend-row.active {
-  border-color: var(--primary);
-  background: rgba(79, 140, 255, 0.12);
-}
-
-.friend-row span {
-  color: var(--text);
-  font-weight: var(--font-thin);
-}
-
-.friend-row b,
-.friend-row small {
-  color: var(--text-muted);
-}
-
-.friend-detail-header {
+.friend-transaction-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.friend-detail-header h2 {
-  color: var(--text);
-  font-size: 24px;
-}
-
-.friend-detail-header p {
-  margin-top: 4px;
-  color: var(--text-muted);
-}
-
-.debt-table-wrapper {
-  display: grid;
-  gap: 10px;
-  margin-top: 16px;
-  overflow-x: auto;
-}
-
-.debt-table-wrapper h3 {
-  color: var(--text);
-  font-size: 16px;
-}
-
-.debt-table {
-  width: 100%;
-  min-width: 760px;
-  border-collapse: collapse;
-}
-
-.debt-table th,
-.debt-table td {
+  gap: 12px;
   padding: 12px;
-  border-bottom: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgb(16, 16, 16);
+}
+
+.friend-row > button:first-child {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
   text-align: left;
-  font-size: 13px;
+  cursor: pointer;
 }
 
-.debt-table th {
-  background: rgb(23, 23, 23);
+.friend-row > button:first-child strong {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: var(--font-thin);
+}
+
+.friend-row > button:first-child span {
   color: var(--text-muted);
+  font-size: 12px;
 }
 
-@media (max-width: 920px) {
-  .friends-layout,
-  .friends-summary {
+.friend-row .table-button.danger {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 90, 82, 0.26);
+  border-radius: 8px;
+  background: rgba(255, 90, 82, 0.08);
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: var(--font-thin);
+}
+
+.friend-row:hover {
+  border-color: var(--primary);
+}
+
+.friend-detail-panel .section-heading {
+  margin-bottom: 14px;
+}
+
+.friend-detail-panel h2 {
+  font-size: 22px;
+  font-weight: var(--font-thin);
+}
+
+.friend-transaction-row b {
+  white-space: nowrap;
+  font-weight: var(--font-thin);
+}
+
+@media (max-width: 960px) {
+  .friends-summary,
+  .friends-layout {
     grid-template-columns: 1fr;
   }
 }
-

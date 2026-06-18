@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
   Cell,
   Line,
@@ -13,88 +12,36 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { useAuth } from '../hooks/useAuth';
 import Navigation from '../components/Navigation';
-import Skeleton from '../components/Skeleton';
-import { AnimateNumber } from '../components/ui/AnimatedBlurNumber';
+import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
 import { getCategoryChartColor } from '../utils/categoryDisplay';
 
-const moneyFormatter = new Intl.NumberFormat('en-IN', {
-  style: 'currency',
-  currency: 'INR',
-  maximumFractionDigits: 0,
-});
-
-const animatedCurrencyFormat = {
-  style: 'currency',
-  currency: 'INR',
-  maximumFractionDigits: 0,
-};
-
-const animatedPercentFormat = {
-  maximumFractionDigits: 0,
-};
+const now = new Date();
 
 const emptySummary = {
-  month: new Date().getMonth() + 1,
-  year: new Date().getFullYear(),
+  month: now.getMonth() + 1,
+  year: now.getFullYear(),
   total_income: 0,
   total_expenses: 0,
   total_savings: 0,
   savings_rate: 0,
+  savings_status: 'Poor',
   transaction_count: 0,
   top_category: null,
-  category_breakdown: [],
+  top_merchant: null,
+  recurring_subscription_count: 0,
+  account_balance: 0,
+  financial_health_score: 0,
+  financial_health_status: 'Needs Improvement',
+  financial_health_reason: '',
 };
 
-const emptyCharts = {
-  category_breakdown: [],
-  income_vs_expense: {
-    income: 0,
-    expenses: 0,
-  },
-  monthly_spending: [],
-  top_merchants: [],
-};
-
-const emptyForecast = {
-  predicted_amount: 0,
-  forecast_month: '',
-  confidence_lower: 0,
-  confidence_upper: 0,
-  history: [],
-  category_forecasts: [],
-  feature_summary: {},
-};
-
-const emptyInvestments = {
-  account_balance: null,
-  current_portfolio_value: 0,
-  manual_invested_amount: 0,
-  auto_detected_invested_amount: 0,
-  total_pnl_amount: 0,
-  total_pnl_percent: 0,
-  net_worth: 0,
-};
-
-const incomeExpenseColors = ['#86efac', '#fca5a5'];
-const lineChartColor = '#93c5fd';
-
-const ChartEmptyState = ({ children = 'No chart data for this period.' }) => (
-  <div className="chart-empty-state">{children}</div>
-);
-
-const currencyTooltip = (value) => moneyFormatter.format(value);
-
-const AnimatedCurrency = ({ value, className = '' }) => (
-  <AnimateNumber
-    value={Number(value || 0)}
-    locale="en-IN"
-    format={animatedCurrencyFormat}
-    className={className}
-  />
-);
+const emptyCharts = { category_breakdown: [], top_merchants: [] };
+const emptyTrendSummary = { trends: [], income_change_percentage: null, expense_change_percentage: null, savings_change_percentage: null };
+const emptyInsights = { insights: [] };
+const emptyMerchants = { top_merchants: [], most_frequent_merchants: [], highest_spending_merchants: [] };
+const emptySubscriptions = { subscription_count: 0, total_monthly_cost: 0, subscriptions: [] };
 
 const monthOptions = [
   { value: 0, label: 'All year' },
@@ -112,616 +59,539 @@ const monthOptions = [
   { value: 12, label: 'December' },
 ];
 
-const currentYear = new Date().getFullYear();
-const yearOptions = Array.from({ length: 7 }, (_, index) => currentYear - 5 + index);
+const currentYear = now.getFullYear();
+const yearOptions = Array.from({ length: currentYear - 1999 + 2 }, (_, index) => currentYear + 1 - index);
+
+const moneyFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+});
+
+const compactMoneyFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
+
+const formatMoney = (value) => moneyFormatter.format(Number(value || 0));
+const formatCompactMoney = (value) => compactMoneyFormatter.format(Number(value || 0));
+
+const MetricIcon = ({ name }) => {
+  const common = {
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    'aria-hidden': 'true',
+  };
+
+  const icons = {
+    income: <svg {...common}><path d="M4 17 10 11l4 4 6-8" /><path d="M14 7h6v6" /></svg>,
+    expenses: <svg {...common}><path d="M4 7 10 13l4-4 6 8" /><path d="M14 17h6v-6" /></svg>,
+    savings: <svg {...common}><path d="M12 21s7-4.4 7-11V5l-7-3-7 3v5c0 6.6 7 11 7 11Z" /><path d="M9 12h6" /></svg>,
+    rate: <svg {...common}><path d="m7 17 10-10" /><circle cx="7.5" cy="7.5" r="1.8" /><circle cx="16.5" cy="16.5" r="1.8" /></svg>,
+    transactions: <svg {...common}><path d="M8 3h8l3 3v15H5V3h3Z" /><path d="M16 3v4h4" /><path d="M8 11h8" /><path d="M8 15h6" /></svg>,
+    category: <svg {...common}><path d="M4 5h6v6H4z" /><path d="M14 5h6v6h-6z" /><path d="M4 15h6v6H4z" /><path d="M14 15h6v6h-6z" /></svg>,
+    merchant: <svg {...common}><path d="M4 10h16" /><path d="m5 10 1-5h12l1 5" /><path d="M6 10v9h12v-9" /><path d="M9 19v-5h6v5" /></svg>,
+    health: <svg {...common}><path d="M12 21s7-4.4 7-11V5l-7-3-7 3v5c0 6.6 7 11 7 11Z" /><path d="M12 8v5" /><path d="M12 17h.01" /></svg>,
+    balance: <svg {...common}><path d="M19 7V6a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V7" /><path d="M16 14h.01" /></svg>,
+  };
+
+  return icons[name] || icons.transactions;
+};
+
+const getMonthLabel = (month) => (
+  Number(month) === 0 ? 'All year' : monthOptions.find((item) => item.value === Number(month))?.label || 'This month'
+);
+
+const getDateRangeLabel = (month, year) => {
+  if (Number(month) === 0) return `Jan 1 - Dec 31, ${year}`;
+  const firstDay = new Date(year, month - 1, 1);
+  const lastDay = new Date(year, month, 0);
+  const monthName = firstDay.toLocaleString('en-US', { month: 'short' });
+  return `${monthName} 1 - ${monthName} ${lastDay.getDate()}, ${year}`;
+};
+
+const getPreviousMonthLabel = (month, year) => {
+  if (Number(month) === 0) return String(Number(year) - 1);
+  return new Date(year, Number(month) - 2, 1).toLocaleString('en-US', { month: 'short' });
+};
+
+const formatDelta = (value, previousLabel, fallback = 'This period') => {
+  if (value === null || value === undefined) return fallback;
+  const numeric = Number(value || 0);
+  return `${numeric >= 0 ? '+' : '-'} ${Math.abs(numeric).toFixed(1)}% vs ${previousLabel}`;
+};
+
+const deltaClass = (value, reverse = false) => {
+  if (value === null || value === undefined) return 'neutral';
+  const positive = reverse ? Number(value) <= 0 : Number(value) >= 0;
+  return positive ? 'positive' : 'negative';
+};
+
+const MiniSparkline = ({ tone = 'positive' }) => {
+  const path = tone === 'negative'
+    ? 'M3 25 C14 22 20 23 28 16 S42 9 50 10 S62 30 77 20'
+    : 'M3 24 C15 23 18 16 31 17 S44 20 54 13 S66 6 78 11';
+
+  return (
+    <svg className={`metric-sparkline ${tone}`} viewBox="0 0 82 34" aria-hidden="true">
+      <path d={path} />
+    </svg>
+  );
+};
+
+const DashboardMetric = ({ icon, label, value, helper, delta, tone = 'neutral', spark = true, loading = false }) => (
+  <article className={`premium-metric-card tone-${tone}`}>
+    <div className="metric-card-copy">
+      <div className="metric-icon" aria-hidden="true"><MetricIcon name={icon} /></div>
+      <div>
+        <span>{label}</span>
+        <strong>{loading ? 'Loading...' : value}</strong>
+        {helper && <small>{helper}</small>}
+      </div>
+    </div>
+    {(delta || spark) && (
+      <div className="metric-trend-row">
+        {delta && <em className={`metric-delta ${tone}`}>{delta}</em>}
+        {spark && <MiniSparkline tone={tone === 'negative' ? 'negative' : 'positive'} />}
+      </div>
+    )}
+  </article>
+);
+
+const InsightCard = ({ insight, index }) => (
+  <article className="premium-insight-card">
+    <span className="metric-icon small" aria-hidden="true">
+      <MetricIcon name={['income', 'savings', 'transactions', 'expenses', 'health'][index % 5]} />
+    </span>
+    <div>
+      <strong>{insight.title || 'Insight'}</strong>
+      <p>{insight.message}</p>
+      <small>{index === 0 ? 'Just now' : `${index + 1} min ago`}</small>
+    </div>
+  </article>
+);
 
 const Dashboard = () => {
   const { token, user } = useAuth();
   const [summary, setSummary] = useState(emptySummary);
   const [charts, setCharts] = useState(emptyCharts);
-  const [forecast, setForecast] = useState(emptyForecast);
-  const [investments, setInvestments] = useState(emptyInvestments);
-  const [budgets, setBudgets] = useState([]);
+  const [trendSummary, setTrendSummary] = useState(emptyTrendSummary);
+  const [insights, setInsights] = useState(emptyInsights);
+  const [merchantAnalytics, setMerchantAnalytics] = useState(emptyMerchants);
+  const [subscriptionAnalytics, setSubscriptionAnalytics] = useState(emptySubscriptions);
+  const [periodMode, setPeriodMode] = useState('month');
   const [selectedMonth, setSelectedMonth] = useState(emptySummary.month);
   const [selectedYear, setSelectedYear] = useState(emptySummary.year);
-  const [balanceDraft, setBalanceDraft] = useState({ account_name: 'Kotak 811', balance_amount: '' });
-  const [editingBalance, setEditingBalance] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(now.toISOString().slice(0, 10));
   const [loading, setLoading] = useState(true);
-  const [chartsLoading, setChartsLoading] = useState(true);
-  const [forecastLoading, setForecastLoading] = useState(true);
-  const [investmentsLoading, setInvestmentsLoading] = useState(true);
-  const [balanceSaving, setBalanceSaving] = useState(false);
-  const [budgetsLoading, setBudgetsLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const loadSummary = async () => {
+    let cancelled = false;
+
+    const loadDashboard = async () => {
       setLoading(true);
+      setError('');
+      const headers = getAuthHeaders(token);
+      const selectedDayDate = new Date(`${selectedDate}T00:00:00`);
+      const params = periodMode === 'lifetime'
+        ? { month: -1, year: selectedYear }
+        : periodMode === 'day'
+          ? {
+            month: selectedDayDate.getMonth() + 1,
+            year: selectedDayDate.getFullYear(),
+            day: selectedDayDate.getDate(),
+          }
+          : periodMode === 'year'
+            ? { month: 0, year: selectedYear }
+            : { month: selectedMonth, year: selectedYear };
+      const trendYear = periodMode === 'day' ? selectedDayDate.getFullYear() : selectedYear;
+
       try {
-        const response = await api.get('/dashboard/summary', {
-          headers: getAuthHeaders(token),
-          params: {
-            month: selectedMonth,
-            year: selectedYear,
-          },
-        });
-        setSummary(response.data);
-        setError('');
-      } catch (err) {
-        console.error(err);
-        setError('Unable to load dashboard summary.');
-      } finally {
-        setLoading(false);
-      }
-    };
+        const results = await Promise.allSettled([
+          api.get('/dashboard/summary', { headers, params }),
+          api.get('/dashboard/charts', { headers, params }),
+          api.get('/dashboard/charts/monthly-trends', { headers, params: { year: trendYear } }),
+          api.get('/dashboard/insights', { headers, params }),
+          api.get('/dashboard/merchants', { headers, params }),
+          api.get('/dashboard/subscriptions', { headers, params }),
+        ]);
 
-    if (token) {
-      loadSummary();
-    }
-  }, [token, selectedMonth, selectedYear]);
+        if (cancelled) return;
 
-  useEffect(() => {
-    const loadCharts = async () => {
-      setChartsLoading(true);
-      try {
-        const response = await api.get('/dashboard/charts', {
-          headers: getAuthHeaders(token),
-          params: {
-            month: selectedMonth,
-            year: selectedYear,
-          },
-        });
-        setCharts(response.data);
-      } catch (err) {
-        console.error(err);
-        setCharts(emptyCharts);
-      } finally {
-        setChartsLoading(false);
-      }
-    };
+        const [
+          summaryResult,
+          chartsResult,
+          trendsResult,
+          insightsResult,
+          merchantsResult,
+          subscriptionsResult,
+        ] = results;
+        setSummary(summaryResult.status === 'fulfilled' ? summaryResult.value.data : emptySummary);
+        setCharts(chartsResult.status === 'fulfilled' ? chartsResult.value.data : emptyCharts);
+        setTrendSummary(trendsResult.status === 'fulfilled' ? trendsResult.value.data : emptyTrendSummary);
+        setInsights(insightsResult.status === 'fulfilled' ? insightsResult.value.data : emptyInsights);
+        setMerchantAnalytics(merchantsResult.status === 'fulfilled' ? merchantsResult.value.data : emptyMerchants);
+        setSubscriptionAnalytics(subscriptionsResult.status === 'fulfilled' ? subscriptionsResult.value.data : emptySubscriptions);
 
-    if (token) {
-      loadCharts();
-    }
-  }, [token, selectedMonth, selectedYear]);
-
-  useEffect(() => {
-    const loadForecast = async () => {
-      setForecastLoading(true);
-      try {
-        const response = await api.get('/forecast/expenses', {
-          headers: getAuthHeaders(token),
-        });
-        setForecast(response.data);
-      } catch (err) {
-        console.error(err);
-        setForecast(emptyForecast);
-      } finally {
-        setForecastLoading(false);
-      }
-    };
-
-    if (token) {
-      loadForecast();
-    }
-  }, [token]);
-
-  useEffect(() => {
-    const loadInvestments = async () => {
-      setInvestmentsLoading(true);
-      try {
-        const response = await api.get('/investments/summary', {
-          headers: getAuthHeaders(token),
-        });
-        setInvestments(response.data);
-        if (response.data.account_balance) {
-          setBalanceDraft({
-            account_name: response.data.account_balance.account_name,
-            balance_amount: response.data.account_balance.balance_amount,
-          });
+        if (summaryResult.status === 'rejected') {
+          setError('Unable to load dashboard summary.');
         }
       } catch (err) {
         console.error(err);
-        setInvestments(emptyInvestments);
+        if (!cancelled) {
+          setSummary(emptySummary);
+          setCharts(emptyCharts);
+          setTrendSummary(emptyTrendSummary);
+          setInsights(emptyInsights);
+          setError('Unable to load dashboard data.');
+        }
       } finally {
-        setInvestmentsLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
-    if (token) {
-      loadInvestments();
-    }
-  }, [token]);
+    if (token) loadDashboard();
 
-  useEffect(() => {
-    const loadBudgets = async () => {
-      setBudgetsLoading(true);
-      try {
-        const params = selectedMonth === 0
-          ? { year: selectedYear }
-          : { month: selectedMonth, year: selectedYear };
-        const response = await api.get('/budgets', {
-          headers: getAuthHeaders(token),
-          params,
-        });
-        setBudgets(response.data);
-      } catch (err) {
-        console.error(err);
-        setBudgets([]);
-      } finally {
-        setBudgetsLoading(false);
-      }
+    return () => {
+      cancelled = true;
     };
+  }, [token, periodMode, selectedDate, selectedMonth, selectedYear]);
 
-    if (token) {
-      loadBudgets();
-    }
-  }, [token, selectedMonth, selectedYear]);
-
-  const maxCategoryTotal = useMemo(
-    () => Math.max(...summary.category_breakdown.map((item) => item.total), 0),
-    [summary.category_breakdown]
-  );
-
-  const selectedMonthLabel = selectedMonth === 0
-    ? 'All year'
-    : monthOptions.find((month) => month.value === Number(summary.month))?.label;
-  const hasNoTransactions = !loading && summary.transaction_count === 0;
-  const incomeExpenseData = [
-    { name: 'Income', value: charts.income_vs_expense.income },
-    { name: 'Expenses', value: charts.income_vs_expense.expenses },
+  const categoryBreakdown = charts.category_breakdown || [];
+  const trendData = trendSummary.trends || [];
+  const totalCategorySpend = categoryBreakdown.reduce((sum, item) => sum + Number(item.value || 0), 0);
+  const hasCategoryData = categoryBreakdown.length > 0 && totalCategorySpend > 0;
+  const hasTrendData = trendData.some((item) => Number(item.income || 0) || Number(item.expenses || 0));
+  const healthScore = Number(summary.financial_health_score || 0);
+  const healthRotation = Math.min(Math.max(healthScore, 0), 100) * 3.6;
+  const selectedDayDate = new Date(`${selectedDate}T00:00:00`);
+  const monthLabel = getMonthLabel(selectedMonth);
+  const periodLabel = periodMode === 'lifetime'
+    ? 'all time'
+    : periodMode === 'day'
+      ? selectedDayDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
+      : periodMode === 'year'
+        ? `all ${selectedYear}`
+        : `${monthLabel} ${selectedYear}`;
+  const comparisonMonth = periodMode === 'day' ? selectedDayDate.getMonth() + 1 : selectedMonth;
+  const comparisonYear = periodMode === 'day' ? selectedDayDate.getFullYear() : selectedYear;
+  const previousMonthLabel = periodMode === 'lifetime'
+    ? 'earlier data'
+    : periodMode === 'year'
+      ? `${selectedYear - 1}`
+      : getPreviousMonthLabel(comparisonMonth, comparisonYear);
+  const insightsList = insights.insights?.length ? insights.insights.slice(0, 4) : [
+    { title: 'No activity yet', message: 'Add or upload transactions to generate smart insights.' },
   ];
-  const hasIncomeExpenseData = incomeExpenseData.some((item) => item.value > 0);
-  const hasMonthlySpendingData = charts.monthly_spending.length > 0;
-  const totalBudgetLimit = budgets.reduce((sum, budget) => sum + Number(budget.monthly_limit || 0), 0);
-  const totalBudgetSpent = budgets.reduce((sum, budget) => sum + Number(budget.actual_spent || 0), 0);
-  const budgetUsagePercent = totalBudgetLimit ? Math.round((totalBudgetSpent / totalBudgetLimit) * 100) : 0;
-  const reachedBudgetMilestone = [99, 95, 90, 75, 50].find((milestone) => budgetUsagePercent >= milestone);
-  const nextBudgetMilestone = [50, 75, 90, 95, 99].find((milestone) => budgetUsagePercent < milestone);
-  const forecastExceedsBudget = selectedMonth !== 0 && totalBudgetLimit > 0 && forecast.predicted_amount > totalBudgetLimit;
-  const forecastPreviousSpending = Number(forecast.feature_summary?.previous_month_spending || 0);
-  const forecastPredictedAmount = Number(forecast.predicted_amount || 0);
-  const forecastDelta = forecastPredictedAmount - forecastPreviousSpending;
-  const forecastTrendClass = forecastPreviousSpending === 0
-    ? 'prediction-neutral'
-    : forecastDelta > 0
-      ? 'prediction-up'
-      : forecastDelta < 0
-        ? 'prediction-down'
-        : 'prediction-neutral';
-  const forecastTrendText = forecastPreviousSpending === 0
-    ? 'Waiting for previous month comparison'
-    : forecastDelta > 0
-      ? `${moneyFormatter.format(Math.abs(forecastDelta))} above previous month`
-      : forecastDelta < 0
-        ? `${moneyFormatter.format(Math.abs(forecastDelta))} below previous month`
-        : 'Same as previous month';
-  const saveBalance = async (event) => {
-    event.preventDefault();
-    setBalanceSaving(true);
-    try {
-      await api.post('/investments/balance', {
-        account_name: balanceDraft.account_name.trim() || 'Current balance',
-        balance_amount: Number(balanceDraft.balance_amount || 0),
-      }, {
-        headers: getAuthHeaders(token),
-      });
-      const response = await api.get('/investments/summary', {
-        headers: getAuthHeaders(token),
-      });
-      setInvestments(response.data);
-      if (response.data.account_balance) {
-        setBalanceDraft({
-          account_name: response.data.account_balance.account_name,
-          balance_amount: response.data.account_balance.balance_amount,
-        });
-      }
-      setEditingBalance(false);
-    } catch (err) {
-      console.error(err);
-      setError('Unable to update current balance.');
-    } finally {
-      setBalanceSaving(false);
-    }
-  };
+
+  const metrics = [
+    {
+      icon: 'income',
+      label: 'Total Income',
+      value: formatMoney(summary.total_income),
+      delta: formatDelta(trendSummary.income_change_percentage, previousMonthLabel, 'This month'),
+      tone: deltaClass(trendSummary.income_change_percentage),
+    },
+    {
+      icon: 'expenses',
+      label: 'Total Expenses',
+      value: formatMoney(summary.total_expenses),
+      delta: formatDelta(trendSummary.expense_change_percentage, previousMonthLabel, 'This month'),
+      tone: deltaClass(trendSummary.expense_change_percentage, true),
+    },
+    {
+      icon: 'savings',
+      label: 'Total Savings',
+      value: formatMoney(summary.total_savings),
+      delta: formatDelta(trendSummary.savings_change_percentage, previousMonthLabel, `${Number(summary.savings_rate || 0).toFixed(1)}% rate`),
+      tone: Number(summary.total_savings || 0) >= 0 ? 'positive' : 'negative',
+    },
+    {
+      icon: 'rate',
+      label: 'Savings Rate',
+      value: `${Number(summary.savings_rate || 0).toFixed(1)}%`,
+      helper: summary.savings_status || 'Calculated from cash flow',
+      tone: Number(summary.savings_rate || 0) >= 20 ? 'positive' : Number(summary.savings_rate || 0) < 0 ? 'negative' : 'neutral',
+    },
+    {
+      icon: 'transactions',
+      label: 'Transactions',
+      value: String(summary.transaction_count || 0),
+      helper: 'This period',
+      tone: 'neutral',
+      spark: false,
+    },
+    {
+      icon: 'category',
+      label: 'Top Category',
+      value: summary.top_category || 'No category',
+      helper: 'Highest spending group',
+      tone: 'neutral',
+      spark: false,
+    },
+    {
+      icon: 'merchant',
+      label: 'Top Merchant',
+      value: summary.top_merchant || 'No merchant',
+      helper: summary.top_merchant ? 'Highest spending merchant' : '',
+      tone: 'warning',
+      spark: false,
+    },
+    {
+      icon: 'balance',
+      label: 'Balance',
+      value: formatMoney(summary.account_balance || 0),
+      helper: 'Latest statement balance',
+      tone: Number(summary.account_balance || 0) >= 0 ? 'positive' : 'negative',
+      spark: false,
+    },
+  ];
 
   return (
     <div>
       <Navigation />
-      <div className="dashboard-container">
-        <div className="page-heading">
+      <main className="dashboard-container premium-dashboard">
+        <header className="premium-dashboard-header">
           <div>
-            <p className="eyebrow">Personal finance workspace</p>
-            <h1>Welcome back, {user?.name}</h1>
-            <p>Track your cash flow, spending mix, and savings position from your latest transactions.</p>
+            <p className="eyebrow">Financial health intelligence</p>
+            <h1>Good evening, {user?.name || 'Aiman Raza'}</h1>
+            <p>Here&apos;s your financial overview for {periodLabel}</p>
           </div>
-          <div className="dashboard-filters">
-            <label>
-              Month
-              <select value={selectedMonth} onChange={(event) => setSelectedMonth(Number(event.target.value))}>
-                {monthOptions.map((month) => (
-                  <option key={month.value} value={month.value}>
-                    {month.label}
-                  </option>
-                ))}
+          <div className="premium-header-actions">
+            <label className="premium-date-control period-mode-control">
+              <span className="control-glyph" aria-hidden="true">□</span>
+              <select aria-label="Select dashboard period type" value={periodMode} onChange={(event) => setPeriodMode(event.target.value)}>
+                <option value="month">Month</option>
+                <option value="year">Year</option>
+                <option value="day">Day</option>
+                <option value="lifetime">All</option>
               </select>
             </label>
-            <label>
-              Year
-              <select value={selectedYear} onChange={(event) => setSelectedYear(Number(event.target.value))}>
-                {yearOptions.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {periodMode === 'month' && (
+              <label className="premium-date-control month-period-control">
+                <select aria-label="Select dashboard month" value={selectedMonth} onChange={(event) => setSelectedMonth(Number(event.target.value))}>
+                  {monthOptions.filter((month) => month.value > 0).map((month) => (
+                    <option key={month.value} value={month.value}>
+                      {month.label} {selectedYear}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {(periodMode === 'month' || periodMode === 'year') && (
+              <label className="premium-year-control">
+                <select aria-label="Select dashboard year" value={selectedYear} onChange={(event) => setSelectedYear(Number(event.target.value))}>
+                  {yearOptions.map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {periodMode === 'day' && (
+              <label className="premium-date-control dashboard-day-control">
+                <input
+                  aria-label="Select dashboard day"
+                  type="date"
+                  value={selectedDate}
+                  onChange={(event) => setSelectedDate(event.target.value)}
+                />
+              </label>
+            )}
+            {periodMode === 'year' && (
+              <span className="premium-period-pill">Full year</span>
+            )}
+            {periodMode === 'lifetime' && (
+              <span className="premium-period-pill">All time</span>
+            )}
           </div>
-        </div>
+        </header>
 
         {error && <div className="surface-message error">{error}</div>}
 
-        <section className="dashboard-balance-hero">
-          <div
-            className="balance-hero-card"
-            onDoubleClick={() => setEditingBalance(true)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                setEditingBalance(true);
-              }
-            }}
-          >
-            <div className="balance-hero-copy">
-              <span>Current balance</span>
-              <strong>
-                {investmentsLoading ? 'Loading...' : (
-                  <AnimatedCurrency value={investments.account_balance?.balance_amount || 0} />
+        <div className="premium-dashboard-grid">
+          <section className="premium-dashboard-main">
+            <div className="premium-metrics-grid">
+              {metrics.map((metric) => (
+                <DashboardMetric key={metric.label} {...metric} loading={loading} />
+              ))}
+            </div>
+
+            <Link className="health-link-card dashboard-health-wide" to="/financial-health">
+              <section className="dashboard-card health-panel">
+                <div className="premium-panel-header">
+                  <div>
+                    <h2>Financial Health Score</h2>
+                    <p>{summary.financial_health_status || 'Needs Improvement'}</p>
+                  </div>
+                  <span>Details</span>
+                </div>
+                <div className="health-ring" style={{ '--health-deg': `${healthRotation}deg` }}>
+                  <strong>{healthScore}</strong>
+                  <span>/100</span>
+                </div>
+                <strong className="health-label">{summary.financial_health_status || 'Needs Improvement'}</strong>
+                <p>{summary.financial_health_reason || 'Your score improves as income, savings, and spending patterns become healthier.'}</p>
+                <div className="health-scale" style={{ '--health-score': `${Math.min(Math.max(healthScore, 0), 100)}%` }}>
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </section>
+            </Link>
+
+            <section className="premium-chart-grid">
+              <article className="dashboard-card spending-panel">
+                <div className="premium-panel-header">
+                  <div>
+                    <h2>Spending by Category</h2>
+                    <p>{formatMoney(totalCategorySpend)} total expenses</p>
+                  </div>
+                  <Link to="/categories">View breakdown</Link>
+                </div>
+                {!hasCategoryData ? (
+                  <div className="chart-empty-state">No expense categories found for this period.</div>
+                ) : (
+                  <div className="premium-donut-layout">
+                    <div className="premium-donut">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={categoryBreakdown}
+                            dataKey="value"
+                            nameKey="name"
+                            innerRadius="62%"
+                            outerRadius="88%"
+                            paddingAngle={1.5}
+                            stroke="none"
+                            strokeWidth={0}
+                            isAnimationActive={false}
+                          >
+                            {categoryBreakdown.map((entry, index) => (
+                              <Cell key={entry.name} fill={getCategoryChartColor(entry, index)} stroke="none" strokeWidth={0} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value) => formatMoney(value)} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="donut-center">
+                        <strong>{formatMoney(totalCategorySpend)}</strong>
+                        <span>Total Expenses</span>
+                      </div>
+                    </div>
+                    <div className="premium-category-list">
+                      {categoryBreakdown.slice(0, 8).map((entry, index) => {
+                        const percentage = totalCategorySpend ? ((Number(entry.value || 0) / totalCategorySpend) * 100).toFixed(1) : '0.0';
+                        return (
+                          <div className="premium-category-row" key={entry.name}>
+                            <span className="legend-dot" style={{ background: getCategoryChartColor(entry, index) }} />
+                            <span>{entry.name}</span>
+                            <strong>{formatCompactMoney(entry.value)}</strong>
+                            <em>{percentage}%</em>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
-              </strong>
-              <small>{investments.account_balance?.account_name || 'Double-click the card to enter balance'}</small>
-            </div>
-            {editingBalance ? (
-              <form className="balance-inline-form" onSubmit={saveBalance} onClick={(event) => event.stopPropagation()}>
-                <input
-                  value={balanceDraft.account_name}
-                  onChange={(event) => setBalanceDraft((current) => ({ ...current, account_name: event.target.value }))}
-                  placeholder="Account label"
-                  autoFocus
-                />
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={balanceDraft.balance_amount}
-                  onChange={(event) => setBalanceDraft((current) => ({ ...current, balance_amount: event.target.value }))}
-                  placeholder="Current balance"
-                />
-                <div className="balance-inline-actions">
-                  <button className="primary-button" type="submit" disabled={balanceSaving}>
-                    {balanceSaving ? 'Saving...' : 'Save'}
-                  </button>
-                  <button className="secondary-button" type="button" onClick={() => setEditingBalance(false)}>
-                    Cancel
-                  </button>
+              </article>
+
+              <article className="dashboard-card trend-panel">
+                <div className="premium-panel-header">
+                  <div>
+                    <h2>Income vs Expenses</h2>
+                    <p>{formatDelta(trendSummary.expense_change_percentage, previousMonthLabel, 'Monthly trend')}</p>
+                  </div>
                 </div>
-              </form>
-            ) : (
-              <button className="secondary-button" type="button" onClick={() => setEditingBalance(true)}>
-                Edit balance
-              </button>
-            )}
-          </div>
-        </section>
-        
-        <div className="dashboard-cards">
-          <div
-            className="metric-card balance-stat-card"
-            onDoubleClick={() => setEditingBalance(true)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                setEditingBalance(true);
-              }
-            }}
-          >
-            <span>Account balance</span>
-            {investmentsLoading ? <Skeleton rows={1} /> : (
-              <strong><AnimatedCurrency value={investments.account_balance?.balance_amount || 0} /></strong>
-            )}
-            {editingBalance ? (
-              <form className="balance-card-form" onSubmit={saveBalance} onClick={(event) => event.stopPropagation()}>
-                <input
-                  value={balanceDraft.account_name}
-                  onChange={(event) => setBalanceDraft((current) => ({ ...current, account_name: event.target.value }))}
-                  placeholder="Account label"
-                  autoFocus
-                />
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={balanceDraft.balance_amount}
-                  onChange={(event) => setBalanceDraft((current) => ({ ...current, balance_amount: event.target.value }))}
-                  placeholder="Current balance"
-                />
-                <div className="balance-card-actions">
-                  <button className="primary-button" type="submit" disabled={balanceSaving}>
-                    {balanceSaving ? 'Saving...' : 'Save'}
-                  </button>
-                  <button className="secondary-button" type="button" onClick={() => setEditingBalance(false)}>
-                    Cancel
-                  </button>
+                {!hasTrendData ? (
+                  <div className="chart-empty-state">No monthly trend data yet.</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={235}>
+                    <LineChart data={trendData} margin={{ top: 10, right: 8, left: -18, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.08)" />
+                      <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#8d969f' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: '#7D8781' }} axisLine={false} tickLine={false} tickFormatter={(value) => `INR ${Math.round(Number(value || 0) / 1000)}K`} />
+                      <Tooltip formatter={(value) => formatMoney(value)} />
+                      <Line type="monotone" dataKey="income" stroke="#a3e635" strokeWidth={2.5} dot={false} isAnimationActive={false} />
+                      <Line type="monotone" dataKey="expenses" stroke="#ff4d4d" strokeWidth={2.2} dot={false} isAnimationActive={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </article>
+            </section>
+
+          </section>
+
+          <aside className="premium-right-rail">
+            <section className="rail-section ai-panel">
+              <div className="premium-panel-header">
+                <div>
+                  <h2>AI Insights</h2>
+                  <p>Readable signals from your data.</p>
                 </div>
-              </form>
-            ) : (
-              <small>{investments.account_balance?.account_name || 'Double-click to enter balance'}</small>
-            )}
-          </div>
-          <div className={`metric-card ${Number(summary.total_income || 0) > 0 ? 'metric-positive' : 'metric-neutral'}`}>
-            <span>Total income</span>
-            {loading ? <Skeleton rows={1} /> : (
-              <strong><AnimatedCurrency value={summary.total_income} /></strong>
-            )}
-            <small>{loading ? 'Fetching period data' : `${summary.transaction_count} transactions recorded`}</small>
-          </div>
-          <div className={`metric-card ${Number(summary.total_expenses || 0) > 0 ? 'metric-negative' : 'metric-neutral'}`}>
-            <span>Total expenses</span>
-            {loading ? <Skeleton rows={1} /> : (
-              <strong><AnimatedCurrency value={summary.total_expenses} /></strong>
-            )}
-            <small>{summary.top_category ? `Top category: ${summary.top_category}` : 'No expense category yet'}</small>
-          </div>
-          <div className={`metric-card ${Number(summary.total_savings || 0) > 0 ? 'metric-positive' : Number(summary.total_savings || 0) < 0 ? 'metric-negative' : 'metric-neutral'}`}>
-            <span>Net savings</span>
-            {loading ? <Skeleton rows={1} /> : (
-              <strong><AnimatedCurrency value={summary.total_savings} /></strong>
-            )}
-            <small>{summary.savings_rate}% savings rate</small>
-          </div>
-          <div className={`metric-card ${totalBudgetLimit ? budgetUsagePercent >= 90 ? 'metric-negative' : budgetUsagePercent >= 50 ? 'metric-positive' : 'metric-neutral' : 'metric-neutral'}`}>
-            <span>Budget usage</span>
-            {budgetsLoading ? <Skeleton rows={1} /> : (
-              <strong>
-                {totalBudgetLimit ? (
-                  <AnimateNumber
-                    value={budgetUsagePercent}
-                    suffix="%"
-                    locale="en-IN"
-                    format={animatedPercentFormat}
-                  />
-                ) : 'No budget'}
-              </strong>
-            )}
-            <small>
-              {totalBudgetLimit
-                ? `${moneyFormatter.format(totalBudgetSpent)} of ${moneyFormatter.format(totalBudgetLimit)} used. ${
-                  reachedBudgetMilestone ? `${reachedBudgetMilestone}% milestone reached.` : `Next milestone: ${nextBudgetMilestone}%.`
-                }`
-                : 'Create budgets to track progress'}
-            </small>
-          </div>
-          <div className={`metric-card prediction-card ${forecastTrendClass} ${forecastExceedsBudget ? 'metric-card-warning' : ''}`}>
-            <span>Next month forecast</span>
-            {forecastLoading ? <Skeleton rows={1} /> : (
-              <strong><AnimatedCurrency value={forecast.predicted_amount || 0} /></strong>
-            )}
-            <small>
-              {forecast.forecast_month ? `${forecast.forecast_month} predicted expense` : 'Add more data for prediction'}
-              {forecast.forecast_month && <em>{forecastTrendText}</em>}
-            </small>
-          </div>
-          <div className={`metric-card ${Number(investments.total_pnl_amount || 0) > 0 ? 'metric-positive' : Number(investments.total_pnl_amount || 0) < 0 ? 'metric-negative' : 'metric-neutral'}`}>
-            <span>Investments</span>
-            {investmentsLoading ? <Skeleton rows={1} /> : (
-              <strong><AnimatedCurrency value={investments.current_portfolio_value || 0} /></strong>
-            )}
-            <small>
-              P/L <AnimatedCurrency value={investments.total_pnl_amount || 0} className="inline-animate-number" /> ({investments.total_pnl_percent || 0}%)
-            </small>
-          </div>
-          <div className={`metric-card ${Number(investments.net_worth || 0) > 0 ? 'metric-positive' : Number(investments.net_worth || 0) < 0 ? 'metric-negative' : 'metric-neutral'}`}>
-            <span>Net worth estimate</span>
-            {investmentsLoading ? <Skeleton rows={1} /> : (
-              <strong><AnimatedCurrency value={investments.net_worth || 0} /></strong>
-            )}
-            <small>Balance + tracked portfolio value</small>
-          </div>
+                <Link to="/insights">View all</Link>
+              </div>
+              <div className="premium-insights-list">
+                {insightsList.slice(0, 4).map((insight, index) => (
+                  <InsightCard insight={insight} index={index} key={`${insight.title}-${index}`} />
+                ))}
+              </div>
+            </section>
+
+            <section className="rail-section">
+              <div className="premium-panel-header">
+                <div>
+                  <h2>Top Merchants</h2>
+                  <p>Highest spending merchants this period.</p>
+                </div>
+              </div>
+              <div className="premium-category-list compact">
+                {(merchantAnalytics.top_merchants || []).length === 0 ? (
+                  <div className="chart-empty-state small">No merchant spending yet.</div>
+                ) : merchantAnalytics.top_merchants.slice(0, 5).map((merchant, index) => (
+                  <div className="premium-category-row" key={merchant.merchant_name}>
+                    <span className="legend-dot" style={{ background: index === 0 ? '#a3e635' : '#8d969f' }} />
+                    <span>{merchant.merchant_name}</span>
+                    <strong>{formatCompactMoney(merchant.total_spent)}</strong>
+                    <em>{merchant.frequency}x</em>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rail-section">
+              <div className="premium-panel-header">
+                <div>
+                  <h2>Subscription Analysis</h2>
+                  <p>
+                    {subscriptionAnalytics.subscription_count || 0} active -
+                    {' '}{formatMoney(subscriptionAnalytics.total_monthly_cost || 0)} / month
+                  </p>
+                </div>
+              </div>
+              <div className="premium-category-list compact">
+                {(subscriptionAnalytics.subscriptions || []).length === 0 ? (
+                  <div className="chart-empty-state small">No Subscriptions category payments found.</div>
+                ) : subscriptionAnalytics.subscriptions.slice(0, 4).map((subscription) => (
+                  <div className="premium-category-row" key={subscription.merchant_name}>
+                    <span className="legend-dot" style={{ background: '#5eead4' }} />
+                    <span>{subscription.merchant_name}</span>
+                    <strong>{formatCompactMoney(subscription.monthly_cost)}</strong>
+                    <em>{Math.round((subscription.confidence || 0) * 100)}%</em>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </aside>
         </div>
-
-        {forecastExceedsBudget && (
-          <div className="surface-message error dashboard-empty">
-            Forecast warning: next month predicted expense is above your selected monthly budget total of {moneyFormatter.format(totalBudgetLimit)}.
-          </div>
-        )}
-
-        {hasNoTransactions && (
-          <div className="empty-state dashboard-empty">
-            No transactions found for {selectedMonthLabel} {summary.year}. Add income or expense records to populate this summary.
-          </div>
-        )}
-
-        <section className="analytics-section">
-          <div className="section-heading">
-            <div>
-              <h2>Expense Breakdown</h2>
-              <p>Category totals for {selectedMonthLabel} {summary.year}.</p>
-            </div>
-          </div>
-
-          <div className="breakdown-list">
-            {loading && <Skeleton rows={4} />}
-
-            {!loading && summary.category_breakdown.length === 0 && (
-              <div className="empty-state">Add expense transactions to see category analytics.</div>
-            )}
-
-              {!loading && summary.category_breakdown.map((item, index) => {
-                const width = maxCategoryTotal ? `${(item.total / maxCategoryTotal) * 100}%` : '0%';
-                const categoryColor = getCategoryChartColor(item.category_name, index);
-                return (
-                  <div className="breakdown-row" key={`${item.category_id}-${item.category_name}`}>
-                  <div className="breakdown-label">
-                    <span>{item.category_name}</span>
-                    <strong>{moneyFormatter.format(item.total)}</strong>
-                  </div>
-                  <div className="breakdown-track">
-                    <div
-                      className="breakdown-bar"
-                      style={{
-                        width,
-                        background: categoryColor,
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="charts-grid">
-          <div className="chart-panel category-donut-panel">
-            <div className="section-heading">
-              <div>
-                <h2>Total Expenses</h2>
-                <p>Expense share by category.</p>
-              </div>
-            </div>
-            <div className="chart-frame">
-              {chartsLoading ? (
-                <ChartEmptyState>Loading chart...</ChartEmptyState>
-              ) : charts.category_breakdown.length === 0 ? (
-                <ChartEmptyState>Add expenses to see category share.</ChartEmptyState>
-              ) : (
-                <div className="category-donut-layout">
-                  <div className="category-donut-chart">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={charts.category_breakdown}
-                          dataKey="value"
-                          nameKey="name"
-                          innerRadius="54%"
-                          outerRadius="78%"
-                          paddingAngle={1.5}
-                        >
-                          {charts.category_breakdown.map((entry, index) => (
-                            <Cell key={entry.name} fill={getCategoryChartColor(entry.name, index)} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={currencyTooltip} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="category-donut-legend">
-                    {charts.category_breakdown.map((entry, index) => {
-                      const total = charts.category_breakdown.reduce((sum, item) => sum + Number(item.value || 0), 0);
-                      const percentage = total ? ((Number(entry.value || 0) / total) * 100).toFixed(1) : '0.0';
-                      return (
-                        <div className="category-legend-row" key={entry.name}>
-                          <span className="legend-dot" style={{ background: getCategoryChartColor(entry.name, index) }} />
-                          <span>{entry.name}</span>
-                          <strong>{moneyFormatter.format(entry.value)}</strong>
-                          <em>{percentage}%</em>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="chart-panel">
-            <div className="section-heading">
-              <div>
-                <h2>Category Bar Graph</h2>
-                <p>Expense totals by category.</p>
-              </div>
-            </div>
-            <div className="chart-frame">
-              {chartsLoading ? (
-                <ChartEmptyState>Loading chart...</ChartEmptyState>
-              ) : charts.category_breakdown.length === 0 ? (
-                <ChartEmptyState>Add expenses to compare categories.</ChartEmptyState>
-              ) : (
-                <ResponsiveContainer width="100%" height={360}>
-                  <BarChart data={charts.category_breakdown}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(value) => `${value}`} tick={{ fontSize: 12 }} />
-                    <Tooltip formatter={currencyTooltip} />
-                    <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                      {charts.category_breakdown.map((entry, index) => (
-                        <Cell key={entry.name} fill={getCategoryChartColor(entry.name, index)} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </div>
-
-          <div className="chart-panel">
-            <div className="section-heading">
-              <div>
-                <h2>Income vs Expense</h2>
-                <p>Cash flow comparison for the selected period.</p>
-              </div>
-            </div>
-            <div className="chart-frame">
-              {chartsLoading ? (
-                <ChartEmptyState>Loading chart...</ChartEmptyState>
-              ) : !hasIncomeExpenseData ? (
-                <ChartEmptyState>Add income or expenses to compare cash flow.</ChartEmptyState>
-              ) : (
-                <ResponsiveContainer width="100%" height={340}>
-                  <BarChart data={incomeExpenseData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip formatter={currencyTooltip} />
-                    <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                      {incomeExpenseData.map((entry, index) => (
-                        <Cell key={entry.name} fill={incomeExpenseColors[index % incomeExpenseColors.length]} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </div>
-
-          <div className="chart-panel chart-panel-wide">
-            <div className="section-heading">
-              <div>
-                <h2>Monthly Spending Line Chart</h2>
-                <p>Expense trend across {selectedYear}.</p>
-              </div>
-            </div>
-            <div className="chart-frame">
-              {chartsLoading ? (
-                <ChartEmptyState>Loading chart...</ChartEmptyState>
-              ) : !hasMonthlySpendingData ? (
-                <ChartEmptyState>Monthly spending data is not available yet.</ChartEmptyState>
-              ) : (
-                <ResponsiveContainer width="100%" height={340}>
-                  <LineChart data={charts.monthly_spending}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip formatter={currencyTooltip} />
-                    <Line type="monotone" dataKey="expenses" stroke={lineChartColor} strokeWidth={3} dot={{ r: 3, fill: lineChartColor }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </div>
-        </section>
-      </div>
+      </main>
     </div>
   );
 };

@@ -4,7 +4,8 @@ import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
 import '../styles/UploadStatement.css';
 
-const INCOME_CATEGORY_NAMES = ['Refunds', 'Investments', 'Salary', 'Shopping', 'Other'];
+const INCOME_CATEGORY_NAMES = ['Refunds', 'Friends', 'Salary', 'Shopping', 'Other'];
+const SAVINGS_CATEGORY_NAMES = ['Investments'];
 
 const moneyFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
@@ -20,6 +21,7 @@ const UploadStatement = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [history, setHistory] = useState([]);
+  const [importProfiles, setImportProfiles] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -31,8 +33,12 @@ const UploadStatement = () => {
 
   const loadHistory = async () => {
     try {
-      const response = await api.get('/uploads/history', { headers });
-      setHistory(response.data);
+      const [historyResponse, profileResponse] = await Promise.all([
+        api.get('/uploads/history', { headers }),
+        api.get('/import-profiles', { headers }),
+      ]);
+      setHistory(historyResponse.data);
+      setImportProfiles(profileResponse.data);
     } catch (err) {
       console.error(err);
     }
@@ -43,11 +49,13 @@ const UploadStatement = () => {
 
     const loadInitialHistory = async () => {
       try {
-        const response = await api.get('/uploads/history', {
-          headers: getAuthHeaders(token),
-        });
+        const [response, profileResponse] = await Promise.all([
+          api.get('/uploads/history', { headers: getAuthHeaders(token) }),
+          api.get('/import-profiles', { headers: getAuthHeaders(token) }),
+        ]);
         if (!cancelled) {
           setHistory(response.data);
+          setImportProfiles(profileResponse.data);
         }
       } catch (err) {
         console.error(err);
@@ -127,6 +135,7 @@ const UploadStatement = () => {
         file_name: preview.file_name,
         file_size: preview.file_size,
         file_type: preview.file_type,
+        column_mapping: preview.column_mapping || {},
         total_rows: preview.total_rows,
         failed_rows: preview.failed_rows,
         rows: preview.rows,
@@ -181,8 +190,9 @@ const UploadStatement = () => {
           ? {
               ...row,
               category_id: categoryId ? Number(categoryId) : null,
-              category: selectedCategory?.name || 'Needs Review',
-              category_name: selectedCategory?.name || 'Needs Review',
+              category: selectedCategory?.name || 'Uncategorized',
+              category_name: selectedCategory?.name || 'Uncategorized',
+              transaction_type: selectedCategory?.name === 'Investments' ? 'savings' : row.transaction_type,
               category_confidence: categoryId ? 1 : row.category_confidence,
               categorization_method: categoryId ? 'manual' : row.categorization_method,
             }
@@ -202,9 +212,13 @@ const UploadStatement = () => {
     needs_review: 'Needs Review',
   }[method] || 'Needs Review');
   const getCategoriesForType = (transactionType) => (
-    transactionType === 'income'
-      ? categories.filter((category) => INCOME_CATEGORY_NAMES.includes(category.name))
-      : categories.filter((category) => category.name !== 'Needs Review')
+    transactionType === 'savings'
+      ? categories.filter((category) => SAVINGS_CATEGORY_NAMES.includes(category.name))
+      : (
+        transactionType === 'income'
+          ? categories.filter((category) => INCOME_CATEGORY_NAMES.includes(category.name))
+          : categories
+      )
   );
 
   return (
@@ -226,15 +240,26 @@ const UploadStatement = () => {
           <div className="upload-panel">
             <h2>Select statement</h2>
             <form onSubmit={handlePreview} className="upload-form">
-              <label>
-                Statement file
+              <label className="statement-dropzone">
                 <input type="file" accept=".csv,.xlsx,.xls,.pdf" onChange={handleFileChange} />
+                <span className="dropzone-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12 3v12" />
+                    <path d="m7 8 5-5 5 5" />
+                    <path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
+                  </svg>
+                </span>
+                <span className="dropzone-title">Drag and drop your statement here</span>
+                <span className="dropzone-or">or</span>
+                <span className="dropzone-button">Choose file</span>
+                <span className="dropzone-file-name">
+                  {selectedFile ? selectedFile.name : 'No file selected'}
+                </span>
               </label>
               <button type="submit" className="primary-button" disabled={loadingPreview}>
                 {loadingPreview ? 'Reading file...' : 'Show upload preview'}
               </button>
             </form>
-            <p className="upload-hint">CSV, Excel, and PDF bank statements are supported. PDF tables are extracted across pages before preview.</p>
           </div>
 
           <div className="upload-panel">
@@ -260,6 +285,25 @@ const UploadStatement = () => {
                         {deletingUploadId === item.id ? 'Deleting...' : 'Delete'}
                       </button>
                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="upload-panel import-profile-panel">
+            <h2>Import profiles</h2>
+            {importProfiles.length === 0 ? (
+              <div className="empty-state">Profiles are created after confirmed CSV or Excel uploads.</div>
+            ) : (
+              <div className="history-list">
+                {importProfiles.slice(0, 4).map((profile) => (
+                  <div className="history-item" key={profile.id}>
+                    <div>
+                      <strong>{profile.profile_name}</strong>
+                      <span>{profile.bank_name || 'Bank format'} · {Math.round((profile.confidence_score || 0) * 100)}% confidence</span>
+                    </div>
+                    <b>{profile.usage_count} uses</b>
                   </div>
                 ))}
               </div>
@@ -298,6 +342,10 @@ const UploadStatement = () => {
               <div>
                 <span>Failed rows</span>
                 <strong>{preview.failed_rows}</strong>
+              </div>
+              <div>
+                <span>Import confidence</span>
+                <strong>{Math.round((preview.import_confidence || 0) * 100)}%</strong>
               </div>
             </div>
 

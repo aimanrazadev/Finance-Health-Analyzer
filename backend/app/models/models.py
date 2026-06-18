@@ -1,14 +1,13 @@
-"""
-SQLAlchemy ORM models for the application
-"""
+"""SQLAlchemy ORM models for the focused Finance Health Analyzer."""
 
-from sqlalchemy import Column, Integer, String, DateTime, Float, Boolean, Text
+from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, Text
 from sqlalchemy.sql import func
+
 from app.db.database import Base
 
 
 class User(Base):
-    """User model - stores user account information"""
+    """Registered account used by auth and per-user data isolation."""
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -19,18 +18,16 @@ class User(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     is_active = Column(Boolean, default=True)
 
-    def __repr__(self):
-        return f"<User(id={self.id}, email={self.email}, name={self.name})>"
-
 
 class Transaction(Base):
-    """Transaction model - stores financial transactions"""
+    """Clean transaction ledger used by categorization, analytics, and AI advice."""
     __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
     amount = Column(Float, nullable=False)
     category_id = Column(Integer, nullable=True, index=True)
+    merchant_id = Column(Integer, nullable=True, index=True)
     uploaded_file_id = Column(Integer, nullable=True, index=True)
     description = Column(String(255), nullable=False)
     merchant = Column(String(150), nullable=True)
@@ -39,155 +36,122 @@ class Transaction(Base):
     withdrawal_amount = Column(Float, nullable=True)
     deposit_amount = Column(Float, nullable=True)
     balance = Column(Float, nullable=True)
-    transaction_type = Column(String(50), nullable=False)  # 'income', 'expense'
+    transaction_type = Column(String(50), nullable=False)
     date = Column(DateTime, nullable=False)
     payment_method = Column(String(100), nullable=True)
     source = Column(String(50), default="manual")
-    is_recurring = Column(Boolean, default=False)
+    friend_id = Column(Integer, nullable=True, index=True)
+    is_friend_transaction = Column(Boolean, default=False)
     category_confidence = Column(Float, default=0.30)
     categorization_method = Column(String(50), default="needs_review")
-    friend_id = Column(Integer, nullable=True, index=True)
-    debt_type = Column(String(50), nullable=True)
-    debt_direction = Column(String(50), nullable=True)
-    is_friend_transaction = Column(Boolean, default=False)
     is_needs_review = Column(Boolean, default=False)
     review_status = Column(String(50), default="approved")
-    review_reason = Column(String(255), nullable=True)
-    original_category_id = Column(Integer, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    def __repr__(self):
-        return f"<Transaction(id={self.id}, user_id={self.user_id}, amount={self.amount})>"
-
 
 class Category(Base):
-    """Category model - expense categories"""
+    """Transaction category catalog used across badges, charts, and ML labels."""
     __tablename__ = "categories"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
-    color = Column(String(7), nullable=True)  # hex color
-    icon = Column(String(50), nullable=True)  # icon name
-
-    def __repr__(self):
-        return f"<Category(id={self.id}, name={self.name})>"
+    color = Column(String(7), nullable=True)
+    icon = Column(String(50), nullable=True)
 
 
-class Budget(Base):
-    """Budget model - user-defined spending budgets"""
-    __tablename__ = "budgets"
+class ImportProfile(Base):
+    """Remembered bank statement column mappings for repeat uploads."""
+    __tablename__ = "import_profiles"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
-    category_id = Column(Integer, nullable=False)
-    amount = Column(Float, nullable=False)
-    period = Column(String(50), nullable=False)  # 'monthly', 'yearly'
-    alert_threshold = Column(Float, default=80.0)  # percentage
+    profile_name = Column(String(150), nullable=False)
+    bank_name = Column(String(150), nullable=True, index=True)
+    file_type = Column(String(50), nullable=True)
+    header_signature = Column(String(500), nullable=False, index=True)
+    column_mapping = Column(Text, nullable=False)
+    preferences = Column(Text, nullable=True)
+    confidence_score = Column(Float, default=0.0)
+    usage_count = Column(Integer, default=0)
+    last_used_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-    is_active = Column(Boolean, default=True)
-
-    def __repr__(self):
-        return f"<Budget(id={self.id}, user_id={self.user_id})>"
 
 
-class SavingsGoal(Base):
-    """Savings Goal model - user saving targets"""
-    __tablename__ = "savings_goals"
+class Merchant(Base):
+    """Canonical merchant directory built from extracted transaction merchants."""
+    __tablename__ = "merchants"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
-    name = Column(String(100), nullable=False)
-    target_amount = Column(Float, nullable=False)
-    current_amount = Column(Float, default=0.0)
-    monthly_contribution = Column(Float, default=0.0)
-    target_date = Column(DateTime, nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-    status = Column(String(50), default="active")  # 'active', 'completed', 'paused'
-
-    def __repr__(self):
-        return f"<SavingsGoal(id={self.id}, user_id={self.user_id}, name={self.name})>"
-
-
-class AccountBalance(Base):
-    """Manual current bank/cash balance snapshot used for net-worth and spending analysis."""
-    __tablename__ = "account_balances"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    account_name = Column(String(120), default="Current balance")
-    balance_amount = Column(Float, nullable=False)
-    currency = Column(String(10), default="INR")
-    recorded_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-
-class InvestmentHolding(Base):
-    """Manual stock/mutual-fund holding tracked against public market quotes."""
-    __tablename__ = "investment_holdings"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    asset_name = Column(String(150), nullable=False)
-    symbol = Column(String(40), nullable=False, index=True)
-    exchange = Column(String(30), default="NSE")
-    quantity = Column(Float, nullable=False)
-    average_buy_price = Column(Float, nullable=False)
-    invested_amount = Column(Float, nullable=False)
-    current_price = Column(Float, nullable=True)
-    current_value = Column(Float, default=0.0)
-    pnl_amount = Column(Float, default=0.0)
-    pnl_percent = Column(Float, default=0.0)
-    source = Column(String(50), default="manual")
-    last_price_at = Column(DateTime, nullable=True)
+    canonical_name = Column(String(150), nullable=False)
+    normalized_name = Column(String(150), nullable=False, index=True)
+    aliases = Column(Text, nullable=True)
+    transaction_count = Column(Integer, default=0)
+    total_spent = Column(Float, default=0.0)
+    last_seen_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
 class AiInsight(Base):
-    """AI Insights model - AI-generated spending insights"""
+    """Stored AI-generated financial advice for a user."""
     __tablename__ = "ai_insights"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
     insight_text = Column(Text, nullable=False)
-    insight_type = Column(String(50), nullable=False)  # 'spending', 'savings', 'budget', etc.
+    insight_type = Column(String(50), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
     is_read = Column(Boolean, default=False)
 
-    def __repr__(self):
-        return f"<AiInsight(id={self.id}, user_id={self.user_id})>"
 
-
-class ForecastResult(Base):
-    """Forecast model - ML-based expense forecasts"""
-    __tablename__ = "forecast_results"
+class AdvisorChat(Base):
+    """One AI Financial Advisor conversation for a user."""
+    __tablename__ = "advisor_chats"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
-    category_id = Column(Integer, nullable=True)
-    forecast_month = Column(String(50), nullable=False)  # 'YYYY-MM'
-    predicted_amount = Column(Float, nullable=False)
-    confidence_lower = Column(Float, nullable=False)
-    confidence_upper = Column(Float, nullable=False)
-    model_used = Column(String(50), nullable=False)  # 'linear', 'random_forest', etc.
-    accuracy = Column(Float, nullable=True)
+    title = Column(String(180), nullable=False, default="New advisor chat")
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class AdvisorMessage(Base):
+    """Stored user or assistant message inside an advisor chat."""
+    __tablename__ = "advisor_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    chat_id = Column(Integer, nullable=False, index=True)
+    role = Column(String(30), nullable=False)
+    content = Column(Text, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
-    def __repr__(self):
-        return f"<ForecastResult(id={self.id}, category_id={self.category_id})>"
+
+class AdvisorRecommendation(Base):
+    """Actionable AI suggestion extracted from an advisor response."""
+    __tablename__ = "advisor_recommendations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False, index=True)
+    chat_id = Column(Integer, nullable=False, index=True)
+    title = Column(String(180), nullable=False)
+    description = Column(Text, nullable=True)
+    estimated_savings = Column(Float, default=0)
+    category = Column(String(100), nullable=True)
+    status = Column(String(30), default="pending")
+    created_at = Column(DateTime, server_default=func.now())
 
 
 class FinancialScore(Base):
-    """Financial Health Score model"""
+    """Financial health score snapshots generated from transaction analytics."""
     __tablename__ = "financial_scores"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
-    overall_score = Column(Integer, nullable=False)  # 0-100
+    overall_score = Column(Integer, nullable=False)
     savings_score = Column(Integer, nullable=False)
     budget_score = Column(Integer, nullable=False)
     stability_score = Column(Integer, nullable=False)
@@ -196,44 +160,26 @@ class FinancialScore(Base):
     emergency_fund_score = Column(Integer, nullable=False)
     calculated_at = Column(DateTime, server_default=func.now())
 
-    def __repr__(self):
-        return f"<FinancialScore(id={self.id}, user_id={self.user_id}, score={self.overall_score})>"
 
-
-class ChatHistory(Base):
-    """Chat History model - AI chatbot conversations"""
-    __tablename__ = "chat_history"
+class Subscription(Base):
+    """Detected recurring subscription from categorized transaction history."""
+    __tablename__ = "subscriptions"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
-    user_message = Column(Text, nullable=False)
-    assistant_response = Column(Text, nullable=False)
-    intent = Column(String(100), nullable=True)
+    merchant_name = Column(String(150), nullable=False)
+    category_id = Column(Integer, nullable=True, index=True)
+    amount = Column(Float, nullable=False, default=0)
+    billing_period = Column(String(50), default="monthly")
+    next_expected_payment = Column(DateTime, nullable=True)
+    confidence = Column(Float, default=0.75)
+    status = Column(String(50), default="active")
     created_at = Column(DateTime, server_default=func.now())
-
-    def __repr__(self):
-        return f"<ChatHistory(id={self.id}, user_id={self.user_id})>"
-
-
-class AiActionAudit(Base):
-    """Audit log for AI assistant tool calls, previews, confirmations, and failures."""
-    __tablename__ = "ai_action_audit"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    action_type = Column(String(100), nullable=False)
-    status = Column(String(50), nullable=False, default="previewed")
-    request_text = Column(Text, nullable=False)
-    preview_payload = Column(Text, nullable=True)
-    result_payload = Column(Text, nullable=True)
-    error_message = Column(Text, nullable=True)
-    requires_confirmation = Column(Boolean, default=True)
-    confirmed_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
 class UploadedFile(Base):
-    """Uploaded Files model - tracks bank statement uploads"""
+    """Bank statement upload audit record."""
     __tablename__ = "uploaded_files"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -249,29 +195,23 @@ class UploadedFile(Base):
     failed_rows = Column(Integer, default=0)
     upload_date = Column(DateTime, server_default=func.now())
 
-    def __repr__(self):
-        return f"<UploadedFile(id={self.id}, user_id={self.user_id}, filename={self.filename})>"
-
 
 class UserLearning(Base):
-    """User Learning model - stores merchant-category associations learned from user corrections"""
+    """Legacy merchant-category learning record used by categorization fallback."""
     __tablename__ = "user_learning"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
     merchant = Column(String(150), nullable=False)
     category_id = Column(Integer, nullable=False)
-    frequency = Column(Integer, default=1)  # how many times user confirmed this
-    confidence = Column(Float, nullable=True)  # AI confidence when category was suggested
+    frequency = Column(Integer, default=1)
+    confidence = Column(Float, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    def __repr__(self):
-        return f"<UserLearning(id={self.id}, merchant={self.merchant})>"
-
 
 class CategoryCorrection(Base):
-    """Category correction history - stores user overrides for transaction categories"""
+    """History of user corrections used as labeled ML training data."""
     __tablename__ = "category_corrections"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -287,9 +227,6 @@ class CategoryCorrection(Base):
     old_method = Column(String(50), nullable=True)
     correction_source = Column(String(50), default="manual")
     created_at = Column(DateTime, server_default=func.now())
-
-    def __repr__(self):
-        return f"<CategoryCorrection(id={self.id}, transaction_id={self.transaction_id})>"
 
 
 class CategoryLearningRule(Base):
@@ -310,109 +247,47 @@ class CategoryLearningRule(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    def __repr__(self):
-        return f"<CategoryLearningRule(id={self.id}, merchant={self.normalized_merchant})>"
-
-
-class SuggestedBudget(Base):
-    """Auto-generated category budget suggestion that users can override with a real Budget."""
-    __tablename__ = "suggested_budgets"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    category_id = Column(Integer, nullable=False, index=True)
-    period = Column(String(50), nullable=False, index=True)
-    average_spend = Column(Float, nullable=False, default=0.0)
-    suggested_amount = Column(Float, nullable=False, default=0.0)
-    source = Column(String(50), default="auto_average")
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
 
 class Friend(Base):
-    """Friend/person tracked for lending, borrowing, and repayment balances."""
+    """Saved person/contact used to group friend-related transactions."""
     __tablename__ = "friends"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
     name = Column(String(150), nullable=False)
     normalized_name = Column(String(150), nullable=False, index=True)
+    email = Column(String(150), nullable=True)
     phone = Column(String(50), nullable=True)
-    note = Column(Text, nullable=True)
-    is_archived = Column(Boolean, default=False)
+    notes = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-
-class Debt(Base):
-    """Debt ledger entry attached to a friend and optionally a bank transaction."""
-    __tablename__ = "debts"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    friend_id = Column(Integer, nullable=False, index=True)
-    transaction_id = Column(Integer, nullable=True, index=True)
-    amount = Column(Float, nullable=False)
-    debt_type = Column(String(50), nullable=False)
-    direction = Column(String(50), nullable=False)
-    status = Column(String(50), default="unpaid")
-    note = Column(Text, nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-
-class FriendSettlement(Base):
-    """Audit record for settlement actions that zero or adjust a friend's balance."""
-    __tablename__ = "friend_settlements"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    friend_id = Column(Integer, nullable=False, index=True)
-    amount = Column(Float, nullable=False)
-    settlement_type = Column(String(50), nullable=False)
-    note = Column(Text, nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
 
 
 class FriendTransactionLink(Base):
-    """Join/audit table linking bank transactions to friend debt records."""
+    """Stable link between a friend and a matched bank transaction."""
     __tablename__ = "friend_transaction_links"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
     friend_id = Column(Integer, nullable=False, index=True)
     transaction_id = Column(Integer, nullable=False, index=True)
-    debt_id = Column(Integer, nullable=True, index=True)
+    amount = Column(Float, nullable=True)
+    transaction_type = Column(String(50), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
 
 class FriendMerchantLearning(Base):
-    """User-specific mapping from transaction narration patterns to friends."""
+    """Merchant/person text learned from transactions linked to a friend."""
     __tablename__ = "friend_merchant_learning"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
     friend_id = Column(Integer, nullable=False, index=True)
-    raw_transaction_text = Column(Text, nullable=False)
-    normalized_text = Column(String(255), nullable=False, index=True)
+    merchant_pattern = Column(String(150), nullable=False)
+    normalized_merchant = Column(String(150), nullable=False, index=True)
     confidence = Column(Float, default=0.95)
+    usage_count = Column(Integer, default=1)
+    last_used_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-
-class RecurringTransaction(Base):
-    """Recurring Transactions model - for recurring bills/income"""
-    __tablename__ = "recurring_transactions"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    description = Column(String(255), nullable=False)
-    amount = Column(Float, nullable=False)
-    category_id = Column(Integer, nullable=True)
-    recurrence = Column(String(50), nullable=False)  # 'daily', 'weekly', 'monthly', 'yearly'
-    next_date = Column(DateTime, nullable=False)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, server_default=func.now())
-
-    def __repr__(self):
-        return f"<RecurringTransaction(id={self.id}, user_id={self.user_id})>"

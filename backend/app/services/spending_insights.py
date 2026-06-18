@@ -6,9 +6,7 @@ from sqlalchemy import extract, func
 from sqlalchemy.orm import Session
 
 from app.ai.llm_client import LLMClient
-from app.models.models import AiInsight, Budget, Category, Transaction
-
-SUBSCRIPTION_KEYWORDS = ["subscription", "netflix", "spotify", "youtube", "prime", "apple music"]
+from app.models.models import AiInsight, Category, Transaction
 
 
 def previous_month(month: int, year: int) -> tuple[int, int]:
@@ -83,27 +81,25 @@ def get_category_totals(db: Session, user_id: int, month: int, year: int) -> lis
 def detect_subscription_transactions(db: Session, user_id: int, month: int, year: int) -> list[dict[str, Any]]:
     start_date, end_date = month_bounds(month, year)
     transactions = (
-        db.query(Transaction)
+        db.query(Transaction, Category)
+        .join(Category, Transaction.category_id == Category.id)
         .filter(
             Transaction.user_id == user_id,
             Transaction.transaction_type == "expense",
             Transaction.date >= start_date,
             Transaction.date <= end_date,
+            func.lower(Category.name) == "subscriptions",
         )
         .all()
     )
-    matches = []
-    for transaction in transactions:
-        text = f"{transaction.description or ''} {transaction.merchant or ''}".lower()
-        if any(keyword in text for keyword in SUBSCRIPTION_KEYWORDS):
-            matches.append(
-                {
-                    "description": transaction.description,
-                    "merchant": transaction.merchant,
-                    "amount": float(transaction.amount),
-                }
-            )
-    return matches
+    return [
+        {
+            "description": transaction.description,
+            "merchant": transaction.merchant,
+            "amount": float(transaction.amount),
+        }
+        for transaction, _category in transactions
+    ]
 
 
 def detect_top_merchant(db: Session, user_id: int, month: int, year: int) -> dict[str, Any] | None:
@@ -124,38 +120,6 @@ def detect_top_merchant(db: Session, user_id: int, month: int, year: int) -> dic
     if not row:
         return None
     return {"merchant": row.merchant, "total": float(row.total or 0)}
-
-
-def detect_budget_variances(db: Session, user_id: int, month: int, year: int) -> list[dict[str, Any]]:
-    start_date, end_date = month_bounds(month, year)
-    rows = (
-        db.query(Budget, Category)
-        .join(Category, Budget.category_id == Category.id)
-        .filter(Budget.user_id == user_id, Budget.period == f"{year:04d}-{month:02d}", Budget.is_active == True)  # noqa: E712
-        .all()
-    )
-    variances = []
-    for budget, category in rows:
-        spent = float(
-            db.query(func.coalesce(func.sum(Transaction.amount), 0))
-            .filter(
-                Transaction.user_id == user_id,
-                Transaction.category_id == budget.category_id,
-                Transaction.transaction_type == "expense",
-                Transaction.date >= start_date,
-                Transaction.date <= end_date,
-            )
-            .scalar()
-            or 0
-        )
-        if spent > budget.amount:
-            variances.append({
-                "category": category.name,
-                "spent": spent,
-                "budget": float(budget.amount),
-                "variance": spent - float(budget.amount),
-            })
-    return sorted(variances, key=lambda item: item["variance"], reverse=True)
 
 
 def detect_unusual_spending(db: Session, user_id: int, month: int, year: int, current_total: float) -> dict[str, Any] | None:
@@ -231,7 +195,6 @@ def build_spending_summary(db: Session, user_id: int, month: int, year: int) -> 
         "top_merchant": detect_top_merchant(db, user_id, month, year),
         "category_totals": category_totals,
         "category_increases": category_increases,
-        "budget_variances": detect_budget_variances(db, user_id, month, year),
         "unusual_spending": detect_unusual_spending(db, user_id, month, year, current_expenses),
         "subscriptions": detect_subscription_transactions(db, user_id, month, year),
     }
@@ -240,7 +203,7 @@ def build_spending_summary(db: Session, user_id: int, month: int, year: int) -> 
 def build_insight_prompt(summary: dict[str, Any]) -> str:
     return (
         "Analyze this personal finance summary and produce 4 short, practical insights.\n"
-        "Avoid risky investment advice. Focus on spending, budgeting, subscriptions, and saving.\n\n"
+        "Avoid risky investment advice. Focus on spending, savings, recurring payments, and practical next steps.\n\n"
         f"Summary: {summary}"
     )
 
@@ -273,13 +236,6 @@ def fallback_insights(summary: dict[str, Any]) -> list[dict[str, str]]:
         insights.append({
             "type": "anomaly",
             "text": f"This month looks unusually high: INR {item['current']:.2f} versus a recent average of INR {item['average']:.2f}.",
-        })
-
-    if summary.get("budget_variances"):
-        item = summary["budget_variances"][0]
-        insights.append({
-            "type": "budget",
-            "text": f"{item['category']} is over budget by INR {item['variance']:.2f}.",
         })
 
     if summary.get("top_merchant"):

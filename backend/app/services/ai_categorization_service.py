@@ -4,7 +4,6 @@ from app.ai.llm_client import LLMClient
 
 
 ALLOWED_AI_CATEGORIES = [
-    "Debt Cleared",
     "Refunds",
     "Bills",
     "Subscriptions",

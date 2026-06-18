@@ -1,137 +1,281 @@
-import re
-
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
-from app.models.models import Category, Debt, Friend, FriendTransactionLink, Transaction
-from app.services.friend_learning_service import normalize_friend_text, save_friend_learning
+from app.models.models import Category, Friend, FriendTransactionLink, Transaction
+from app.services.friend_detection_service import detect_friend_for_transaction, normalize_friend_name
+from app.services.friend_learning_service import save_friend_learning_rule
+from app.services.merchant_extractor_service import extract_transaction_merchant
 
 
-def normalize_friend_name(name: str | None) -> str:
-    """Normalize friend names for exact and fuzzy matching."""
-    text = re.sub(r"[^a-z0-9 ]", " ", (name or "").lower())
-    return re.sub(r"\s+", " ", text).strip()
-
-
-def summarize_friend(db: Session, friend: Friend) -> dict:
-    """Calculate all balance totals for one friend from debt ledger rows."""
-    debts = db.query(Debt).filter(Debt.friend_id == friend.id, Debt.user_id == friend.user_id).all()
-    transactions = (
-        db.query(Transaction)
-        .filter(Transaction.friend_id == friend.id, Transaction.user_id == friend.user_id)
-        .order_by(Transaction.date.desc())
-        .all()
-    )
-    total_lent = sum(debt.amount for debt in debts if debt.direction == "friend_owes_me")
-    total_borrowed = sum(debt.amount for debt in debts if debt.direction == "i_owe_friend")
-    total_friend_paid_back = sum(debt.amount for debt in debts if debt.direction == "reduces_friend_debt")
-    total_i_paid_back = sum(debt.amount for debt in debts if debt.direction == "reduces_my_debt")
-    money_friend_owes_me = max(total_lent - total_friend_paid_back, 0)
-    money_i_owe_friend = max(total_borrowed - total_i_paid_back, 0)
-    net_balance = round(money_friend_owes_me - money_i_owe_friend, 2)
-
-    if net_balance == 0:
-        status = "Paid / Settled"
-    elif abs(net_balance) < max(total_lent, total_borrowed, 0):
-        status = "Partially Paid"
-    else:
-        status = "Unpaid"
-
-    return {
-        "id": friend.id,
-        "user_id": friend.user_id,
-        "name": friend.name,
-        "normalized_name": friend.normalized_name,
-        "phone": friend.phone,
-        "note": friend.note,
-        "is_archived": friend.is_archived,
-        "total_lent": round(total_lent, 2),
-        "total_borrowed": round(total_borrowed, 2),
-        "total_friend_paid_back": round(total_friend_paid_back, 2),
-        "total_i_paid_back": round(total_i_paid_back, 2),
-        "net_balance": net_balance,
-        "status": status,
-        "last_transaction_date": transactions[0].date if transactions else None,
-        "created_at": friend.created_at,
-    }
-
-
-def get_friend_dashboard(db: Session, user_id: int, include_archived: bool = False, search: str | None = None) -> dict:
-    """Build dashboard cards and friend summaries for the current user."""
-    query = db.query(Friend).filter(Friend.user_id == user_id)
-    if not include_archived:
-        query = query.filter(Friend.is_archived == False)  # noqa: E712
-    if search:
-        query = query.filter(Friend.normalized_name.ilike(f"%{normalize_friend_name(search)}%"))
-    friends = query.order_by(Friend.name).all()
-    summaries = [summarize_friend(db, friend) for friend in friends]
-    friends_owe_me = sum(item["net_balance"] for item in summaries if item["net_balance"] > 0)
-    i_owe_friends = abs(sum(item["net_balance"] for item in summaries if item["net_balance"] < 0))
-    return {
-        "total_friends": len(summaries),
-        "friends_owe_me": round(friends_owe_me, 2),
-        "i_owe_friends": round(i_owe_friends, 2),
-        "net_balance": round(friends_owe_me - i_owe_friends, 2),
-        "settled_friends": sum(1 for item in summaries if item["net_balance"] == 0),
-        "unsettled_friends": sum(1 for item in summaries if item["net_balance"] != 0),
-        "friends": summaries,
-    }
-
-
-def _friends_category_id(db: Session) -> int | None:
+def get_friends_category_id(db: Session) -> int | None:
     category = db.query(Category).filter(Category.name == "Friends").first()
-    if category:
-        return category.id
-    category = Category(name="Friends", description="Friends and debt tracking")
-    db.add(category)
+    return category.id if category else None
+
+
+def create_friend(
+    db: Session,
+    user_id: int,
+    name: str,
+    email: str | None = None,
+    phone: str | None = None,
+    notes: str | None = None,
+) -> Friend:
+    normalized_name = normalize_friend_name(name)
+    if not normalized_name:
+        raise ValueError("Friend name is required")
+
+    friend = (
+        db.query(Friend)
+        .filter(
+            Friend.user_id == user_id,
+            Friend.normalized_name == normalized_name,
+        )
+        .order_by(Friend.id.desc())
+        .first()
+    )
+    if friend:
+        friend.name = name.strip()
+        friend.email = email if email is not None else friend.email
+        friend.phone = phone if phone is not None else friend.phone
+        friend.notes = notes if notes is not None else friend.notes
+        friend.is_active = True
+        auto_attach_matching_transactions(db, user_id, friend)
+        return friend
+
+    friend = Friend(
+        user_id=user_id,
+        name=name.strip(),
+        normalized_name=normalized_name,
+        email=email,
+        phone=phone,
+        notes=notes,
+        is_active=True,
+    )
+    db.add(friend)
     db.flush()
-    return category.id
+    auto_attach_matching_transactions(db, user_id, friend)
+    return friend
+
+
+def _link_exists(db: Session, friend_id: int, transaction_id: int) -> bool:
+    return (
+        db.query(FriendTransactionLink)
+        .filter(
+            FriendTransactionLink.friend_id == friend_id,
+            FriendTransactionLink.transaction_id == transaction_id,
+        )
+        .first()
+        is not None
+    )
+
+
+def attach_transaction_to_friend(
+    db: Session,
+    user_id: int,
+    friend: Friend,
+    transaction: Transaction,
+) -> bool:
+    """Attach one transaction to a friend and remove it from category review."""
+    friends_category_id = get_friends_category_id(db)
+    if friends_category_id is None:
+        return False
+
+    changed = transaction.friend_id != friend.id or not transaction.is_friend_transaction
+    transaction.friend_id = friend.id
+    transaction.is_friend_transaction = True
+    transaction.category_id = friends_category_id
+    transaction.category_confidence = 0.95
+    transaction.categorization_method = "friend_match"
+    transaction.review_status = "approved"
+    transaction.is_needs_review = False
+
+    if not _link_exists(db, friend.id, transaction.id):
+        db.add(
+            FriendTransactionLink(
+                user_id=user_id,
+                friend_id=friend.id,
+                transaction_id=transaction.id,
+                amount=transaction.amount,
+                transaction_type=transaction.transaction_type,
+            )
+        )
+        changed = True
+
+    save_friend_learning_rule(
+        db,
+        user_id,
+        friend.id,
+        transaction.extracted_merchant or transaction.merchant or transaction.description,
+    )
+    return changed
 
 
 def auto_attach_matching_transactions(db: Session, user_id: int, friend: Friend) -> int:
-    """Attach existing unlinked transactions whose narration clearly contains the friend's name."""
-    category_id = _friends_category_id(db)
-    normalized_friend = normalize_friend_name(friend.name)
-    if not normalized_friend:
-        return 0
-
-    attached_count = 0
+    """Attach all existing transactions that mention the saved friend's name."""
     transactions = (
         db.query(Transaction)
+        .filter(Transaction.user_id == user_id)
+        .order_by(Transaction.date.desc())
+        .all()
+    )
+    attached_count = 0
+    for transaction in transactions:
+        suggestion = detect_friend_for_transaction(db, user_id, transaction)
+        if suggestion and suggestion["friend_id"] == friend.id:
+            if attach_transaction_to_friend(db, user_id, friend, transaction):
+                attached_count += 1
+    return attached_count
+
+
+def auto_attach_transaction_if_friend(db: Session, user_id: int, transaction: Transaction) -> bool:
+    """Attach a newly created/imported transaction if it matches any saved friend."""
+    suggestion = detect_friend_for_transaction(db, user_id, transaction)
+    if not suggestion:
+        return False
+    friend = (
+        db.query(Friend)
         .filter(
-            Transaction.user_id == user_id,
-            Transaction.friend_id.is_(None),
+            Friend.id == suggestion["friend_id"],
+            Friend.user_id == user_id,
+            Friend.is_active == True,  # noqa: E712
+        )
+        .first()
+    )
+    if not friend:
+        return False
+    return attach_transaction_to_friend(db, user_id, friend, transaction)
+
+
+def sync_friends_category_transactions(db: Session) -> int:
+    """Repair rows categorized as Friends but not yet visible in the Friends module."""
+    friends_category_id = get_friends_category_id(db)
+    if friends_category_id is None:
+        return 0
+
+    linked_friend_ids = [
+        row[0]
+        for row in (
+            db.query(Transaction.friend_id)
+            .filter(Transaction.category_id == friends_category_id, Transaction.friend_id.isnot(None))
+            .distinct()
+            .all()
+        )
+    ]
+    reactivated = 0
+    if linked_friend_ids:
+        linked_friends = (
+            db.query(Friend)
+            .filter(
+                Friend.id.in_(linked_friend_ids),
+                or_(Friend.is_active.is_(None), Friend.is_active == False),  # noqa: E712
+            )
+            .all()
+        )
+        for friend in linked_friends:
+            friend.is_active = True
+            reactivated += 1
+
+    rows = (
+        db.query(Transaction)
+        .filter(
+            Transaction.category_id == friends_category_id,
+            (Transaction.friend_id.is_(None)) | (Transaction.is_friend_transaction == False),  # noqa: E712
         )
         .all()
     )
-    for transaction in transactions:
-        normalized_text = normalize_friend_text(f"{transaction.description} {transaction.merchant or ''}")
-        if normalized_friend not in normalized_text:
+    repaired_count = 0
+    for transaction in rows:
+        friend_name = extract_transaction_merchant(
+            transaction.description,
+            transaction.extracted_merchant or transaction.merchant,
+        )
+        if not friend_name:
             continue
 
-        transaction.original_category_id = transaction.original_category_id or transaction.category_id
-        transaction.category_id = category_id
-        transaction.friend_id = friend.id
-        transaction.is_friend_transaction = True
-        transaction.is_needs_review = False
-        transaction.review_status = "approved"
-        transaction.review_reason = None
-        transaction.debt_type = transaction.debt_type or "unclassified_friend"
-        transaction.debt_direction = transaction.debt_direction or "no_debt"
-        transaction.categorization_method = "friend_match"
-        transaction.category_confidence = 0.95
+        normalized_name = normalize_friend_name(friend_name)
+        if not normalized_name:
+            continue
 
-        existing_link = (
-            db.query(FriendTransactionLink)
+        friend = (
+            db.query(Friend)
             .filter(
-                FriendTransactionLink.user_id == user_id,
-                FriendTransactionLink.friend_id == friend.id,
-                FriendTransactionLink.transaction_id == transaction.id,
+                Friend.user_id == transaction.user_id,
+                Friend.normalized_name == normalized_name,
+                Friend.is_active == True,  # noqa: E712
             )
             .first()
         )
-        if not existing_link:
-            db.add(FriendTransactionLink(user_id=user_id, friend_id=friend.id, transaction_id=transaction.id))
-        save_friend_learning(db, user_id, friend.id, transaction.description, 0.95)
-        attached_count += 1
+        if not friend:
+            friend = Friend(
+                user_id=transaction.user_id,
+                name=friend_name,
+                normalized_name=normalized_name,
+                is_active=True,
+            )
+            db.add(friend)
+            db.flush()
 
-    return attached_count
+        if attach_transaction_to_friend(db, transaction.user_id, friend, transaction):
+            repaired_count += 1
+
+    if repaired_count or reactivated:
+        db.commit()
+    return repaired_count + int(reactivated or 0)
+
+
+def friend_summary(db: Session, user_id: int, friend_id: int) -> dict[str, float | int]:
+    rows = (
+        db.query(Transaction)
+        .filter(
+            Transaction.user_id == user_id,
+            Transaction.friend_id == friend_id,
+            Transaction.is_friend_transaction == True,  # noqa: E712
+        )
+        .all()
+    )
+    total_income = sum(row.amount for row in rows if row.transaction_type == "income")
+    total_expense = sum(row.amount for row in rows if row.transaction_type == "expense")
+    return {
+        "transaction_count": len(rows),
+        "total_income": total_income,
+        "total_expense": total_expense,
+        "net_amount": total_income - total_expense,
+    }
+
+
+def get_friend_dashboard(db: Session, user_id: int) -> dict[str, float | int]:
+    active_count = (
+        db.query(func.count(Friend.id))
+        .filter(Friend.user_id == user_id, or_(Friend.is_active == True, Friend.is_active.is_(None)))  # noqa: E712
+        .scalar()
+        or 0
+    )
+    linked_count = (
+        db.query(func.count(Transaction.id))
+        .filter(Transaction.user_id == user_id, Transaction.is_friend_transaction == True)  # noqa: E712
+        .scalar()
+        or 0
+    )
+    total_amount = (
+        db.query(func.coalesce(func.sum(Transaction.amount), 0))
+        .filter(Transaction.user_id == user_id, Transaction.is_friend_transaction == True)  # noqa: E712
+        .scalar()
+        or 0
+    )
+    return {
+        "active_friends": active_count,
+        "linked_transactions": linked_count,
+        "total_friend_amount": float(total_amount),
+    }
+
+
+__all__ = [
+    "attach_transaction_to_friend",
+    "auto_attach_matching_transactions",
+    "auto_attach_transaction_if_friend",
+    "create_friend",
+    "friend_summary",
+    "get_friend_dashboard",
+    "normalize_friend_name",
+    "sync_friends_category_transactions",
+]

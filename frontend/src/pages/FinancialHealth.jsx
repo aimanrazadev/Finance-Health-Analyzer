@@ -69,7 +69,7 @@ const FinancialHealth = () => {
           <div>
             <p className="eyebrow">Financial health score</p>
             <h1>Financial Health</h1>
-            <p>Understand savings strength, budget discipline, spending stability, debt position, and emergency readiness.</p>
+            <p>Understand savings strength, expense control, spending stability, and recurring payment load.</p>
           </div>
           <div className="health-actions">
             <label>
@@ -96,7 +96,7 @@ const FinancialHealth = () => {
         {loading ? (
           <div className="empty-state">Calculating financial health...</div>
         ) : !score ? (
-          <div className="empty-state">Add transactions and budgets to calculate your financial health score.</div>
+          <div className="empty-state">Add income and expense transactions to calculate your financial health score.</div>
         ) : (
           <div className="health-layout">
             <section className={`health-score-card ${statusClass(score.status_label)}`}>

@@ -14,6 +14,9 @@ from app.services.categorization import (
 )
 from app.services.learning_service import save_category_correction
 from app.services.merchant_extractor_service import extract_transaction_merchant
+from app.services.friend_service import auto_attach_transaction_if_friend
+from app.services.friend_service import attach_transaction_to_friend, create_friend
+from app.services.transaction_type_service import normalize_transaction_type
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
@@ -47,6 +50,31 @@ def review_status_from_result(category_confidence: float, categorization_method:
     """Convert categorization metadata into the review fields stored on transactions."""
     needs_review = categorization_method == "needs_review" or category_confidence < 0.80
     return ("needs_review" if needs_review else "approved"), needs_review
+
+
+def sync_friend_if_friends_category(
+    db: Session,
+    user_id: int,
+    transaction: Transaction,
+    category_id: int,
+) -> None:
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if not category or category.name.strip().lower() != "friends":
+        return
+
+    friend_name = extract_transaction_merchant(transaction.description, None)
+    if not friend_name:
+        friend_name = extract_transaction_merchant(
+            transaction.description,
+            transaction.extracted_merchant or transaction.merchant,
+        )
+    if not friend_name:
+        friend_name = transaction.extracted_merchant or transaction.merchant or transaction.description
+    if not friend_name:
+        return
+
+    friend = create_friend(db, user_id, friend_name)
+    attach_transaction_to_friend(db, user_id, friend, transaction)
 
 
 @router.post("/", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
@@ -83,6 +111,11 @@ def create_transaction(
             category_id,
         )
 
+    final_transaction_type = normalize_transaction_type(
+        db,
+        transaction_data.transaction_type,
+        category_id,
+    )
     review_status, is_needs_review = review_status_from_result(category_confidence, categorization_method)
 
     transaction = Transaction(
@@ -92,7 +125,7 @@ def create_transaction(
         description=transaction_data.description,
         merchant=merchant,
         extracted_merchant=extracted_merchant,
-        transaction_type=transaction_data.transaction_type,
+        transaction_type=final_transaction_type,
         date=transaction_data.date,
         category_confidence=category_confidence,
         categorization_method=categorization_method,
@@ -100,6 +133,8 @@ def create_transaction(
         is_needs_review=is_needs_review,
     )
     db.add(transaction)
+    db.flush()
+    auto_attach_transaction_if_friend(db, current_user.id, transaction)
     db.commit()
     db.refresh(transaction)
     return transaction
@@ -126,7 +161,7 @@ def get_transactions(
             )
         )
 
-    if transaction_type in {"income", "expense"}:
+    if transaction_type in {"income", "expense", "savings"}:
         query = query.filter(Transaction.transaction_type == transaction_type)
 
     if category_id is not None:
@@ -205,7 +240,11 @@ def update_transaction(
     transaction.category_id = new_category_id
     transaction.description = transaction_data.description
     transaction.merchant = transaction.extracted_merchant or transaction_data.merchant
-    transaction.transaction_type = transaction_data.transaction_type
+    transaction.transaction_type = normalize_transaction_type(
+        db,
+        transaction_data.transaction_type,
+        new_category_id,
+    )
     transaction.date = transaction_data.date
     transaction.review_status, transaction.is_needs_review = review_status_from_result(
         transaction.category_confidence or 0.30,
@@ -254,10 +293,16 @@ def correct_transaction_category_from_transactions(
     ensure_category_exists(db, correction_data.category_id)
     save_category_correction(db, current_user.id, transaction.id, transaction.category_id, correction_data.category_id)
     transaction.category_id = correction_data.category_id
+    transaction.transaction_type = normalize_transaction_type(
+        db,
+        transaction.transaction_type,
+        correction_data.category_id,
+    )
     transaction.category_confidence = 1.0
     transaction.categorization_method = "manual"
     transaction.review_status = "approved"
     transaction.is_needs_review = False
+    sync_friend_if_friends_category(db, current_user.id, transaction, correction_data.category_id)
     db.commit()
     db.refresh(transaction)
     return transaction

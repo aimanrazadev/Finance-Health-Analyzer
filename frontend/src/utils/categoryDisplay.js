@@ -1,12 +1,10 @@
 export const CATEGORY_COLORS = {
-  'Debt Cleared': '#5eead4',
   Refunds: '#86efac',
   Bills: '#fcd34d',
   Subscriptions: '#c4b5fd',
   Education: '#93c5fd',
   Entertainment: '#f9a8d4',
   Food: '#fca5a5',
-  Friends: '#67e8f9',
   Laundry: '#cbd5e1',
   Healthcare: '#6ee7b7',
   Investments: '#a5b4fc',
@@ -17,7 +15,6 @@ export const CATEGORY_COLORS = {
   Shopping: '#fdba74',
   Travel: '#bae6fd',
   Other: '#cbd5e1',
-  'Needs Review': '#fda4af',
   Uncategorized: '#cbd5e1',
 };
 
@@ -39,7 +36,7 @@ export const getCategoryColor = (categoryOrName) => {
   if (typeof categoryOrName === 'string') {
     return CATEGORY_COLORS[categoryOrName] || CATEGORY_COLORS.Uncategorized;
   }
-  return CATEGORY_COLORS[categoryOrName.name] || categoryOrName.color || CATEGORY_COLORS.Uncategorized;
+  return categoryOrName.color || CATEGORY_COLORS[categoryOrName.name] || CATEGORY_COLORS.Uncategorized;
 };
 
 export const getCategoryChartColor = (categoryOrName, index = 0) => (

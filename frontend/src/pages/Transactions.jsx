@@ -7,7 +7,8 @@ import { useUI } from '../hooks/useUI';
 import api, { getAuthHeaders } from '../utils/api';
 import '../styles/Transactions.css';
 
-const INCOME_CATEGORY_NAMES = ['Refunds', 'Investments', 'Salary', 'Shopping', 'Other'];
+const INCOME_CATEGORY_NAMES = ['Refunds', 'Friends', 'Salary', 'Shopping', 'Other'];
+const SAVINGS_CATEGORY_NAMES = ['Investments'];
 
 const defaultFormState = {
   amount: '',
@@ -115,9 +116,26 @@ const Transactions = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'category_id') {
+      const selectedCategory = categories.find((category) => category.id === Number(value));
+      setFormData((prev) => ({
+        ...prev,
+        category_id: value,
+        transaction_type: selectedCategory?.name === 'Investments' ? 'savings' : prev.transaction_type,
+      }));
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+      ...(name === 'transaction_type' && value === 'savings'
+        ? {
+            category_id: (
+              categories.find((category) => category.name === 'Investments')?.id || prev.category_id
+            ),
+          }
+        : {}),
     }));
   };
 
@@ -126,12 +144,17 @@ const Transactions = () => {
     setError('');
     setSuccess('');
 
+    const selectedCategory = categories.find((category) => category.id === Number(formData.category_id));
+    const normalizedType = SAVINGS_CATEGORY_NAMES.includes(selectedCategory?.name)
+      ? 'savings'
+      : formData.transaction_type;
+
     const payload = {
       amount: parseFloat(formData.amount),
       category_id: formData.category_id ? Number(formData.category_id) : null,
       description: formData.description,
       merchant: formData.merchant || null,
-      transaction_type: formData.transaction_type,
+      transaction_type: normalizedType,
       date: new Date(formData.date).toISOString(),
     };
 
@@ -158,13 +181,14 @@ const Transactions = () => {
   };
 
   const handleEdit = (transaction) => {
+    const category = categories.find((item) => item.id === transaction.category_id);
     setEditingId(transaction.id);
     setFormData({
       amount: transaction.amount.toString(),
       category_id: transaction.category_id || '',
       description: transaction.description,
       merchant: transaction.merchant || '',
-      transaction_type: transaction.transaction_type,
+      transaction_type: SAVINGS_CATEGORY_NAMES.includes(category?.name) ? 'savings' : transaction.transaction_type,
       date: formatDateLocal(transaction.date),
     });
     setSuccess('');
@@ -229,10 +253,27 @@ const Transactions = () => {
   };
 
   const getCategoriesForType = (transactionType) => (
+    transactionType === 'savings'
+      ? categories.filter((category) => SAVINGS_CATEGORY_NAMES.includes(category.name))
+      : (
     transactionType === 'income'
       ? categories.filter((category) => INCOME_CATEGORY_NAMES.includes(category.name))
-      : categories.filter((category) => category.name !== 'Needs Review')
+      : categories
+      )
   );
+
+  const getTransactionCategory = (transaction) => (
+    categories.find((category) => category.id === transaction.category_id)
+  );
+
+  const getNormalizedTransactionType = (transaction) => {
+    const category = getTransactionCategory(transaction);
+    if (SAVINGS_CATEGORY_NAMES.includes(category?.name)) {
+      return 'savings';
+    }
+    return transaction.transaction_type || 'expense';
+  };
+
   const mlLearnedCount = transactions.filter((transaction) => (
     transaction.categorization_method === 'ml_model'
     && (transaction.category_confidence ?? 0) >= 0.8
@@ -242,16 +283,9 @@ const Transactions = () => {
     <div>
       <Navigation />
       <div className="transactions-page">
-        <div className="transactions-header">
-          <div>
-            <h1>Manual Transactions</h1>
-            <p>Track income and expenses with categories, filters, and search.</p>
-          </div>
-        </div>
-
         <div className="transactions-main">
           <section className="transaction-form-panel">
-            <h2>{editingId ? 'Edit Transaction' : 'Add Transaction'}</h2>
+            <h2>{editingId ? 'Edit Manual Transaction' : 'Manual Transaction'}</h2>
             {error && <div className="form-error">{error}</div>}
             {success && <div className="form-success">{success}</div>}
             {mlLearnedCount > 0 && (
@@ -317,6 +351,7 @@ const Transactions = () => {
                 >
                   <option value="expense">Expense</option>
                   <option value="income">Income</option>
+                  <option value="savings">Savings</option>
                 </select>
               </label>
 
@@ -361,6 +396,7 @@ const Transactions = () => {
                 <option value="">All types</option>
                 <option value="expense">Expense</option>
                 <option value="income">Income</option>
+                <option value="savings">Savings</option>
               </select>
               <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
                 <option value="">All categories</option>
@@ -397,10 +433,12 @@ const Transactions = () => {
                     </tr>
                   )}
                   {!loading && transactions.map((transaction) => {
-                    const category = categories.find((c) => c.id === transaction.category_id);
+                    const category = getTransactionCategory(transaction);
+                    const displayType = getNormalizedTransactionType(transaction);
                     const date = new Date(transaction.date).toLocaleString();
                     const needsReview = (transaction.category_confidence ?? 0) < 0.8
-                      || category?.name === 'Needs Review';
+                      || transaction.review_status === 'needs_review'
+                      || transaction.is_needs_review;
                     return (
                       <tr key={transaction.id}>
                         <td>{date}</td>
@@ -415,7 +453,7 @@ const Transactions = () => {
                                   onChange={(event) => handleCorrectionChange(transaction.id, event.target.value)}
                                 >
                                   <option value="">Correct category</option>
-                                  {getCategoriesForType(transaction.transaction_type)
+                                  {getCategoriesForType(displayType)
                                     .map((item) => (
                                       <option key={item.id} value={item.id}>{item.name}</option>
                                     ))}
@@ -427,7 +465,7 @@ const Transactions = () => {
                             )}
                           </div>
                         </td>
-                        <td>{transaction.transaction_type}</td>
+                        <td>{displayType}</td>
                         <td>{transaction.amount.toFixed(2)}</td>
                         <td>{transaction.extracted_merchant || transaction.merchant || '-'}</td>
                         <td>

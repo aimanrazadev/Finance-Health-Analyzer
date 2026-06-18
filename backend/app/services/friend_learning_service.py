@@ -1,39 +1,44 @@
-import re
+from datetime import datetime
 
 from sqlalchemy.orm import Session
 
 from app.models.models import FriendMerchantLearning
+from app.services.merchant_extractor_service import normalize_merchant_name
 
 
-def normalize_friend_text(text: str | None) -> str:
-    """Normalize transaction text for friend-pattern learning."""
-    normalized = re.sub(r"[^a-z0-9 ]", " ", (text or "").lower())
-    normalized = re.sub(r"\b\d+\b", " ", normalized)
-    return re.sub(r"\s+", " ", normalized).strip()
+def save_friend_learning_rule(
+    db: Session,
+    user_id: int,
+    friend_id: int,
+    merchant_pattern: str | None,
+) -> FriendMerchantLearning | None:
+    """Remember transaction text that repeatedly belongs to a friend."""
+    normalized = normalize_merchant_name(merchant_pattern)
+    if not normalized:
+        return None
 
-
-def save_friend_learning(db: Session, user_id: int, friend_id: int, raw_text: str, confidence: float) -> FriendMerchantLearning:
-    """Save a user-confirmed mapping from transaction narration to a friend."""
-    normalized_text = normalize_friend_text(raw_text)
-    existing = (
+    rule = (
         db.query(FriendMerchantLearning)
         .filter(
             FriendMerchantLearning.user_id == user_id,
             FriendMerchantLearning.friend_id == friend_id,
-            FriendMerchantLearning.normalized_text == normalized_text,
+            FriendMerchantLearning.normalized_merchant == normalized,
         )
         .first()
     )
-    if existing:
-        existing.confidence = max(existing.confidence or 0, confidence)
-        return existing
+    if rule:
+        rule.usage_count = (rule.usage_count or 0) + 1
+        rule.last_used_at = datetime.utcnow()
+        return rule
 
-    learning = FriendMerchantLearning(
+    rule = FriendMerchantLearning(
         user_id=user_id,
         friend_id=friend_id,
-        raw_transaction_text=raw_text,
-        normalized_text=normalized_text,
-        confidence=confidence,
+        merchant_pattern=merchant_pattern or normalized,
+        normalized_merchant=normalized,
+        confidence=0.95,
+        usage_count=1,
+        last_used_at=datetime.utcnow(),
     )
-    db.add(learning)
-    return learning
+    db.add(rule)
+    return rule

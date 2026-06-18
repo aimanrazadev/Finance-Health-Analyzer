@@ -1,46 +1,25 @@
-"""
-Pydantic schemas for request/response validation
-"""
+"""Pydantic schemas for the focused Finance Health Analyzer API."""
 
-from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from typing import Any, List, Optional
+
+from pydantic import BaseModel, EmailStr, Field
 
 
 # ==================== Authentication Schemas ====================
 
 class UserRegister(BaseModel):
-    """Schema for user registration"""
     name: str = Field(..., min_length=2, max_length=100)
     email: EmailStr
     password: str = Field(..., min_length=6, max_length=100)
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "name": "John Doe",
-                "email": "john@example.com",
-                "password": "SecurePassword123"
-            }
-        }
-
 
 class UserLogin(BaseModel):
-    """Schema for user login"""
     email: EmailStr
     password: str
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "email": "john@example.com",
-                "password": "SecurePassword123"
-            }
-        }
-
 
 class UserResponse(BaseModel):
-    """Schema for user response (safe user info without password)"""
     id: int
     name: str
     email: str
@@ -52,79 +31,130 @@ class UserResponse(BaseModel):
 
 
 class TokenResponse(BaseModel):
-    """Schema for token response"""
     access_token: str
     refresh_token: Optional[str] = None
     token_type: str = "bearer"
     user: UserResponse
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-                "token_type": "bearer",
-                "user": {
-                    "id": 1,
-                    "name": "John Doe",
-                    "email": "john@example.com",
-                    "created_at": "2026-06-07T12:00:00",
-                    "is_active": True
-                }
-            }
-        }
-
 
 class TokenData(BaseModel):
-    """Schema for JWT token payload"""
     user_id: int
     email: str
+
+
+class MessageResponse(BaseModel):
+    message: str
+
+
+# ==================== Phase 2 Shared Schemas ====================
+
+class ImportProfileCreate(BaseModel):
+    profile_name: str = Field(..., min_length=1, max_length=150)
+    bank_name: Optional[str] = None
+    file_type: Optional[str] = None
+    header_signature: str
+    column_mapping: dict[str, str]
+    preferences: dict[str, Any] = {}
+    confidence_score: float = 0
+
+
+class ImportProfileResponse(BaseModel):
+    id: int
+    user_id: int
+    profile_name: str
+    bank_name: Optional[str]
+    file_type: Optional[str]
+    header_signature: str
+    column_mapping: dict[str, str]
+    preferences: dict[str, Any] = {}
+    confidence_score: float
+    usage_count: int
+    last_used_at: Optional[datetime]
+    created_at: datetime
+
+
+class MerchantResponse(BaseModel):
+    id: int
+    user_id: int
+    canonical_name: str
+    normalized_name: str
+    aliases: List[str] = []
+    transaction_count: int = 0
+    total_spent: float = 0
+    last_seen_at: Optional[datetime] = None
+
+
+class MerchantRenameRequest(BaseModel):
+    canonical_name: str = Field(..., min_length=1, max_length=150)
+
+
+class MerchantMergeRequest(BaseModel):
+    source_merchant_id: int
+
+
+class MerchantDirectoryDetailResponse(BaseModel):
+    merchant: MerchantResponse
+    total_income: float = 0
+    total_expenses: float = 0
+    transaction_count: int = 0
+    average_amount: float = 0
+    transactions: List["TransactionResponse"] = []
+
+
+class FinancialSnapshotResponse(BaseModel):
+    month: int
+    year: int
+    current_month_spending: float
+    projected_month_end_spending: float
+    projected_month_end_savings: float
+    projected_savings_rate: float
+    budget_health: str
+    top_merchant: Optional[str]
+    top_category: Optional[str]
+    alerts: List[str] = []
+
+
+class AdvisorActionRequest(BaseModel):
+    message: str = Field(..., min_length=2, max_length=800)
+
+
+class AdvisorActionResponse(BaseModel):
+    action_type: str
+    intent: str
+    filters: dict[str, Any] = {}
+    message: str
+    transactions: List["TransactionResponse"] = []
+    report: dict[str, Any] = {}
 
 
 # ==================== Transaction Schemas ====================
 
 class TransactionCreate(BaseModel):
-    """Schema for creating a transaction"""
     amount: float = Field(..., gt=0)
     category_id: Optional[int] = None
     description: str = Field(..., min_length=1, max_length=255)
     merchant: Optional[str] = None
-    transaction_type: str = Field(..., pattern="^(income|expense)$")
+    transaction_type: str = Field(..., pattern="^(income|expense|savings)$")
     date: datetime
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "amount": 250.50,
-                "category_id": 1,
-                "description": "Grocery shopping",
-                "merchant": "Walmart",
-                "transaction_type": "expense",
-                "date": "2026-06-07T10:30:00"
-            }
-        }
 
 
 class TransactionResponse(BaseModel):
-    """Schema for transaction response"""
     id: int
     user_id: int
     amount: float
     category_id: Optional[int]
+    merchant_id: Optional[int] = None
     description: str
     merchant: Optional[str]
     extracted_merchant: Optional[str] = None
+    friend_id: Optional[int] = None
+    is_friend_transaction: Optional[bool] = False
     transaction_type: str
     date: datetime
     category_confidence: Optional[float] = None
     categorization_method: Optional[str] = None
     review_status: Optional[str] = None
-    friend_id: Optional[int] = None
-    debt_type: Optional[str] = None
-    debt_direction: Optional[str] = None
-    is_friend_transaction: Optional[bool] = False
     is_needs_review: Optional[bool] = False
-    review_reason: Optional[str] = None
     created_at: datetime
 
     class Config:
@@ -135,10 +165,52 @@ class TransactionCategoryCorrectionRequest(BaseModel):
     category_id: int
 
 
-# ==================== Category Schemas ====================
+# ==================== Friend Tracking Schemas ====================
+
+class FriendCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=150)
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class FriendUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=1, max_length=150)
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    notes: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class FriendResponse(BaseModel):
+    id: int
+    user_id: int
+    name: str
+    normalized_name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    notes: Optional[str] = None
+    is_active: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class FriendDetailResponse(FriendResponse):
+    summary: dict[str, float | int]
+    transactions: List[TransactionResponse]
+
+
+class FriendDashboardResponse(BaseModel):
+    active_friends: int
+    linked_transactions: int
+    total_friend_amount: float
+
+
+# ==================== Category + Categorization Schemas ====================
 
 class CategoryCreate(BaseModel):
-    """Schema for creating a category"""
     name: str = Field(..., min_length=1, max_length=100)
     description: Optional[str] = None
     color: Optional[str] = None
@@ -146,7 +218,6 @@ class CategoryCreate(BaseModel):
 
 
 class CategoryResponse(BaseModel):
-    """Schema for category response"""
     id: int
     name: str
     description: Optional[str]
@@ -228,281 +299,7 @@ class CategoryRetrainResponse(BaseModel):
     message: str
 
 
-# ==================== Friends / Debt Schemas ====================
-
-class FriendCreate(BaseModel):
-    name: str = Field(..., min_length=1, max_length=150)
-    phone: Optional[str] = None
-    note: Optional[str] = None
-
-
-class FriendUpdate(BaseModel):
-    name: Optional[str] = Field(default=None, min_length=1, max_length=150)
-    phone: Optional[str] = None
-    note: Optional[str] = None
-    is_archived: Optional[bool] = None
-
-
-class FriendSummary(BaseModel):
-    id: int
-    user_id: int
-    name: str
-    normalized_name: str
-    phone: Optional[str] = None
-    note: Optional[str] = None
-    is_archived: bool
-    total_lent: float
-    total_borrowed: float
-    total_friend_paid_back: float
-    total_i_paid_back: float
-    net_balance: float
-    status: str
-    last_transaction_date: Optional[datetime] = None
-    created_at: datetime
-
-
-class FriendDashboardSummary(BaseModel):
-    total_friends: int
-    friends_owe_me: float
-    i_owe_friends: float
-    net_balance: float
-    settled_friends: int
-    unsettled_friends: int
-    friends: List[FriendSummary]
-
-
-class DebtCreate(BaseModel):
-    amount: float = Field(..., gt=0)
-    debt_type: str
-    direction: str
-    note: Optional[str] = None
-    transaction_id: Optional[int] = None
-
-
-class DebtResponse(BaseModel):
-    id: int
-    user_id: int
-    friend_id: int
-    transaction_id: Optional[int] = None
-    amount: float
-    debt_type: str
-    direction: str
-    status: str
-    note: Optional[str] = None
-    created_at: datetime
-    updated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
-
-
-class DebtUpdate(BaseModel):
-    amount: Optional[float] = Field(default=None, gt=0)
-    debt_type: Optional[str] = None
-    direction: Optional[str] = None
-    status: Optional[str] = None
-    note: Optional[str] = None
-
-
-class LinkFriendRequest(BaseModel):
-    friend_id: int
-    debt_type: Optional[str] = None
-    debt_direction: Optional[str] = None
-    amount: Optional[float] = Field(default=None, gt=0)
-    note: Optional[str] = None
-
-
-class FriendPaymentRequest(BaseModel):
-    amount: float = Field(..., gt=0)
-    debt_type: str
-    direction: str
-    note: Optional[str] = None
-
-
-class SplitFriendShare(BaseModel):
-    friend_id: int
-    amount: float = Field(..., gt=0)
-    note: Optional[str] = None
-
-
-class SplitExpenseRequest(BaseModel):
-    total_amount: float = Field(..., gt=0)
-    transaction_id: Optional[int] = None
-    description: Optional[str] = None
-    equal_split: bool = False
-    shares: List[SplitFriendShare]
-
-
-class FriendSuggestionResponse(BaseModel):
-    transaction_id: int
-    description: str
-    amount: float
-    transaction_type: str
-    friend_id: Optional[int]
-    friend_name: Optional[str]
-    confidence: float
-    reason: str
-
-
-class FriendDetailResponse(BaseModel):
-    friend: FriendSummary
-    transactions: List[TransactionResponse]
-
-
-# ==================== Budget Schemas ====================
-
-class BudgetCreate(BaseModel):
-    """Schema for creating a budget"""
-    category_id: int
-    monthly_limit: float = Field(..., gt=0)
-    month: int = Field(..., ge=1, le=12)
-    year: int = Field(..., ge=2000, le=2100)
-
-
-class BudgetUpdate(BaseModel):
-    category_id: int
-    monthly_limit: float = Field(..., gt=0)
-    month: int = Field(..., ge=1, le=12)
-    year: int = Field(..., ge=2000, le=2100)
-    is_active: bool = True
-
-
-class BudgetResponse(BaseModel):
-    """Schema for budget response"""
-    id: int
-    user_id: int
-    category_id: int
-    category_name: Optional[str] = None
-    monthly_limit: float
-    month: int
-    year: int
-    alert_threshold: float
-    smart_milestones: List[int] = []
-    reached_milestones: List[int] = []
-    next_milestone: Optional[int] = None
-    actual_spent: float
-    remaining_amount: float
-    percentage_used: float
-    status: str
-    alert_message: Optional[str] = None
-    created_at: datetime
-    is_active: bool
-
-
-# ==================== Savings Goal Schemas ====================
-
-class SavingsGoalCreate(BaseModel):
-    """Schema for creating a savings goal"""
-    name: str = Field(..., min_length=1, max_length=100)
-    target_amount: float = Field(..., gt=0)
-    current_amount: float = Field(default=0, ge=0)
-    monthly_contribution: float = Field(default=0, ge=0)
-    target_date: datetime
-
-
-class SavingsGoalUpdate(BaseModel):
-    name: str = Field(..., min_length=1, max_length=100)
-    target_amount: float = Field(..., gt=0)
-    current_amount: float = Field(default=0, ge=0)
-    monthly_contribution: float = Field(default=0, ge=0)
-    target_date: datetime
-    status: str = "active"
-
-
-class SavingsGoalResponse(BaseModel):
-    """Schema for savings goal response"""
-    id: int
-    user_id: int
-    name: str
-    target_amount: float
-    current_amount: float
-    monthly_contribution: float
-    remaining_amount: float
-    progress_percentage: float
-    months_required: Optional[int] = None
-    estimated_completion_date: Optional[datetime] = None
-    ai_suggestion: str
-    target_date: datetime
-    created_at: datetime
-    status: str
-
-
-# ==================== Investment Schemas ====================
-
-class AccountBalanceCreate(BaseModel):
-    account_name: str = Field(default="Current balance", min_length=1, max_length=120)
-    balance_amount: float = Field(..., ge=0)
-
-
-class AccountBalanceResponse(BaseModel):
-    id: int
-    user_id: int
-    account_name: str
-    balance_amount: float
-    currency: str
-    recorded_at: datetime
-    updated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
-
-
-class InvestmentHoldingCreate(BaseModel):
-    asset_name: str = Field(..., min_length=1, max_length=150)
-    symbol: str = Field(..., min_length=1, max_length=40)
-    exchange: str = Field(default="NSE", min_length=1, max_length=30)
-    quantity: float = Field(..., gt=0)
-    average_buy_price: float = Field(..., gt=0)
-    current_price: Optional[float] = Field(default=None, gt=0)
-
-
-class InvestmentHoldingUpdate(InvestmentHoldingCreate):
-    pass
-
-
-class InvestmentHoldingResponse(BaseModel):
-    id: int
-    user_id: int
-    asset_name: str
-    symbol: str
-    exchange: str
-    quantity: float
-    average_buy_price: float
-    invested_amount: float
-    current_price: Optional[float] = None
-    current_value: float
-    pnl_amount: float
-    pnl_percent: float
-    source: str
-    last_price_at: Optional[datetime] = None
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class InvestmentInsightResponse(BaseModel):
-    title: str
-    message: str
-    severity: str
-
-
-class InvestmentSummaryResponse(BaseModel):
-    savings_goal_total: float
-    savings_current_total: float
-    account_balance: Optional[AccountBalanceResponse] = None
-    manual_invested_amount: float
-    auto_detected_invested_amount: float
-    total_invested_amount: float
-    current_portfolio_value: float
-    total_pnl_amount: float
-    total_pnl_percent: float
-    net_worth: float
-    holdings: List[InvestmentHoldingResponse]
-    insights: List[InvestmentInsightResponse]
-
-
-# ==================== Dashboard Schemas ====================
+# ==================== Dashboard Analytics Schemas ====================
 
 class DashboardMetric(BaseModel):
     label: str
@@ -513,6 +310,7 @@ class CategoryBreakdownItem(BaseModel):
     category_id: Optional[int]
     category_name: str
     total: float
+    color: Optional[str] = None
 
 
 class DashboardSummary(BaseModel):
@@ -520,6 +318,9 @@ class DashboardSummary(BaseModel):
     year: int
     total_income: float
     total_expenses: float
+    account_balance: float = 0
+    investment_amount: float = 0
+    remaining_money: float = 0
     total_savings: float
     investment_savings: float = 0
     remaining_balance_savings: float = 0
@@ -527,18 +328,35 @@ class DashboardSummary(BaseModel):
     savings_rate: float
     effective_savings_rate: float = 0
     monthly_savings_trend: float = 0
+    savings_status: str = "Poor"
     transaction_count: int
     top_category: Optional[str]
     top_merchant: Optional[str] = None
     recurring_subscription_count: int = 0
     recurring_subscription_total: float = 0
+    financial_health_score: int = 0
+    financial_health_status: str = "Needs Improvement"
+    financial_health_reason: str = ""
     budget_health_score: int = 0
     category_breakdown: List[CategoryBreakdownItem]
+
+
+class DashboardInsightItem(BaseModel):
+    title: str
+    message: str
+    severity: str = "neutral"
+
+
+class DashboardInsightsResponse(BaseModel):
+    month: int
+    year: int
+    insights: List[DashboardInsightItem]
 
 
 class ChartDataPoint(BaseModel):
     name: str
     value: float
+    color: Optional[str] = None
 
 
 class IncomeExpenseChart(BaseModel):
@@ -551,34 +369,106 @@ class MonthlySpendingPoint(BaseModel):
     expenses: float
 
 
+class MonthlyTrendPoint(BaseModel):
+    month: str
+    income: float
+    expenses: float
+    savings: float
+    investments: float
+
+
+class MonthlyTrendResponse(BaseModel):
+    year: int
+    trends: List[MonthlyTrendPoint]
+    income_change_percentage: Optional[float] = None
+    expense_change_percentage: Optional[float] = None
+    savings_change_percentage: Optional[float] = None
+    investment_change_percentage: Optional[float] = None
+
+
 class DashboardChartsResponse(BaseModel):
     month: int
     year: int
     category_breakdown: List[ChartDataPoint]
     income_vs_expense: IncomeExpenseChart
     monthly_spending: List[MonthlySpendingPoint]
+    monthly_trends: List[MonthlyTrendPoint] = []
     top_merchants: List[ChartDataPoint]
 
 
-class BudgetUsageChartItem(BaseModel):
-    category_id: int
+class SavingsAnalyticsResponse(BaseModel):
+    month: int
+    year: int
+    savings: float
+    savings_rate: float
+    monthly_savings_trend: float
+    previous_month_savings: float
+    savings_status: str
+
+
+class CategoryAnalyticsItem(BaseModel):
+    category_id: Optional[int]
     category_name: str
-    limit: float
-    spent: float
-    remaining: float
-    percentage_used: float
-    status: str
+    total: float
+    percentage: float
+    transaction_count: int
+    color: Optional[str] = None
 
 
-class SuggestedBudgetResponse(BaseModel):
+class CategoryAnalyticsResponse(BaseModel):
+    month: int
+    year: int
+    total_expenses: float
+    highest_spending_category: Optional[str]
+    categories: List[CategoryAnalyticsItem]
+
+
+class MerchantAnalyticsItem(BaseModel):
+    merchant_name: str
+    total_spent: float
+    transaction_count: int
+    frequency: int
+    average_amount: float
+
+
+class MerchantAnalyticsResponse(BaseModel):
+    month: int
+    year: int
+    top_merchants: List[MerchantAnalyticsItem]
+    most_frequent_merchants: List[MerchantAnalyticsItem]
+    highest_spending_merchants: List[MerchantAnalyticsItem]
+
+
+class SubscriptionAnalyticsItem(BaseModel):
     id: Optional[int] = None
-    category_id: int
-    category_name: str
-    period: str
-    average_spend: float
-    suggested_amount: float
-    has_custom_budget: bool = False
-    custom_budget_amount: Optional[float] = None
+    merchant_name: str
+    amount: float
+    billing_period: str = "monthly"
+    monthly_cost: float
+    transaction_count: int
+    confidence: float
+    next_expected_payment: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class SubscriptionAnalyticsResponse(BaseModel):
+    month: int
+    year: int
+    subscription_count: int
+    total_monthly_cost: float
+    subscriptions: List[SubscriptionAnalyticsItem]
+
+
+class DashboardDataResponse(BaseModel):
+    summary: DashboardSummary
+    savings: SavingsAnalyticsResponse
+    categories: CategoryAnalyticsResponse
+    merchants: MerchantAnalyticsResponse
+    subscriptions: SubscriptionAnalyticsResponse
+    charts: DashboardChartsResponse
+    insights: DashboardInsightsResponse
 
 
 # ==================== Upload Schemas ====================
@@ -620,6 +510,10 @@ class UploadPreviewResponse(BaseModel):
     file_name: str
     file_size: int
     file_type: str
+    import_profile_id: Optional[int] = None
+    import_profile_name: Optional[str] = None
+    import_confidence: float = 0
+    column_mapping: dict[str, str] = {}
     total_rows: int
     successful_rows: int
     valid_rows: int
@@ -633,6 +527,8 @@ class UploadConfirmRequest(BaseModel):
     file_name: str
     file_size: int
     file_type: Optional[str] = None
+    bank_name: Optional[str] = None
+    column_mapping: dict[str, str] = {}
     total_rows: Optional[int] = None
     failed_rows: Optional[int] = None
     rows: List[UploadPreviewRow]
@@ -663,7 +559,7 @@ class UploadedFileResponse(BaseModel):
         from_attributes = True
 
 
-# ==================== AI Insight Schemas ====================
+# ==================== AI Advisor Schemas ====================
 
 class AiInsightResponse(BaseModel):
     id: int
@@ -683,26 +579,87 @@ class AiInsightsResponse(BaseModel):
     insights: List[AiInsightResponse]
 
 
-# ==================== AI Budget Recommendation Schemas ====================
+class AdvisorAskRequest(BaseModel):
+    question: str = Field(..., min_length=2, max_length=800)
+    chat_id: Optional[int] = None
+    month: Optional[int] = Field(default=None, ge=1, le=12)
+    year: Optional[int] = Field(default=None, ge=2000, le=2100)
 
-class BudgetRecommendationResponse(BaseModel):
-    id: str
+
+class AdvisorRecommendationItem(BaseModel):
     title: str
-    recommendation_text: str
-    category_name: Optional[str] = None
-    priority: str
-    potential_savings: float
-    impact_score: float
     reason: str
+    impact: str
+    estimated_savings: float = 0
+    category: Optional[str] = None
 
 
-class BudgetRecommendationsResponse(BaseModel):
-    month: int
-    year: int
-    total_income: float
-    total_expenses: float
-    savings_rate: float
-    recommendations: List[BudgetRecommendationResponse]
+class AdvisorStructuredResponse(BaseModel):
+    summary: str
+    main_problem: str
+    recommendations: List[AdvisorRecommendationItem] = []
+    savings_impact: Optional[str] = None
+    subscriptions: List[str] = []
+    risk_note: str = "This is budgeting guidance, not investment, tax, or legal advice."
+
+
+class AdvisorMessageResponse(BaseModel):
+    id: int
+    chat_id: int
+    role: str
+    content: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdvisorChatCreate(BaseModel):
+    title: Optional[str] = None
+
+
+class AdvisorChatResponse(BaseModel):
+    id: int
+    user_id: int
+    title: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdvisorChatDetailResponse(AdvisorChatResponse):
+    messages: List[AdvisorMessageResponse] = []
+
+
+class AdvisorRecommendationResponse(BaseModel):
+    id: int
+    user_id: int
+    chat_id: int
+    title: str
+    description: Optional[str] = None
+    estimated_savings: float = 0
+    category: Optional[str] = None
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdvisorRecommendationStatusUpdate(BaseModel):
+    status: str = Field(..., pattern="^(pending|accepted|dismissed|completed)$")
+
+
+class AdvisorAskResponse(BaseModel):
+    chat: AdvisorChatResponse
+    user_message: AdvisorMessageResponse
+    assistant_message: AdvisorMessageResponse
+    response: AdvisorStructuredResponse
+    recommendations: List[AdvisorRecommendationResponse] = []
+    intent: str
+    context: dict[str, Any]
 
 
 # ==================== Financial Health Score Schemas ====================
@@ -729,138 +686,3 @@ class FinancialHealthScoreResponse(BaseModel):
     breakdown: List[FinancialHealthBreakdownItem]
     improvement_tips: List[str]
     calculated_at: datetime
-
-
-# ==================== Expense Forecast Schemas ====================
-
-class ForecastCategoryPrediction(BaseModel):
-    category_id: Optional[int] = None
-    category_name: str
-    predicted_amount: float
-
-
-class ForecastHistoryPoint(BaseModel):
-    month: str
-    actual_expenses: float
-    predicted_expenses: Optional[float] = None
-
-
-class ExpenseForecastResponse(BaseModel):
-    id: int
-    forecast_month: str
-    predicted_amount: float
-    confidence_lower: float
-    confidence_upper: float
-    model_used: str
-    accuracy: Optional[float] = None
-    feature_summary: dict
-    category_forecasts: List[ForecastCategoryPrediction]
-    history: List[ForecastHistoryPoint]
-    created_at: datetime
-
-
-# ==================== Subscription Schemas ====================
-
-class SubscriptionTransactionItem(BaseModel):
-    id: int
-    description: str
-    merchant: Optional[str] = None
-    amount: float
-    date: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class SubscriptionItem(BaseModel):
-    merchant_name: str
-    monthly_amount: float
-    transaction_count: int
-    first_seen: datetime
-    last_seen: datetime
-    next_expected_date: datetime
-    confidence: float
-    is_active: bool
-    review_suggestion: Optional[str] = None
-    transactions: List[SubscriptionTransactionItem]
-
-
-class SubscriptionChartItem(BaseModel):
-    name: str
-    value: float
-
-
-class SubscriptionsResponse(BaseModel):
-    active_subscriptions: List[SubscriptionItem]
-    monthly_total: float
-    subscription_count: int
-    marked_transaction_ids: List[int]
-    chart_data: List[SubscriptionChartItem]
-
-
-# ==================== AI Financial Assistant Schemas ====================
-
-class AssistantChatRequest(BaseModel):
-    message: str = Field(..., min_length=1, max_length=1000)
-
-
-class AssistantPendingAction(BaseModel):
-    audit_id: int
-    action_type: str
-    explanation: str
-    preview: dict
-    requires_confirmation: bool = True
-
-
-class AssistantChatResponse(BaseModel):
-    message: str
-    intent: str
-    read_only: bool
-    data: Optional[dict] = None
-    pending_action: Optional[AssistantPendingAction] = None
-    suggested_questions: List[str] = []
-
-
-class AssistantConfirmRequest(BaseModel):
-    audit_id: int
-    confirm: bool = True
-
-
-class AssistantConfirmResponse(BaseModel):
-    message: str
-    audit_id: int
-    status: str
-    result: Optional[dict] = None
-
-
-class AssistantHistoryResponse(BaseModel):
-    id: int
-    user_id: int
-    user_message: str
-    assistant_response: str
-    intent: Optional[str] = None
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-# ==================== General Response Schemas ====================
-
-class MessageResponse(BaseModel):
-    """Schema for simple message response"""
-    message: str
-
-
-class ErrorResponse(BaseModel):
-    """Schema for error response"""
-    detail: str
-    status_code: int
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "detail": "Invalid credentials",
-                "status_code": 401
-            }
-        }

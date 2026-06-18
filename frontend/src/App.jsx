@@ -12,14 +12,11 @@ const Register = lazy(() => import('./pages/Register'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Transactions = lazy(() => import('./pages/Transactions'));
 const UploadStatement = lazy(() => import('./pages/UploadStatement'));
-const Budgets = lazy(() => import('./pages/Budgets'));
-const Investments = lazy(() => import('./pages/Investments'));
-const FinancialHealth = lazy(() => import('./pages/FinancialHealth'));
-const Forecast = lazy(() => import('./pages/Forecast'));
-const Subscriptions = lazy(() => import('./pages/Subscriptions'));
-const Insights = lazy(() => import('./pages/Insights'));
-const Categories = lazy(() => import('./pages/Categories'));
 const Friends = lazy(() => import('./pages/Friends'));
+const FinancialHealth = lazy(() => import('./pages/FinancialHealth'));
+const AIAdvisor = lazy(() => import('./pages/Insights'));
+const AIInsights = lazy(() => import('./pages/AIInsights'));
+const Categories = lazy(() => import('./pages/Categories'));
 
 function App() {
   return (
@@ -58,14 +55,6 @@ function App() {
               }
             />
             <Route
-              path="/friends"
-              element={
-                <ProtectedRoute>
-                  <Friends />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/categories"
               element={
                 <ProtectedRoute>
@@ -73,26 +62,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/friends"
+              element={
+                <ProtectedRoute>
+                  <Friends />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/merchants" element={<Navigate to="/dashboard" replace />} />
             <Route path="/needs-review" element={<Navigate to="/categories" replace />} />
-            <Route
-              path="/budgets"
-              element={
-                <ProtectedRoute>
-                  <Budgets />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/recommendations" element={<Navigate to="/insights" replace />} />
-            <Route path="/savings-goals" element={<Navigate to="/investments" replace />} />
-            <Route path="/savings" element={<Navigate to="/investments" replace />} />
-            <Route
-              path="/investments"
-              element={
-                <ProtectedRoute>
-                  <Investments />
-                </ProtectedRoute>
-              }
-            />
             <Route
               path="/financial-health"
               element={
@@ -102,27 +81,18 @@ function App() {
               }
             />
             <Route
-              path="/forecast"
+              path="/ai-advisor"
               element={
                 <ProtectedRoute>
-                  <Forecast />
+                  <AIAdvisor />
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/subscriptions"
-              element={
-                <ProtectedRoute>
-                  <Subscriptions />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/assistant" element={<Navigate to="/dashboard" replace />} />
             <Route
               path="/insights"
               element={
                 <ProtectedRoute>
-                  <Insights />
+                  <AIInsights />
                 </ProtectedRoute>
               }
             />

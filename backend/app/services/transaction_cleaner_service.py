@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.models.models import Category
 from app.services.categorization import categorize_transaction
 from app.services.merchant_extractor_service import extract_merchant_name
+from app.services.transaction_type_service import normalize_transaction_type
 
 COLUMN_ALIASES = {
     "transaction_date": {"date", "transaction_date", "date_of_transaction", "txn_date", "value_date"},
@@ -137,6 +138,7 @@ def standardize_transaction(
         merchant = str(categorization.get("merchant") or merchant or "").strip() or None
         category_id = categorization.get("category_id")
         category = db.query(Category).filter(Category.id == category_id).first() if category_id else None
+        transaction_type = normalize_transaction_type(db, transaction_type, category_id)
 
         return {
             "row_number": row_number,

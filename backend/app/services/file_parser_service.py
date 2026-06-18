@@ -71,4 +71,12 @@ def parse_statement_file(
         "failed_rows": len(failed_items),
         "transactions": transactions,
         "failed_items": failed_items,
+        "import_profile": parsed.get("import_profile") or {
+            "id": None,
+            "name": None,
+            "confidence": 1.0 if file_type == "pdf" else 0,
+            "column_mapping": {},
+            "bank_name": None,
+            "columns": [],
+        },
     }

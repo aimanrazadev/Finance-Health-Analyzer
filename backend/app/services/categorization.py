@@ -55,13 +55,9 @@ CATEGORY_KEYWORDS = {
     "Refunds": [
         "cashback", "refund", "reversal",
     ],
-    "Debt Cleared": [
-        "credit card", "debt", "emi", "loan", "repayment",
-    ],
 }
 
 DEFAULT_CATEGORY_NAME = "Other"
-NEEDS_REVIEW_CATEGORY_NAME = "Needs Review"
 AUTO_SAVE_CONFIDENCE_THRESHOLD = 0.95
 SUGGESTION_CONFIDENCE_THRESHOLD = 0.60
 ML_AUTO_ASSIGN_CONFIDENCE_THRESHOLD = 0.80
@@ -100,10 +96,9 @@ def _get_category_result(
 ) -> dict[str, object]:
     category = get_category_by_name(db, category_name)
     if method == "needs_review" or confidence < SUGGESTION_CONFIDENCE_THRESHOLD:
-        review_category = get_category_by_name(db, NEEDS_REVIEW_CATEGORY_NAME) or get_category_by_name(db, DEFAULT_CATEGORY_NAME)
         return {
-            "category_id": review_category.id if review_category else None,
-            "category_name": review_category.name if review_category else NEEDS_REVIEW_CATEGORY_NAME,
+            "category_id": None,
+            "category_name": "Uncategorized",
             "suggested_category_id": category.id if category else None,
             "suggested_category_name": category_name,
             "confidence": confidence,

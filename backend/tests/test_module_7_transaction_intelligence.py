@@ -188,7 +188,8 @@ class TransactionIntelligenceTestCase(unittest.TestCase):
             )
 
         self.assertEqual(result["method"], "needs_review")
-        self.assertEqual(result["category_name"], "Needs Review")
+        self.assertIsNone(result["category_id"])
+        self.assertEqual(result["category_name"], "Uncategorized")
         self.assertEqual(result["suggested_category_name"], "Food")
         self.assertEqual(result["confidence"], 0.61)
         self.assertEqual(result["review_status"], "needs_review")

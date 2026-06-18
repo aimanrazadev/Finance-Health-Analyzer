@@ -1,19 +1,20 @@
 :root {
-  --bg: rgb(10, 10, 10);
-  --background: rgb(10, 10, 10);
+  --bg: #050606;
+  --background: #050606;
   --surface: rgb(23, 23, 23);
-  --surface-muted: rgb(17, 17, 17);
-  --text: #f5f7fb;
-  --text-muted: #a8b0bf;
-  --text-soft: #747d8d;
+  --surface-muted: #111313;
+  --surface-lifted: #171818;
+  --text: #f6f7f2;
+  --text-muted: #a3abb0;
+  --text-soft: #747d82;
   --border: rgb(43, 44, 44);
-  --border-strong: rgb(58, 59, 59);
-  --primary: #4f8cff;
-  --primary-hover: #72a4ff;
-  --accent: #4f8cff;
-  --success: #00e676;
-  --warning: #f5a524;
-  --danger: #ff4d5e;
+  --border-strong: #3a3d3d;
+  --primary: #b7f536;
+  --primary-hover: #cffb5b;
+  --accent: #b7f536;
+  --success: #28e978;
+  --warning: #f6c45f;
+  --danger: #ff4d4d;
   --shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
   --radius: 24px;
   --radius-sm: 16px;
@@ -25,9 +26,9 @@
   --accent-categories: #ec4899;
   --accent-neutral: #64748b;
   --app-font: Inter, "Segoe UI", Roboto, Helvetica, Arial, ui-sans-serif, system-ui, sans-serif;
-  --font-thin: 300;
-  --font-regular: 350;
-  --font-medium: 420;
+  --font-thin: 200;
+  --font-regular: 250;
+  --font-medium: 300;
   --motion-fast: 140ms ease;
   --motion-standard: 220ms ease;
   --app-card-bg: rgb(23, 23, 23);
@@ -81,8 +82,11 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: var(--bg);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(180, 188, 193, 0.16), transparent 34%),
+    linear-gradient(90deg, #050606 0%, #0a0b0b 46%, #191d1f 100%);
   font-family: var(--app-font);
+  font-weight: var(--font-regular);
 }
 
 button,
@@ -555,7 +559,7 @@ button,
   border-radius: 10px !important;
   background: var(--app-control-bg) !important;
   color: var(--text) !important;
-  font-weight: 650;
+  font-weight: var(--font-regular);
 }
 
 .primary-button,
@@ -608,7 +612,7 @@ table td,
 .investment-summary-grid strong,
 .friends-summary strong {
   color: #ffffff !important;
-  font-weight: 650 !important;
+  font-weight: var(--font-regular) !important;
 }
 
 .page-heading p,

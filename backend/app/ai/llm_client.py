@@ -38,7 +38,7 @@ class LLMClient:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a practical personal finance assistant. Give concise, safe budgeting insights.",
+                        "content": "You are a practical personal finance advisor. Give concise, safe spending and savings insights.",
                     },
                     {"role": "user", "content": prompt},
                 ],

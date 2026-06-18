@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.models.models import Category
 from app.services.categorization import get_predicted_category_id
+from app.services.transaction_type_service import normalize_transaction_type
 
 MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024
 SUPPORTED_EXTENSIONS = {".csv", ".xlsx", ".xls"}
@@ -145,6 +146,7 @@ def parse_statement_rows(db: Session, file_name: str, content: bytes) -> dict:
             if category_id:
                 predicted_category = db.query(Category).filter(Category.id == category_id).first()
                 category_name = predicted_category.name if predicted_category else None
+            transaction_type = normalize_transaction_type(db, transaction_type, category_id)
 
             rows.append(
                 {

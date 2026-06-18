@@ -5,8 +5,8 @@ import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
 import '../styles/NeedsReview.css';
 
-const INCOME_CATEGORY_NAMES = ['Refunds', 'Investments', 'Salary', 'Shopping', 'Friends', 'Other'];
-
+const INCOME_CATEGORY_NAMES = ['Refunds', 'Friends', 'Salary', 'Shopping', 'Other'];
+const SAVINGS_CATEGORY_NAMES = ['Investments'];
 const confidencePercent = (value) => `${Math.round((value ?? 0.3) * 100)}%`;
 const methodLabel = (method) => ({
   learned: 'Learned',
@@ -43,7 +43,7 @@ const Categories = () => {
         api.get('/categories'),
       ]);
       setTransactions(categoryQueueResponse.data);
-      setCategories(categoriesResponse.data.filter((category) => category.name !== 'Needs Review'));
+          setCategories(categoriesResponse.data);
     } catch (err) {
       console.error(err);
       setError('Unable to load category queue.');
@@ -112,9 +112,13 @@ const Categories = () => {
   };
 
   const getCategoriesForType = (transactionType) => (
-    transactionType === 'income'
-      ? categories.filter((category) => INCOME_CATEGORY_NAMES.includes(category.name))
-      : categories
+    transactionType === 'savings'
+      ? categories.filter((category) => SAVINGS_CATEGORY_NAMES.includes(category.name))
+      : (
+        transactionType === 'income'
+          ? categories.filter((category) => INCOME_CATEGORY_NAMES.includes(category.name))
+          : categories
+      )
   );
 
   const getCategoryById = (categoryId) => categories.find((category) => (
@@ -122,9 +126,14 @@ const Categories = () => {
   ));
 
   const bulkCategoryOptions = filteredTransactions.length > 0
-    && filteredTransactions.every((transaction) => transaction.transaction_type === 'income')
-    ? categories.filter((category) => INCOME_CATEGORY_NAMES.includes(category.name))
-    : categories;
+    && filteredTransactions.every((transaction) => transaction.transaction_type === 'savings')
+    ? categories.filter((category) => SAVINGS_CATEGORY_NAMES.includes(category.name))
+    : (
+      filteredTransactions.length > 0
+      && filteredTransactions.every((transaction) => transaction.transaction_type === 'income')
+        ? categories.filter((category) => INCOME_CATEGORY_NAMES.includes(category.name))
+        : categories
+    );
 
   const saveBulkCorrections = async () => {
     const entries = Object.entries(selectedCategories).filter(([, categoryId]) => categoryId);
@@ -173,32 +182,36 @@ const Categories = () => {
           ) : (
             <>
               <div className="bulk-review-actions">
-                <input
-                  type="search"
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="Search name, merchant, description"
-                />
-                <label className="review-toggle">
+                <div className="review-search-control">
                   <input
-                    type="checkbox"
-                    checked={includeLearned}
-                    onChange={(event) => setIncludeLearned(event.target.checked)}
+                    type="search"
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Search transactions"
                   />
-                  Include learned
-                </label>
-                <select value={bulkCategoryId} onChange={(event) => setBulkCategoryId(event.target.value)}>
-                  <option value="">Bulk category</option>
-                  {bulkCategoryOptions.map((category) => (
-                    <option key={category.id} value={category.id}>{category.name}</option>
-                  ))}
-                </select>
-                <button className="secondary-button" onClick={applyBulkCategory}>
-                  Assign Visible
-                </button>
-                <button className="primary-button" onClick={saveBulkCorrections}>
-                  Save Category Corrections
-                </button>
+                  <label className="review-toggle">
+                    <input
+                      type="checkbox"
+                      checked={includeLearned}
+                      onChange={(event) => setIncludeLearned(event.target.checked)}
+                    />
+                    Include learned
+                  </label>
+                </div>
+                <div className="review-bulk-control">
+                  <select value={bulkCategoryId} onChange={(event) => setBulkCategoryId(event.target.value)}>
+                    <option value="">Bulk category</option>
+                    {bulkCategoryOptions.map((category) => (
+                      <option key={category.id} value={category.id}>{category.name}</option>
+                    ))}
+                  </select>
+                  <button className="secondary-button" onClick={applyBulkCategory}>
+                    Assign
+                  </button>
+                  <button className="primary-button" onClick={saveBulkCorrections}>
+                    Save All
+                  </button>
+                </div>
               </div>
               <p className="review-count">
                 Showing {filteredTransactions.length} of {transactions.length} low-confidence transactions
@@ -233,7 +246,7 @@ const Categories = () => {
                       ))}
                     </select>
                     <button className="primary-button" onClick={() => saveCorrection(transaction.id)}>
-                      Save Category
+                      Save
                     </button>
                   </div>
                 ))}

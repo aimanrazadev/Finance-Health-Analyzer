@@ -24,8 +24,8 @@
 
 .transactions-main {
   display: grid;
-  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
-  gap: 16px;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 18px;
   align-items: start;
 }
 
@@ -39,6 +39,8 @@
 
 .transaction-form-panel {
   padding: 18px;
+  position: sticky;
+  top: 24px;
 }
 
 .transaction-list-panel {
@@ -151,7 +153,7 @@
 .transaction-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1040px;
+  min-width: 860px;
 }
 
 .transaction-table th,
@@ -197,6 +199,37 @@
   font-size: 12px;
 }
 
+.method-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgb(23, 23, 23);
+  color: var(--text);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.method-rule_based,
+.method-learned,
+.method-friend_match {
+  color: #bef264;
+}
+
+.method-ml_model {
+  color: #7dd3fc;
+}
+
+.method-manual {
+  color: #ddd6fe;
+}
+
+.method-needs_review {
+  color: #fca5a5;
+}
+
 .form-error,
 .form-success {
   margin-bottom: 12px;
@@ -221,6 +254,10 @@
 @media (max-width: 1040px) {
   .transactions-main {
     grid-template-columns: 1fr;
+  }
+
+  .transaction-form-panel {
+    position: static;
   }
 }
 

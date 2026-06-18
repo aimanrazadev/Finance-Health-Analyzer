@@ -4,23 +4,13 @@ import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
 import '../styles/Insights.css';
 
+const currentDate = new Date();
+const currentYear = currentDate.getFullYear();
 const monthOptions = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ].map((label, index) => ({ label, value: index + 1 }));
-
-const currentDate = new Date();
-const currentYear = currentDate.getFullYear();
 const yearOptions = Array.from({ length: 7 }, (_, index) => currentYear - 5 + index);
-
-const insightLabels = {
-  spending: 'Spending',
-  comparison: 'Monthly Comparison',
-  category_increase: 'Category Increase',
-  anomaly: 'Unusual Spending',
-  subscription: 'Subscriptions',
-  ai: 'AI Insight',
-};
 
 const moneyFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
@@ -28,229 +18,246 @@ const moneyFormatter = new Intl.NumberFormat('en-IN', {
   maximumFractionDigits: 0,
 });
 
-const priorityLabels = {
-  High: 'High priority',
-  Medium: 'Medium priority',
-  Low: 'Low priority',
+const suggestedQuestions = [
+  'How can I save more this month?',
+  'Where am I overspending?',
+  'Review my subscriptions',
+  'How can I improve my health score?',
+  'Generate a monthly report',
+  'Search transactions above INR 500',
+];
+
+const parseAssistantContent = (content) => {
+  try {
+    return JSON.parse(content);
+  } catch {
+    return {
+      summary: content,
+      main_problem: '',
+      recommendations: [],
+      subscriptions: [],
+      risk_note: 'This is budgeting guidance, not investment, tax, or legal advice.',
+    };
+  }
 };
 
 const Insights = () => {
   const { token } = useAuth();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(currentYear);
-  const [insights, setInsights] = useState([]);
-  const [recommendationSummary, setRecommendationSummary] = useState({
-    total_income: 0,
-    total_expenses: 0,
-    savings_rate: 0,
-    recommendations: [],
-  });
-  const [loading, setLoading] = useState(true);
-  const [regenerating, setRegenerating] = useState(false);
+  const [question, setQuestion] = useState('');
+  const [activeChatId, setActiveChatId] = useState(null);
+  const [advisorResponse, setAdvisorResponse] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
+  const [chats, setChats] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [actionInput, setActionInput] = useState('');
+  const [actionResult, setActionResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const loadInsights = async (regenerate = false) => {
-    if (regenerate) {
-      setRegenerating(true);
-    } else {
-      setLoading(true);
-    }
-    setError('');
+  const headers = getAuthHeaders(token);
 
+  const loadHistory = async () => {
+    setHistoryLoading(true);
     try {
-      const [insightsResponse, recommendationsResponse] = await Promise.all([
-        api.get('/ai/insights', {
-          headers: getAuthHeaders(token),
-          params: {
-            month: selectedMonth,
-            year: selectedYear,
-            regenerate,
-          },
-        }),
-        api.get('/budget-recommendations', {
-          headers: getAuthHeaders(token),
-          params: {
-            month: selectedMonth,
-            year: selectedYear,
-          },
-        }),
+      const [chatResponse, recommendationResponse] = await Promise.all([
+        api.get('/advisor/chats', { headers }),
+        api.get('/advisor/recommendations', { headers }),
       ]);
-      setInsights(insightsResponse.data.insights);
-      setRecommendationSummary(recommendationsResponse.data);
+      setChats(chatResponse.data);
+      setRecommendations(recommendationResponse.data);
     } catch (err) {
       console.error(err);
-      setError('Unable to load AI spending insights.');
+      setError('Unable to load advisor history.');
     } finally {
-      setLoading(false);
-      setRegenerating(false);
+      setHistoryLoading(false);
     }
   };
 
   useEffect(() => {
-    let cancelled = false;
-
-    const loadInitialInsights = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const [insightsResponse, recommendationsResponse] = await Promise.all([
-          api.get('/ai/insights', {
-            headers: getAuthHeaders(token),
-            params: {
-              month: selectedMonth,
-              year: selectedYear,
-            },
-          }),
-          api.get('/budget-recommendations', {
-            headers: getAuthHeaders(token),
-            params: {
-              month: selectedMonth,
-              year: selectedYear,
-            },
-          }),
-        ]);
-        if (!cancelled) {
-          setInsights(insightsResponse.data.insights);
-          setRecommendationSummary(recommendationsResponse.data);
-        }
-      } catch (err) {
-        console.error(err);
-        if (!cancelled) {
-          setError('Unable to load AI spending insights.');
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
     if (token) {
-      loadInitialInsights();
+      loadHistory();
     }
+  }, [token]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [token, selectedMonth, selectedYear]);
+  const askAdvisor = async (event) => {
+    event.preventDefault();
+    if (!question.trim()) return;
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await api.post('/advisor/ask', {
+        question: question.trim(),
+        chat_id: activeChatId,
+        month: selectedMonth,
+        year: selectedYear,
+      }, { headers });
+      setAdvisorResponse(response.data.response);
+      setActiveChatId(response.data.chat.id);
+      setQuestion('');
+      await loadHistory();
+      await openChat(response.data.chat.id);
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.detail || 'Unable to generate advisor response.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openChat = async (chatId) => {
+    setError('');
+    try {
+      const response = await api.get(`/advisor/chats/${chatId}`, { headers });
+      setActiveChatId(chatId);
+      setMessages(response.data.messages);
+      const lastAssistant = [...response.data.messages].reverse().find((message) => message.role === 'assistant');
+      if (lastAssistant) {
+        setAdvisorResponse(parseAssistantContent(lastAssistant.content));
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Unable to open advisor chat.');
+    }
+  };
+
+  const startNewChat = async () => {
+    setActiveChatId(null);
+    setAdvisorResponse(null);
+    setMessages([]);
+    setQuestion('');
+    setActionResult(null);
+  };
+
+  const updateRecommendationStatus = async (id, status) => {
+    try {
+      await api.patch(`/advisor/recommendations/${id}`, { status }, { headers });
+      await loadHistory();
+    } catch (err) {
+      console.error(err);
+      setError('Unable to update recommendation.');
+    }
+  };
+
+  const runAdvisorAction = async (event) => {
+    event.preventDefault();
+    if (!actionInput.trim()) return;
+    setError('');
+    try {
+      const response = await api.post('/advisor/actions', { message: actionInput.trim() }, { headers });
+      setActionResult(response.data);
+      setActionInput('');
+    } catch (err) {
+      console.error(err);
+      setError('Unable to run advisor action.');
+    }
+  };
+
+  const handleQuestionKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      event.currentTarget.form?.requestSubmit();
+    }
+  };
+
+  const pendingRecommendations = recommendations.filter((item) => item.status !== 'dismissed');
 
   return (
     <div>
       <Navigation />
-      <main className="insights-page">
-        <div className="page-heading">
-          <div>
-            <p className="eyebrow">AI insights</p>
-            <h1>AI Insights</h1>
-            <p>Review spending insights, unusual activity, budget recommendations, priority levels, and potential savings.</p>
-          </div>
-          <div className="insights-actions">
-            <label>
-              Month
+      <main className="advisor-page">
+        <section className="simple-advisor-shell">
+          <header className="simple-advisor-header">
+            <div>
+              <span>AI Advisor</span>
+              <h1>Finance chat</h1>
+            </div>
+            <div className="simple-advisor-actions">
+              <button type="button" onClick={startNewChat}>New chat</button>
               <select value={selectedMonth} onChange={(event) => setSelectedMonth(Number(event.target.value))}>
-                {monthOptions.map((month) => (
-                  <option key={month.value} value={month.value}>{month.label}</option>
-                ))}
+                {monthOptions.map((month) => <option key={month.value} value={month.value}>{month.label}</option>)}
               </select>
-            </label>
-            <label>
-              Year
               <select value={selectedYear} onChange={(event) => setSelectedYear(Number(event.target.value))}>
-                {yearOptions.map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
+                {yearOptions.map((year) => <option key={year} value={year}>{year}</option>)}
               </select>
-            </label>
-            <button className="primary-button" onClick={() => loadInsights(true)} disabled={regenerating}>
-              {regenerating ? 'Regenerating...' : 'Regenerate'}
+            </div>
+          </header>
+
+          {error && <div className="surface-message error">{error}</div>}
+
+          <div className="simple-chat-window">
+            <article className="simple-chat-message assistant">
+              <div className="simple-avatar">AI</div>
+              <div>
+                <strong>AI Advisor</strong>
+                <p>Ask me about your spending, savings, subscriptions, or health score. I use your uploaded transaction data before answering.</p>
+                {messages.length === 0 && (
+                  <div className="simple-suggestion-grid">
+                    {suggestedQuestions.map((item) => (
+                      <button type="button" key={item} onClick={() => setQuestion(item)}>
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </article>
+
+            {messages.map((message) => {
+              const parsed = message.role === 'assistant' ? parseAssistantContent(message.content) : null;
+              return (
+                <article className={`simple-chat-message ${message.role}`} key={message.id}>
+                  <div className="simple-avatar">{message.role === 'assistant' ? 'AI' : 'You'}</div>
+                  <div>
+                    <strong>{message.role === 'assistant' ? 'AI Advisor' : 'You'}</strong>
+                    <p>{message.role === 'assistant' ? parsed.summary : message.content}</p>
+                    {message.role === 'assistant' && parsed.main_problem && (
+                      <div className="simple-advice-card">
+                        <span>Main issue</span>
+                        <p>{parsed.main_problem}</p>
+                      </div>
+                    )}
+                    {message.role === 'assistant' && parsed.recommendations?.length > 0 && (
+                      <div className="simple-advice-list">
+                        {parsed.recommendations.slice(0, 3).map((item, index) => (
+                          <div key={`${item.title}-${index}`}>
+                            <span>{item.title}</span>
+                            <p>{item.impact || item.reason}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+
+            {loading && (
+              <article className="simple-chat-message assistant simple-thinking">
+                <div className="simple-avatar">AI</div>
+                <div>
+                  <strong>AI Advisor</strong>
+                  <p>Reading your finance data...</p>
+                </div>
+              </article>
+            )}
+          </div>
+
+          <form className="simple-chat-composer" onSubmit={askAdvisor}>
+            <textarea
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
+              onKeyDown={handleQuestionKeyDown}
+              placeholder="Message AI Advisor..."
+              rows={1}
+            />
+            <button type="submit" disabled={loading || !question.trim()}>
+              {loading ? '...' : 'Send'}
             </button>
-          </div>
-        </div>
-
-        {error && <div className="surface-message error">{error}</div>}
-
-        <section className="insight-summary">
-          <div>
-            <span>Income</span>
-            <strong>{moneyFormatter.format(recommendationSummary.total_income)}</strong>
-          </div>
-          <div>
-            <span>Expenses</span>
-            <strong>{moneyFormatter.format(recommendationSummary.total_expenses)}</strong>
-          </div>
-          <div>
-            <span>Savings rate</span>
-            <strong>{recommendationSummary.savings_rate.toFixed(1)}%</strong>
-          </div>
-          <div>
-            <span>Potential savings</span>
-            <strong>
-              {moneyFormatter.format(
-                recommendationSummary.recommendations.reduce((total, item) => total + Number(item.potential_savings || 0), 0)
-              )}
-            </strong>
-          </div>
-        </section>
-
-        <section className="insights-section">
-          <div className="section-heading">
-            <div>
-              <h2>Spending Insights</h2>
-              <p>AI-generated signals for spending changes, unusual transactions, subscriptions, and category movement.</p>
-            </div>
-          </div>
-          {loading ? (
-            <div className="empty-state">Loading insights...</div>
-          ) : insights.length === 0 ? (
-            <div className="empty-state">Add transactions to generate AI spending insights.</div>
-          ) : (
-            <div className="insight-grid">
-              {insights.map((insight) => (
-                <article className="insight-card" key={insight.id}>
-                  <span>{insightLabels[insight.insight_type] || 'Insight'}</span>
-                  <p>{insight.insight_text}</p>
-                  <small>{new Date(insight.created_at).toLocaleString()}</small>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="insights-section">
-          <div className="section-heading">
-            <div>
-              <h2>Budget Recommendations</h2>
-              <p>Ranked actions based on budget overages, high-spend categories, savings rate, and potential savings.</p>
-            </div>
-          </div>
-          {loading ? (
-            <div className="empty-state">Loading recommendations...</div>
-          ) : recommendationSummary.recommendations.length === 0 ? (
-            <div className="empty-state">Add income, expenses, and budgets to generate recommendations.</div>
-          ) : (
-            <div className="recommendation-grid">
-              {recommendationSummary.recommendations.map((recommendation, index) => (
-                <article className={`recommendation-card ${recommendation.priority.toLowerCase()}`} key={recommendation.id}>
-                  <div className="recommendation-card-top">
-                    <span>Recommendation {index + 1}</span>
-                    <strong>{priorityLabels[recommendation.priority] || recommendation.priority}</strong>
-                  </div>
-                  <h2>{recommendation.title}</h2>
-                  <p>{recommendation.recommendation_text}</p>
-                  <div className="recommendation-meta">
-                    <div>
-                      <span>Potential savings</span>
-                      <strong>{moneyFormatter.format(recommendation.potential_savings)}/month</strong>
-                    </div>
-                    <div>
-                      <span>Reason</span>
-                      <strong>{recommendation.reason.replaceAll('_', ' ')}</strong>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
+          </form>
         </section>
       </main>
     </div>
