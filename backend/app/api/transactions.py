@@ -16,6 +16,7 @@ from app.services.learning_service import save_category_correction
 from app.services.merchant_extractor_service import extract_transaction_merchant
 from app.services.friend_service import auto_attach_transaction_if_friend
 from app.services.friend_service import attach_transaction_to_friend, create_friend
+from app.services.friend_detection_service import extract_friend_name_from_text
 from app.services.transaction_type_service import normalize_transaction_type
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
@@ -62,12 +63,10 @@ def sync_friend_if_friends_category(
     if not category or category.name.strip().lower() != "friends":
         return
 
-    friend_name = extract_transaction_merchant(transaction.description, None)
-    if not friend_name:
-        friend_name = extract_transaction_merchant(
-            transaction.description,
-            transaction.extracted_merchant or transaction.merchant,
-        )
+    friend_name = extract_friend_name_from_text(
+        transaction.description,
+        transaction.extracted_merchant or transaction.merchant,
+    )
     if not friend_name:
         friend_name = transaction.extracted_merchant or transaction.merchant or transaction.description
     if not friend_name:

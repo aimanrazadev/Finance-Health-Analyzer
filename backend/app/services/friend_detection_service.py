@@ -11,13 +11,82 @@ try:
 except ImportError:  # pragma: no cover - fallback for minimal local installs
     fuzz = None
 
+FRIEND_TRAILING_NOISE = {
+    "BANK",
+    "BHARATPE",
+    "BY",
+    "FROM",
+    "GOOGLE",
+    "INDIA",
+    "LTD",
+    "MIN",
+    "PAY",
+    "PAYMENT",
+    "PHONEPE",
+    "PVT",
+    "REF",
+    "REMARKS",
+    "TO",
+    "TRANSFER",
+    "UPI",
+    "VALUE",
+    "WHATSAPP",
+}
+
 
 def normalize_friend_name(name: str | None) -> str:
-    """Create a stable lowercase key for friend-name matching."""
+    """Create one compact key so `Aryan Malhotra` and `aryanmalhotra` match."""
     text = normalize_description(name)
-    text = re.sub(r"[^A-Za-z0-9 ]", " ", text)
-    text = re.sub(r"\s+", " ", text).strip().lower()
+    text = re.sub(r"[^A-Za-z0-9]", "", text)
+    text = text.strip().lower()
     return text
+
+
+def extract_friend_name_from_text(description: str | None, merchant: str | None = None) -> str | None:
+    """Extract a human friend name from UPI/bank narration text."""
+    raw = normalize_description(merchant if merchant else description).upper()
+    if not raw:
+        return None
+
+    parts = [part.strip(" :-") for part in re.split(r"[/|]", raw) if part.strip(" :-")]
+    candidates: list[str] = []
+    for part in parts:
+        part = re.sub(r"\b\d{3,}\b", " ", part)
+        part = re.sub(r"[^A-Z ]", " ", part)
+        tokens = [
+            token
+            for token in re.sub(r"\s+", " ", part).strip().split()
+            if token and token not in FRIEND_TRAILING_NOISE and not token.isdigit()
+        ]
+        if not tokens:
+            continue
+        if len(tokens) >= 2:
+            candidates.append(" ".join(tokens[:2]))
+        elif len(tokens[0]) >= 3:
+            candidates.append(tokens[0])
+
+    if not candidates and description and merchant:
+        return extract_friend_name_from_text(description, None)
+
+    if not candidates:
+        return None
+
+    return canonical_friend_display_name(candidates[0])
+
+
+def canonical_friend_display_name(name: str | None) -> str | None:
+    """Return the display name stored in Friends after removing noisy suffixes."""
+    text = normalize_description(name).upper()
+    text = re.sub(r"\b\d{3,}\b", " ", text)
+    text = re.sub(r"[^A-Z ]", " ", text)
+    tokens = [
+        token
+        for token in re.sub(r"\s+", " ", text).strip().split()
+        if token and token not in FRIEND_TRAILING_NOISE
+    ]
+    if not tokens:
+        return None
+    return " ".join(tokens[:2]).title()
 
 
 def _similarity(left: str, right: str) -> float:
@@ -29,11 +98,11 @@ def _similarity(left: str, right: str) -> float:
 
 
 def _transaction_text(transaction: Transaction) -> str:
-    parts = [
+    friend_name = extract_friend_name_from_text(
         transaction.description,
-        transaction.merchant,
-        transaction.extracted_merchant,
-    ]
+        transaction.extracted_merchant or transaction.merchant,
+    )
+    parts = [friend_name, transaction.description, transaction.merchant, transaction.extracted_merchant]
     return normalize_friend_name(" ".join(part for part in parts if part))
 
 
@@ -62,7 +131,13 @@ def detect_friend_for_transaction(
                 "reason": "friend_name_match",
             }
 
-    merchant_key = normalize_merchant_name(transaction.extracted_merchant or transaction.merchant or transaction.description)
+    friend_candidate = extract_friend_name_from_text(
+        transaction.description,
+        transaction.extracted_merchant or transaction.merchant,
+    )
+    merchant_key = normalize_friend_name(friend_candidate) or normalize_merchant_name(
+        transaction.extracted_merchant or transaction.merchant or transaction.description
+    )
     learned_rows = (
         db.query(FriendMerchantLearning)
         .filter(FriendMerchantLearning.user_id == user_id)

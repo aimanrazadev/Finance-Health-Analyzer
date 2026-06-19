@@ -378,7 +378,7 @@ def build_dashboard_charts(db: Session, user_id: int, month: int, year: int, day
         for row in _category_rows(db, user_id, month, year, day=day)
     ]
 
-    monthly_trends = build_monthly_trends(db, user_id, year).trends
+    monthly_trends = _period_trends(db, user_id, month, year, day)
     monthly_by_name = {row.month: row.expenses for row in monthly_trends}
 
     start_date, end_date = _period_bounds(month, year, day)
@@ -420,6 +420,59 @@ def build_dashboard_charts(db: Session, user_id: int, month: int, year: int, day
             for row in merchant_rows
         ],
     )
+
+
+def _period_trends(db: Session, user_id: int, month: int, year: int, day: int | None = None) -> list[MonthlyTrendPoint]:
+    """Return chart points that match the selected dashboard period."""
+    if month == -1:
+        rows = (
+            db.query(extract("year", Transaction.date).label("period_year"))
+            .filter(Transaction.user_id == user_id)
+            .group_by(extract("year", Transaction.date))
+            .order_by(extract("year", Transaction.date))
+            .all()
+        )
+        years = [int(row.period_year) for row in rows if row.period_year]
+        return [
+            MonthlyTrendPoint(
+                month=str(period_year),
+                income=round(_income_total(db, user_id, 0, period_year), 2),
+                expenses=round(_expense_and_investment_totals(db, user_id, 0, period_year)[0], 2),
+                savings=round(_income_total(db, user_id, 0, period_year) - _expense_and_investment_totals(db, user_id, 0, period_year)[0], 2),
+                investments=round(_expense_and_investment_totals(db, user_id, 0, period_year)[1], 2),
+            )
+            for period_year in years
+        ]
+
+    if day and month > 0:
+        income = _income_total(db, user_id, month, year, day)
+        expenses, investments = _expense_and_investment_totals(db, user_id, month, year, day)
+        return [
+            MonthlyTrendPoint(
+                month=datetime(year, month, day).strftime("%d %b"),
+                income=round(income, 2),
+                expenses=round(expenses, 2),
+                savings=round(income - expenses, 2),
+                investments=round(investments, 2),
+            )
+        ]
+
+    if month == 0:
+        return build_monthly_trends(db, user_id, year).trends
+
+    _, last_day = monthrange(year, month)
+    trends = []
+    for day_number in range(1, last_day + 1):
+        income = _income_total(db, user_id, month, year, day_number)
+        expenses, investments = _expense_and_investment_totals(db, user_id, month, year, day_number)
+        trends.append(MonthlyTrendPoint(
+            month=str(day_number),
+            income=round(income, 2),
+            expenses=round(expenses, 2),
+            savings=round(income - expenses, 2),
+            investments=round(investments, 2),
+        ))
+    return trends
 
 
 def build_merchant_analytics(db: Session, user_id: int, month: int, year: int, day: int | None = None) -> list[ChartDataPoint]:

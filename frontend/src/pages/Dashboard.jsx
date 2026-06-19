@@ -39,7 +39,6 @@ const emptySummary = {
 
 const emptyCharts = { category_breakdown: [], top_merchants: [] };
 const emptyTrendSummary = { trends: [], income_change_percentage: null, expense_change_percentage: null, savings_change_percentage: null };
-const emptyInsights = { insights: [] };
 const emptyMerchants = { top_merchants: [], most_frequent_merchants: [], highest_spending_merchants: [] };
 const emptySubscriptions = { subscription_count: 0, total_monthly_cost: 0, subscriptions: [] };
 
@@ -164,25 +163,11 @@ const DashboardMetric = ({ icon, label, value, helper, delta, tone = 'neutral', 
   </article>
 );
 
-const InsightCard = ({ insight, index }) => (
-  <article className="premium-insight-card">
-    <span className="metric-icon small" aria-hidden="true">
-      <MetricIcon name={['income', 'savings', 'transactions', 'expenses', 'health'][index % 5]} />
-    </span>
-    <div>
-      <strong>{insight.title || 'Insight'}</strong>
-      <p>{insight.message}</p>
-      <small>{index === 0 ? 'Just now' : `${index + 1} min ago`}</small>
-    </div>
-  </article>
-);
-
 const Dashboard = () => {
   const { token, user } = useAuth();
   const [summary, setSummary] = useState(emptySummary);
   const [charts, setCharts] = useState(emptyCharts);
   const [trendSummary, setTrendSummary] = useState(emptyTrendSummary);
-  const [insights, setInsights] = useState(emptyInsights);
   const [merchantAnalytics, setMerchantAnalytics] = useState(emptyMerchants);
   const [subscriptionAnalytics, setSubscriptionAnalytics] = useState(emptySubscriptions);
   const [periodMode, setPeriodMode] = useState('month');
@@ -218,7 +203,6 @@ const Dashboard = () => {
           api.get('/dashboard/summary', { headers, params }),
           api.get('/dashboard/charts', { headers, params }),
           api.get('/dashboard/charts/monthly-trends', { headers, params: { year: trendYear } }),
-          api.get('/dashboard/insights', { headers, params }),
           api.get('/dashboard/merchants', { headers, params }),
           api.get('/dashboard/subscriptions', { headers, params }),
         ]);
@@ -229,14 +213,12 @@ const Dashboard = () => {
           summaryResult,
           chartsResult,
           trendsResult,
-          insightsResult,
           merchantsResult,
           subscriptionsResult,
         ] = results;
         setSummary(summaryResult.status === 'fulfilled' ? summaryResult.value.data : emptySummary);
         setCharts(chartsResult.status === 'fulfilled' ? chartsResult.value.data : emptyCharts);
         setTrendSummary(trendsResult.status === 'fulfilled' ? trendsResult.value.data : emptyTrendSummary);
-        setInsights(insightsResult.status === 'fulfilled' ? insightsResult.value.data : emptyInsights);
         setMerchantAnalytics(merchantsResult.status === 'fulfilled' ? merchantsResult.value.data : emptyMerchants);
         setSubscriptionAnalytics(subscriptionsResult.status === 'fulfilled' ? subscriptionsResult.value.data : emptySubscriptions);
 
@@ -249,7 +231,6 @@ const Dashboard = () => {
           setSummary(emptySummary);
           setCharts(emptyCharts);
           setTrendSummary(emptyTrendSummary);
-          setInsights(emptyInsights);
           setError('Unable to load dashboard data.');
         }
       } finally {
@@ -265,7 +246,7 @@ const Dashboard = () => {
   }, [token, periodMode, selectedDate, selectedMonth, selectedYear]);
 
   const categoryBreakdown = charts.category_breakdown || [];
-  const trendData = trendSummary.trends || [];
+  const trendData = charts.monthly_trends?.length ? charts.monthly_trends : (trendSummary.trends || []);
   const totalCategorySpend = categoryBreakdown.reduce((sum, item) => sum + Number(item.value || 0), 0);
   const hasCategoryData = categoryBreakdown.length > 0 && totalCategorySpend > 0;
   const hasTrendData = trendData.some((item) => Number(item.income || 0) || Number(item.expenses || 0));
@@ -287,9 +268,6 @@ const Dashboard = () => {
     : periodMode === 'year'
       ? `${selectedYear - 1}`
       : getPreviousMonthLabel(comparisonMonth, comparisonYear);
-  const insightsList = insights.insights?.length ? insights.insights.slice(0, 4) : [
-    { title: 'No activity yet', message: 'Add or upload transactions to generate smart insights.' },
-  ];
 
   const metrics = [
     {
@@ -530,21 +508,6 @@ const Dashboard = () => {
           </section>
 
           <aside className="premium-right-rail">
-            <section className="rail-section ai-panel">
-              <div className="premium-panel-header">
-                <div>
-                  <h2>AI Insights</h2>
-                  <p>Readable signals from your data.</p>
-                </div>
-                <Link to="/insights">View all</Link>
-              </div>
-              <div className="premium-insights-list">
-                {insightsList.slice(0, 4).map((insight, index) => (
-                  <InsightCard insight={insight} index={index} key={`${insight.title}-${index}`} />
-                ))}
-              </div>
-            </section>
-
             <section className="rail-section">
               <div className="premium-panel-header">
                 <div>

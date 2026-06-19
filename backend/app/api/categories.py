@@ -26,10 +26,10 @@ from app.services.category_service import get_visible_categories
 from app.services.learning_service import save_category_correction
 from app.services.merchant_extractor_service import normalize_merchant_name
 from app.services.merchant_extractor_service import extract_merchant_name
-from app.services.merchant_extractor_service import extract_transaction_merchant
 from app.services.ml_categorization_service import MIN_TRAINING_LABELS, retrain_after_correction, train_user_category_model
 from app.services.transaction_type_service import normalize_transaction_type
 from app.services.friend_service import attach_transaction_to_friend, create_friend
+from app.services.friend_detection_service import extract_friend_name_from_text
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
@@ -48,12 +48,10 @@ def _sync_friend_after_category_correction(
     if not _is_friends_category(category):
         return
 
-    friend_name = extract_transaction_merchant(transaction.description, None)
-    if not friend_name:
-        friend_name = extract_transaction_merchant(
-            transaction.description,
-            transaction.extracted_merchant or transaction.merchant,
-        )
+    friend_name = extract_friend_name_from_text(
+        transaction.description,
+        transaction.extracted_merchant or transaction.merchant,
+    )
     if not friend_name:
         friend_name = transaction.extracted_merchant or transaction.merchant or transaction.description
     if not friend_name:

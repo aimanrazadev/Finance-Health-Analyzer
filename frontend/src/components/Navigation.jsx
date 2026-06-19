@@ -105,9 +105,11 @@ const Navigation = () => {
       </nav>
 
       <div className="nav-user">
-        <NavLink to="/upload" className="nav-bottom-button upload-bottom-link">
-          <UploadIcon />
-          <span>Upload Statement</span>
+        <NavLink to="/upload" className="nav-link upload-bottom-link">
+          <span className="nav-icon" aria-hidden="true">
+            <UploadIcon />
+          </span>
+          <span className="nav-label">Upload Statement</span>
         </NavLink>
         <button onClick={handleLogout} className="logout-button">
           <LogoutIcon />

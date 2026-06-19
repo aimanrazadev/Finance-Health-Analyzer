@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.models.models import FriendMerchantLearning
+from app.services.friend_detection_service import extract_friend_name_from_text, normalize_friend_name
 from app.services.merchant_extractor_service import normalize_merchant_name
 
 
@@ -13,7 +14,8 @@ def save_friend_learning_rule(
     merchant_pattern: str | None,
 ) -> FriendMerchantLearning | None:
     """Remember transaction text that repeatedly belongs to a friend."""
-    normalized = normalize_merchant_name(merchant_pattern)
+    friend_name = extract_friend_name_from_text(merchant_pattern)
+    normalized = normalize_friend_name(friend_name) or normalize_merchant_name(merchant_pattern)
     if not normalized:
         return None
 
@@ -34,7 +36,7 @@ def save_friend_learning_rule(
     rule = FriendMerchantLearning(
         user_id=user_id,
         friend_id=friend_id,
-        merchant_pattern=merchant_pattern or normalized,
+        merchant_pattern=friend_name or merchant_pattern or normalized,
         normalized_merchant=normalized,
         confidence=0.95,
         usage_count=1,

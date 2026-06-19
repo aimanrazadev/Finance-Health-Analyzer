@@ -1,8 +1,13 @@
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
-from app.models.models import Category, Friend, FriendTransactionLink, Transaction
-from app.services.friend_detection_service import detect_friend_for_transaction, normalize_friend_name
+from app.models.models import Category, Friend, FriendMerchantLearning, FriendTransactionLink, Transaction
+from app.services.friend_detection_service import (
+    canonical_friend_display_name,
+    detect_friend_for_transaction,
+    extract_friend_name_from_text,
+    normalize_friend_name,
+)
 from app.services.friend_learning_service import save_friend_learning_rule
 from app.services.merchant_extractor_service import extract_transaction_merchant
 
@@ -10,6 +15,121 @@ from app.services.merchant_extractor_service import extract_transaction_merchant
 def get_friends_category_id(db: Session) -> int | None:
     category = db.query(Category).filter(Category.name == "Friends").first()
     return category.id if category else None
+
+
+def _friend_name_from_transaction(transaction: Transaction) -> str | None:
+    return (
+        extract_friend_name_from_text(transaction.description, transaction.extracted_merchant or transaction.merchant)
+        or extract_transaction_merchant(transaction.description, transaction.extracted_merchant or transaction.merchant)
+        or canonical_friend_display_name(transaction.extracted_merchant or transaction.merchant or transaction.description)
+    )
+
+
+def merge_duplicate_friends(db: Session, user_id: int, normalized_name: str) -> Friend | None:
+    """Collapse duplicate friend rows into one canonical record for a user."""
+    duplicates = (
+        db.query(Friend)
+        .filter(Friend.user_id == user_id, Friend.normalized_name == normalized_name)
+        .order_by(Friend.id.asc())
+        .all()
+    )
+    if not duplicates:
+        return None
+
+    primary = duplicates[0]
+    primary.is_active = True
+    primary.name = canonical_friend_display_name(primary.name) or primary.name
+
+    duplicate_ids = [friend.id for friend in duplicates[1:]]
+    if not duplicate_ids:
+        return primary
+
+    db.query(Transaction).filter(
+        Transaction.user_id == user_id,
+        Transaction.friend_id.in_(duplicate_ids),
+    ).update({Transaction.friend_id: primary.id, Transaction.is_friend_transaction: True}, synchronize_session=False)
+
+    db.query(FriendTransactionLink).filter(
+        FriendTransactionLink.user_id == user_id,
+        FriendTransactionLink.friend_id.in_(duplicate_ids),
+    ).update({FriendTransactionLink.friend_id: primary.id}, synchronize_session=False)
+
+    db.query(FriendMerchantLearning).filter(
+        FriendMerchantLearning.user_id == user_id,
+        FriendMerchantLearning.friend_id.in_(duplicate_ids),
+    ).update({FriendMerchantLearning.friend_id: primary.id}, synchronize_session=False)
+
+    for duplicate in duplicates[1:]:
+        duplicate.is_active = False
+        duplicate.normalized_name = f"{duplicate.normalized_name}__merged_{duplicate.id}"
+
+    _dedupe_friend_links(db, user_id, primary.id)
+    _dedupe_friend_learning(db, user_id, primary.id)
+    return primary
+
+
+def normalize_existing_friends(db: Session, user_id: int | None = None) -> int:
+    """Normalize old friend rows and merge existing dirty duplicates."""
+    query = db.query(Friend)
+    if user_id is not None:
+        query = query.filter(Friend.user_id == user_id)
+
+    changed = 0
+    seen: set[tuple[int, str]] = set()
+    for friend in query.order_by(Friend.id.asc()).all():
+        if friend.is_active is False and "__merged_" in (friend.normalized_name or ""):
+            continue
+
+        display_name = canonical_friend_display_name(friend.name) or friend.name.strip()
+        normalized_name = normalize_friend_name(display_name)
+        if not normalized_name:
+            continue
+        if friend.name != display_name:
+            friend.name = display_name
+            changed += 1
+        if friend.normalized_name != normalized_name:
+            friend.normalized_name = normalized_name
+            changed += 1
+        key = (friend.user_id, normalized_name)
+        if key not in seen:
+            seen.add(key)
+            primary = merge_duplicate_friends(db, friend.user_id, normalized_name)
+            if primary:
+                changed += 1
+    return changed
+
+
+def _dedupe_friend_links(db: Session, user_id: int, friend_id: int) -> None:
+    seen: set[int] = set()
+    rows = (
+        db.query(FriendTransactionLink)
+        .filter(FriendTransactionLink.user_id == user_id, FriendTransactionLink.friend_id == friend_id)
+        .order_by(FriendTransactionLink.id.asc())
+        .all()
+    )
+    for row in rows:
+        if row.transaction_id in seen:
+            db.delete(row)
+        else:
+            seen.add(row.transaction_id)
+
+
+def _dedupe_friend_learning(db: Session, user_id: int, friend_id: int) -> None:
+    seen: dict[str, FriendMerchantLearning] = {}
+    rows = (
+        db.query(FriendMerchantLearning)
+        .filter(FriendMerchantLearning.user_id == user_id, FriendMerchantLearning.friend_id == friend_id)
+        .order_by(FriendMerchantLearning.id.asc())
+        .all()
+    )
+    for row in rows:
+        normalized = row.normalized_merchant or normalize_friend_name(row.merchant_pattern)
+        if normalized in seen:
+            seen[normalized].usage_count = (seen[normalized].usage_count or 0) + (row.usage_count or 0)
+            db.delete(row)
+        else:
+            row.normalized_merchant = normalized
+            seen[normalized] = row
 
 
 def create_friend(
@@ -20,10 +140,12 @@ def create_friend(
     phone: str | None = None,
     notes: str | None = None,
 ) -> Friend:
-    normalized_name = normalize_friend_name(name)
+    display_name = canonical_friend_display_name(name) or name.strip()
+    normalized_name = normalize_friend_name(display_name)
     if not normalized_name:
         raise ValueError("Friend name is required")
 
+    normalize_existing_friends(db, user_id)
     friend = (
         db.query(Friend)
         .filter(
@@ -34,7 +156,8 @@ def create_friend(
         .first()
     )
     if friend:
-        friend.name = name.strip()
+        friend = merge_duplicate_friends(db, user_id, normalized_name) or friend
+        friend.name = display_name
         friend.email = email if email is not None else friend.email
         friend.phone = phone if phone is not None else friend.phone
         friend.notes = notes if notes is not None else friend.notes
@@ -44,7 +167,7 @@ def create_friend(
 
     friend = Friend(
         user_id=user_id,
-        name=name.strip(),
+        name=display_name,
         normalized_name=normalized_name,
         email=email,
         phone=phone,
@@ -101,17 +224,26 @@ def attach_transaction_to_friend(
         )
         changed = True
 
+    friend_name = _friend_name_from_transaction(transaction)
+    if friend_name:
+        friend.name = canonical_friend_display_name(friend_name) or friend.name
+        friend.normalized_name = normalize_friend_name(friend.name)
+        friend = merge_duplicate_friends(db, user_id, friend.normalized_name) or friend
+        transaction.friend_id = friend.id
+
     save_friend_learning_rule(
         db,
         user_id,
         friend.id,
-        transaction.extracted_merchant or transaction.merchant or transaction.description,
+        friend_name or transaction.extracted_merchant or transaction.merchant or transaction.description,
     )
     return changed
 
 
 def auto_attach_matching_transactions(db: Session, user_id: int, friend: Friend) -> int:
     """Attach all existing transactions that mention the saved friend's name."""
+    normalize_existing_friends(db, user_id)
+    friend = merge_duplicate_friends(db, user_id, friend.normalized_name or normalize_friend_name(friend.name)) or friend
     transactions = (
         db.query(Transaction)
         .filter(Transaction.user_id == user_id)
@@ -152,6 +284,7 @@ def sync_friends_category_transactions(db: Session) -> int:
     if friends_category_id is None:
         return 0
 
+    repaired_count = normalize_existing_friends(db)
     linked_friend_ids = [
         row[0]
         for row in (
@@ -183,12 +316,8 @@ def sync_friends_category_transactions(db: Session) -> int:
         )
         .all()
     )
-    repaired_count = 0
     for transaction in rows:
-        friend_name = extract_transaction_merchant(
-            transaction.description,
-            transaction.extracted_merchant or transaction.merchant,
-        )
+        friend_name = _friend_name_from_transaction(transaction)
         if not friend_name:
             continue
 
@@ -201,8 +330,8 @@ def sync_friends_category_transactions(db: Session) -> int:
             .filter(
                 Friend.user_id == transaction.user_id,
                 Friend.normalized_name == normalized_name,
-                Friend.is_active == True,  # noqa: E712
             )
+            .order_by(Friend.id.asc())
             .first()
         )
         if not friend:
@@ -214,6 +343,9 @@ def sync_friends_category_transactions(db: Session) -> int:
             )
             db.add(friend)
             db.flush()
+        else:
+            friend.is_active = True
+            friend = merge_duplicate_friends(db, transaction.user_id, normalized_name) or friend
 
         if attach_transaction_to_friend(db, transaction.user_id, friend, transaction):
             repaired_count += 1
@@ -276,6 +408,8 @@ __all__ = [
     "create_friend",
     "friend_summary",
     "get_friend_dashboard",
+    "merge_duplicate_friends",
     "normalize_friend_name",
+    "normalize_existing_friends",
     "sync_friends_category_transactions",
 ]

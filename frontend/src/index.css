@@ -569,6 +569,20 @@ button,
   color: #ffffff !important;
 }
 
+.app-shell .friends-page .friend-select-button {
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+
+.app-shell .friends-page .friend-row {
+  border: 1px solid rgba(49, 59, 61, 0.78) !important;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.035), transparent 34%),
+    linear-gradient(145deg, rgba(14, 19, 20, 0.94), rgba(6, 9, 10, 0.98)) !important;
+}
+
 table,
 .transaction-table,
 .preview-table,

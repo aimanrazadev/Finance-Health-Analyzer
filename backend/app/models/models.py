@@ -1,6 +1,6 @@
 """SQLAlchemy ORM models for the focused Finance Health Analyzer."""
 
-from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, Text, UniqueConstraint
 from sqlalchemy.sql import func
 
 from app.db.database import Base
@@ -251,6 +251,9 @@ class CategoryLearningRule(Base):
 class Friend(Base):
     """Saved person/contact used to group friend-related transactions."""
     __tablename__ = "friends"
+    __table_args__ = (
+        UniqueConstraint("user_id", "normalized_name", name="uq_friends_user_normalized_name"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
@@ -267,6 +270,9 @@ class Friend(Base):
 class FriendTransactionLink(Base):
     """Stable link between a friend and a matched bank transaction."""
     __tablename__ = "friend_transaction_links"
+    __table_args__ = (
+        UniqueConstraint("user_id", "transaction_id", name="uq_friend_links_user_transaction"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
@@ -280,6 +286,9 @@ class FriendTransactionLink(Base):
 class FriendMerchantLearning(Base):
     """Merchant/person text learned from transactions linked to a friend."""
     __tablename__ = "friend_merchant_learning"
+    __table_args__ = (
+        UniqueConstraint("user_id", "friend_id", "normalized_merchant", name="uq_friend_learning_user_friend_merchant"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)

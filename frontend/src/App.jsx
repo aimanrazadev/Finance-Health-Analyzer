@@ -15,7 +15,6 @@ const UploadStatement = lazy(() => import('./pages/UploadStatement'));
 const Friends = lazy(() => import('./pages/Friends'));
 const FinancialHealth = lazy(() => import('./pages/FinancialHealth'));
 const AIAdvisor = lazy(() => import('./pages/Insights'));
-const AIInsights = lazy(() => import('./pages/AIInsights'));
 const Categories = lazy(() => import('./pages/Categories'));
 
 function App() {
@@ -88,14 +87,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/insights"
-              element={
-                <ProtectedRoute>
-                  <AIInsights />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/insights" element={<Navigate to="/financial-health" replace />} />
 
             {/* Redirect */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />

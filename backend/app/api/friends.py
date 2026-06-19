@@ -17,8 +17,11 @@ from app.services.friend_service import (
     create_friend,
     friend_summary,
     get_friend_dashboard,
+    merge_duplicate_friends,
     normalize_friend_name,
+    normalize_existing_friends,
 )
+from app.services.friend_detection_service import canonical_friend_display_name
 
 router = APIRouter(prefix="/friends", tags=["friends"])
 
@@ -38,6 +41,8 @@ def get_friends(
     db: Session = Depends(get_db),
     include_hidden: bool = False,
 ):
+    normalize_existing_friends(db, current_user.id)
+    db.commit()
     query = db.query(Friend).filter(Friend.user_id == current_user.id)
     if not include_hidden:
         query = query.filter(or_(Friend.is_active == True, Friend.is_active.is_(None)))  # noqa: E712
@@ -74,9 +79,25 @@ def get_friend_detail(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    normalize_existing_friends(db, current_user.id)
+    db.commit()
     friend = db.query(Friend).filter(Friend.id == friend_id, Friend.user_id == current_user.id).first()
     if not friend:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Friend not found")
+    if friend.is_active is False and "__merged_" in (friend.normalized_name or ""):
+        canonical_key = normalize_friend_name(canonical_friend_display_name(friend.name) or friend.name)
+        primary_friend = (
+            db.query(Friend)
+            .filter(
+                Friend.user_id == current_user.id,
+                Friend.normalized_name == canonical_key,
+                or_(Friend.is_active == True, Friend.is_active.is_(None)),  # noqa: E712
+            )
+            .order_by(Friend.id.asc())
+            .first()
+        )
+        if primary_friend:
+            friend = primary_friend
 
     transactions = (
         db.query(Transaction)
@@ -115,8 +136,9 @@ def update_friend(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Friend not found")
 
     if payload.name is not None:
-        friend.name = payload.name.strip()
-        friend.normalized_name = normalize_friend_name(payload.name)
+        display_name = canonical_friend_display_name(payload.name) or payload.name.strip()
+        friend.name = display_name
+        friend.normalized_name = normalize_friend_name(display_name)
     if payload.email is not None:
         friend.email = payload.email
     if payload.phone is not None:
@@ -127,6 +149,7 @@ def update_friend(
         friend.is_active = payload.is_active
 
     if friend.is_active:
+        friend = merge_duplicate_friends(db, current_user.id, friend.normalized_name) or friend
         auto_attach_matching_transactions(db, current_user.id, friend)
 
     db.commit()

@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Navigation from '../components/Navigation';
+import FriendDetailPanel from '../components/friends/FriendDetailPanel';
+import FriendDirectory from '../components/friends/FriendDirectory';
+import FriendStatCards from '../components/friends/FriendStatCards';
 import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
 import '../styles/Friends.css';
@@ -62,20 +65,6 @@ const Friends = () => {
     }
   };
 
-  const hideFriend = async (friendId) => {
-    setError('');
-    setMessage('');
-    try {
-      await api.delete(`/friends/${friendId}`, { headers });
-      setMessage('Friend hidden. Existing transaction history is kept safe.');
-      setSelectedFriend(null);
-      await loadFriends();
-    } catch (err) {
-      console.error(err);
-      setError('Unable to hide friend.');
-    }
-  };
-
   const openFriend = async (friendId) => {
     setError('');
     try {
@@ -87,9 +76,14 @@ const Friends = () => {
     }
   };
 
-  const filteredFriends = friends.filter((friend) => (
-    friend.name.toLowerCase().includes(search.trim().toLowerCase())
-  ));
+  const filteredFriends = friends.filter((friend) => {
+    const term = search.trim().toLowerCase();
+    if (!term) return true;
+    return (
+      friend.name.toLowerCase().includes(term)
+      || friend.normalized_name.toLowerCase().includes(term)
+    );
+  });
 
   return (
     <div>
@@ -106,86 +100,21 @@ const Friends = () => {
         {message && <div className="surface-message success">{message}</div>}
         {error && <div className="surface-message error">{error}</div>}
 
-        <section className="friends-summary">
-          <div>
-            <span>Active friends</span>
-            <strong>{dashboard?.active_friends ?? 0}</strong>
-          </div>
-          <div>
-            <span>Linked transactions</span>
-            <strong>{dashboard?.linked_transactions ?? 0}</strong>
-          </div>
-        </section>
+        <FriendStatCards dashboard={dashboard} />
 
         <section className="friends-layout">
-          <div className="friends-panel">
-            <form className="friend-form" onSubmit={addFriend}>
-              <input
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Friend name"
-              />
-              <button className="primary-button" type="submit">Add Friend</button>
-            </form>
-            <input
-              className="friend-search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search friends"
-            />
-
-            {loading ? (
-              <div className="empty-state">Loading friends...</div>
-            ) : filteredFriends.length === 0 ? (
-              <div className="empty-state">No friends saved yet.</div>
-            ) : (
-              <div className="friends-list">
-                {filteredFriends.map((friend) => (
-                  <div className="friend-row" key={friend.id}>
-                    <button type="button" onClick={() => openFriend(friend.id)}>
-                      <strong>{friend.name}</strong>
-                      <span>{friend.normalized_name}</span>
-                    </button>
-                    <button className="table-button danger" onClick={() => hideFriend(friend.id)}>
-                      Hide
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="friend-detail-panel">
-            {!selectedFriend ? (
-              <div className="empty-state">Select a friend to see linked transactions.</div>
-            ) : (
-              <>
-                <div className="section-heading">
-                  <div>
-                    <h2>{selectedFriend.name}</h2>
-                    <p>
-                      {selectedFriend.summary.transaction_count} linked transaction
-                      {selectedFriend.summary.transaction_count === 1 ? '' : 's'}
-                    </p>
-                  </div>
-                  <strong>{moneyFormatter.format(selectedFriend.summary.net_amount)}</strong>
-                </div>
-                <div className="friend-transaction-list">
-                  {selectedFriend.transactions.length === 0 ? (
-                    <div className="empty-state">No linked transactions yet.</div>
-                  ) : selectedFriend.transactions.map((transaction) => (
-                    <div className="friend-transaction-row" key={transaction.id}>
-                      <div>
-                        <strong>{transaction.description}</strong>
-                        <span>{new Date(transaction.date).toLocaleDateString()} - {transaction.transaction_type}</span>
-                      </div>
-                      <b>{moneyFormatter.format(transaction.amount)}</b>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          <FriendDirectory
+            friends={filteredFriends}
+            loading={loading}
+            name={name}
+            search={search}
+            selectedFriendId={selectedFriend?.id}
+            onAddFriend={addFriend}
+            onOpenFriend={openFriend}
+            onNameChange={setName}
+            onSearchChange={setSearch}
+          />
+          <FriendDetailPanel friend={selectedFriend} moneyFormatter={moneyFormatter} />
         </section>
       </main>
     </div>

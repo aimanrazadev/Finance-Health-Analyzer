@@ -14,36 +14,58 @@ const currentYear = currentDate.getFullYear();
 const yearOptions = Array.from({ length: 7 }, (_, index) => currentYear - 5 + index);
 
 const statusClass = (label = '') => label.toLowerCase().replaceAll(' ', '-');
+const moneyFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+});
+
+const formatMoney = (value) => moneyFormatter.format(Number(value || 0));
+const formatPercent = (value) => `${Number(value || 0).toFixed(1)}%`;
 
 const FinancialHealth = () => {
   const { token } = useAuth();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [score, setScore] = useState(null);
+  const [summary, setSummary] = useState(null);
+  const [snapshot, setSnapshot] = useState(null);
+  const [insights, setInsights] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
 
-    const loadScore = async () => {
+    const loadHealthIntelligence = async () => {
       setLoading(true);
       setError('');
       try {
-        const response = await api.get('/financial-health/score', {
-          headers: getAuthHeaders(token),
-          params: {
-            month: selectedMonth,
-            year: selectedYear,
-          },
-        });
+        const headers = getAuthHeaders(token);
+        const params = {
+          month: selectedMonth,
+          year: selectedYear,
+        };
+        const [scoreResponse, summaryResponse, snapshotResponse, insightsResponse] = await Promise.all([
+          api.get('/financial-health/score', { headers, params }),
+          api.get('/dashboard/summary', { headers, params }),
+          api.get('/dashboard/snapshot', { headers, params }),
+          api.get('/dashboard/insights', { headers, params }),
+        ]);
         if (!cancelled) {
-          setScore(response.data);
+          setScore(scoreResponse.data);
+          setSummary(summaryResponse.data);
+          setSnapshot(snapshotResponse.data);
+          setInsights(insightsResponse.data?.insights || []);
         }
       } catch (err) {
         console.error(err);
         if (!cancelled) {
-          setError('Unable to calculate financial health score.');
+          setError('Unable to calculate financial health and insights.');
+          setScore(null);
+          setSummary(null);
+          setSnapshot(null);
+          setInsights([]);
         }
       } finally {
         if (!cancelled) {
@@ -53,7 +75,7 @@ const FinancialHealth = () => {
     };
 
     if (token) {
-      loadScore();
+      loadHealthIntelligence();
     }
 
     return () => {
@@ -135,6 +157,54 @@ const FinancialHealth = () => {
               <div className="health-tips-list">
                 {score.improvement_tips.map((tip) => (
                   <div className="health-tip" key={tip}>{tip}</div>
+                ))}
+              </div>
+            </section>
+
+            <section className="health-insights-panel">
+              <div className="section-heading">
+                <h2>AI Insights</h2>
+                <p>Financial snapshot and readable signals for the selected month.</p>
+              </div>
+
+              <div className="health-snapshot-grid">
+                <article>
+                  <span>Income</span>
+                  <strong>{formatMoney(summary?.total_income)}</strong>
+                </article>
+                <article>
+                  <span>Expenses</span>
+                  <strong>{formatMoney(summary?.total_expenses)}</strong>
+                </article>
+                <article>
+                  <span>Savings Rate</span>
+                  <strong>{formatPercent(summary?.savings_rate)}</strong>
+                </article>
+                <article>
+                  <span>Projected Spending</span>
+                  <strong>{formatMoney(snapshot?.projected_month_end_spending)}</strong>
+                </article>
+                <article>
+                  <span>Projected Savings</span>
+                  <strong>{formatMoney(snapshot?.projected_month_end_savings)}</strong>
+                </article>
+                <article>
+                  <span>Top Signal</span>
+                  <strong>{snapshot?.top_signal || summary?.top_category || 'No signal'}</strong>
+                </article>
+              </div>
+
+              <div className="health-insights-list">
+                {insights.length === 0 ? (
+                  <div className="empty-state">Upload or add transactions to generate AI insights.</div>
+                ) : insights.map((insight, index) => (
+                  <article className="health-insight-card" key={`${insight.title}-${index}`}>
+                    <span className="health-insight-index">{index + 1}</span>
+                    <div>
+                      <h3>{insight.title || 'Insight'}</h3>
+                      <p>{insight.message}</p>
+                    </div>
+                  </article>
                 ))}
               </div>
             </section>
