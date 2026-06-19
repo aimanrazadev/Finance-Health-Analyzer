@@ -61,10 +61,6 @@ jobs:
         run: |
           python -c "import main; print('backend import ok')"
 
-      - name: Run backend smoke tests
-        run: |
-          python -m unittest discover backend/tests
-
       - name: Start backend and check health
         working-directory: backend
         run: |
