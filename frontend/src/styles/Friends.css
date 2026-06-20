@@ -1,294 +1,266 @@
 .friends-page {
-  width: 100%;
-  max-width: 1480px;
-  margin: 0;
-  padding: 32px 32px 56px;
-  box-sizing: border-box;
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
 }
 
-.friends-summary {
+.friends-heading {
+  margin-bottom: 22px;
+}
+
+.friends-heading h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 520;
+  letter-spacing: 0;
+}
+
+.friends-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
-  margin: 20px 0;
+  margin-bottom: 22px;
 }
 
-.friends-summary article,
-.friends-panel,
-.friend-detail-panel {
-  border: 1px solid rgba(54, 62, 64, 0.78);
-  border-radius: 18px;
+.friends-stats article,
+.friend-transaction-row {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 16px;
   background:
-    radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.045), transparent 34%),
-    linear-gradient(145deg, rgba(18, 24, 25, 0.92), rgba(5, 9, 10, 0.98));
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.18);
+    radial-gradient(120% 120% at 0% 100%, rgba(255, 255, 255, 0.04), transparent 58%),
+    #111312;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.20);
 }
 
-.friends-summary article {
-  min-height: 108px;
-  padding: 20px;
+.friends-stats article {
+  display: grid;
+  gap: 18px;
+  min-height: 120px;
+  padding: 24px;
 }
 
-.friends-summary span,
-.friend-select-button span,
+.friends-stats span,
+.friends-section-title span,
+.friend-detail-header p,
 .friend-transaction-row span,
-.friend-transaction-row small {
-  display: block;
+.friend-transaction-row small,
+.friend-row small {
   color: var(--text-muted);
 }
 
-.friends-summary span,
-.friend-select-button span,
-.friend-transaction-row small {
-  font-size: 13px;
-}
-
-.friends-summary strong {
-  display: block;
-  margin-top: 14px;
+.friends-stats strong {
   color: var(--text);
-  font-size: clamp(28px, 3vw, 38px);
-  font-weight: 500;
-  letter-spacing: -0.02em;
+  font-size: 36px;
+  font-weight: 520;
 }
 
-.friends-layout {
+.friends-workspace {
   display: grid;
-  grid-template-columns: minmax(320px, 430px) minmax(0, 1fr);
-  gap: 16px;
+  grid-template-columns: minmax(320px, 470px) minmax(0, 1fr);
+  gap: 28px;
   align-items: start;
-  min-height: 0;
 }
 
-.friends-panel {
+.friends-directory,
+.friend-detail {
+  min-width: 0;
+}
+
+.friends-section-title,
+.friend-detail-header {
   display: flex;
-  width: 100%;
-  max-width: 440px;
-  height: min(560px, calc(100vh - 310px));
-  min-height: 0;
-  flex-direction: column;
-  padding: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
-.friend-detail-panel {
-  display: flex;
-  height: min(560px, calc(100vh - 310px));
-  min-height: 360px;
-  flex-direction: column;
-  overflow: hidden;
-  padding: 20px;
-}
-
-.section-heading.compact {
-  margin-bottom: 14px;
-}
-
-.section-heading.compact h2 {
+.friends-section-title h2,
+.friend-detail h2 {
   margin: 0;
   color: var(--text);
   font-size: 20px;
-  font-weight: 600;
-}
-
-.section-heading.compact p {
-  margin: 4px 0 0;
-  color: var(--text-muted);
-  font-size: 14px;
+  font-weight: 620;
 }
 
 .friend-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
+  margin-bottom: 12px;
 }
 
 .friend-form input,
 .friend-search {
   width: 100%;
-  height: 44px;
-  padding: 0 14px;
-  border: 1px solid rgba(54, 62, 64, 0.92);
-  border-radius: 12px;
-  background: rgba(5, 8, 9, 0.72);
+  height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: #080d0e;
   color: var(--text);
+  padding: 0 15px;
   font: inherit;
   outline: none;
-  transition: border-color 160ms ease, background 160ms ease;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .friend-form input:focus,
 .friend-search:focus {
-  border-color: rgba(163, 230, 53, 0.6);
-  background: rgba(8, 13, 14, 0.96);
+  border-color: rgba(183, 245, 54, 0.54);
+  box-shadow: 0 0 0 3px rgba(183, 245, 54, 0.10);
 }
 
 .friend-search {
-  margin: 12px 0 16px;
+  margin-bottom: 18px;
 }
 
 .friends-list,
 .friend-transaction-list {
   display: grid;
   gap: 10px;
-  min-height: 0;
+  max-height: 560px;
   overflow-y: auto;
   padding-right: 4px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(183, 245, 54, 0.35) transparent;
-}
-
-.friends-list::-webkit-scrollbar,
-.friend-transaction-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.friends-list::-webkit-scrollbar-thumb,
-.friend-transaction-list::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgba(183, 245, 54, 0.32);
+  overscroll-behavior: contain;
 }
 
 .friend-row {
-  display: block;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
   width: 100%;
-  padding: 0;
-  border: 1px solid rgba(54, 62, 64, 0.66);
-  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
   background:
-    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.035), transparent 34%),
-    rgba(8, 13, 15, 0.74);
-  overflow: hidden;
-  transition:
-    border-color 160ms ease,
-    transform 160ms ease,
-    background 160ms ease,
-    box-shadow 160ms ease;
+    radial-gradient(100% 110% at 0% 100%, rgba(255, 255, 255, 0.035), transparent 62%),
+    #101312;
+  color: var(--text);
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
 .friend-row:hover,
 .friend-row.active {
   border-color: rgba(183, 245, 54, 0.34);
   background:
-    radial-gradient(circle at 0% 0%, rgba(183, 245, 54, 0.08), transparent 38%),
-    rgba(10, 15, 16, 0.92);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+    radial-gradient(100% 110% at 0% 100%, rgba(183, 245, 54, 0.055), transparent 62%),
+    #111513;
   transform: translateY(-1px);
 }
 
-.friend-select-button {
+.friend-row span {
   display: grid;
-  gap: 4px;
-  width: 100%;
+  gap: 6px;
   min-width: 0;
-  min-height: 58px;
-  padding: 12px 14px;
-  border: 0;
-  border-radius: 0;
-  background: transparent !important;
-  color: var(--text);
-  text-align: left;
-  cursor: pointer;
 }
 
-.friend-select-button strong,
+.friend-row strong,
 .friend-transaction-row strong {
   overflow: hidden;
   color: var(--text);
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 560;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.friend-select-button span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.friend-row em {
+  color: #b7f536;
+  font-style: normal;
+  font-weight: 620;
+  text-shadow: 0 0 14px rgba(183, 245, 54, 0.18);
 }
 
-.friend-detail-panel .section-heading {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 16px;
+.friends-empty {
+  display: grid;
+  place-items: center;
+  min-height: 170px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  color: var(--text-muted);
+  padding: 34px 18px;
+  text-align: center;
 }
 
-.friend-detail-panel .section-heading > strong {
+.friend-detail {
+  min-height: 560px;
+}
+
+.friend-detail-header p {
+  margin: 6px 0 0;
+}
+
+.friend-detail-total {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.friend-detail-total strong {
   color: var(--text);
-  font-size: 22px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.friend-empty-state {
-  min-height: 210px;
+  font-size: 24px;
+  font-weight: 560;
 }
 
 .friend-transaction-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
+  gap: 18px;
   align-items: center;
-  padding: 14px;
-  border: 1px solid rgba(54, 62, 64, 0.7);
-  border-radius: 14px;
-  background: rgba(8, 13, 15, 0.7);
+  padding: 16px;
+}
+
+.friend-transaction-row div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
 }
 
 .friend-transaction-row span {
   overflow: hidden;
-  margin-top: 4px;
-  font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.friend-transaction-row small {
-  margin-top: 4px;
+.secondary-button.danger {
+  border-color: rgba(255, 93, 108, 0.24);
+  color: #ff8a94;
 }
 
-.friend-transaction-row b {
-  color: var(--text);
-  font-size: 16px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-@media (max-width: 1180px) {
-  .friends-layout {
-    grid-template-columns: 1fr;
+@media (max-width: 960px) {
+  .friends-page {
+    width: min(100% - 24px, 1180px);
+    padding-bottom: 104px;
   }
 
-  .friends-panel,
-  .friend-detail-panel {
-    max-width: none;
-    height: auto;
-    max-height: none;
+  .friends-workspace,
+  .friends-stats {
+    grid-template-columns: 1fr;
   }
 
   .friends-list,
   .friend-transaction-list {
-    max-height: 440px;
+    max-height: 420px;
   }
 }
 
-@media (max-width: 720px) {
-  .friends-page {
-    padding: 24px 16px 40px;
-  }
-
-  .friends-summary,
+@media (max-width: 560px) {
   .friend-form,
   .friend-row,
   .friend-transaction-row {
     grid-template-columns: 1fr;
   }
 
-  .friend-detail-panel .section-heading {
+  .friend-detail-header,
+  .friends-section-title {
     display: grid;
+  }
+
+  .friend-detail-total {
+    justify-items: start;
   }
 }

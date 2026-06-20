@@ -23,7 +23,8 @@
 .app-shell .review-page,
 .app-shell .upload-page,
 .app-shell .insights-page,
-.app-shell .health-page {
+.app-shell .health-page,
+.app-shell .friends-page {
   width: min(1480px, calc(100% - 48px));
   margin-right: auto;
   margin-left: auto;
@@ -40,34 +41,11 @@
   .app-shell .review-page,
   .app-shell .upload-page,
   .app-shell .insights-page,
-  .app-shell .health-page {
+  .app-shell .health-page,
+  .app-shell .friends-page {
     width: min(100% - 24px, 1480px);
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 .dashboard-container {
@@ -243,7 +221,6 @@
 }
 
 
-
 .dashboard-empty {
   margin-bottom: 18px;
 }
@@ -374,7 +351,6 @@ table td {
   background: var(--primary);
   color: var(--bg);
 }
-
 
 
 .secondary-button {
@@ -944,7 +920,6 @@ table td {
   height: 11px;
   border-radius: 999px;
 }
-
 .transaction-form-panel,
 .transaction-list-panel,
 .budget-form-panel,
@@ -952,15 +927,13 @@ table td {
 .budget-planning-section,
 .investment-form-panel,
 .investment-list-panel,
-.friends-panel,
-.friend-detail-panel,
 .upload-card,
 .insight-card,
 .recommendation-card,
 .score-card,
 .forecast-card,
 .subscription-card,
-.subscription-chart-panel {
+.subscription-chart-panel{
   border-radius: 24px !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.72),
@@ -973,11 +946,6 @@ table td {
 .table-button {
   border-radius: 999px;
 }
-
-
-
-
-
 
 
 @media (max-width: 1180px) {
@@ -2168,7 +2136,6 @@ body,
     radial-gradient(circle at 100% 0%, rgba(180, 188, 193, 0.15), transparent 34%),
     linear-gradient(90deg, #050606 0%, #0a0b0b 46%, #191d1f 100%);
 }
-
 .app-shell .dashboard-container,
 .app-shell .wallet-page,
 .app-shell .transactions-page,
@@ -2179,9 +2146,8 @@ body,
 .app-shell .investments-page,
 .app-shell .health-page,
 .app-shell .forecast-page,
-.app-shell .friends-page,
 .app-shell .subscriptions-page,
-.app-shell .goals-page {
+.app-shell .goals-page{
   width: min(1500px, calc(100% - 48px));
   margin-right: auto;
   margin-left: auto;
@@ -2283,7 +2249,6 @@ body,
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
-
 .premium-metric-card,
 .premium-panel,
 .wallet-cash-card,
@@ -2295,8 +2260,6 @@ body,
 .review-row,
 .upload-panel,
 .preview-panel,
-.friends-panel,
-.friend-detail-panel,
 .budget-edit-panel,
 .budget-detail-panel,
 .budget-wallet-row,
@@ -2320,7 +2283,7 @@ body,
 .health-tips-panel,
 .assistant-popup,
 .assistant-message,
-.modal-backdrop .confirm-modal {
+.modal-backdrop .confirm-modal{
   border: 1px solid rgba(255, 255, 255, 0.10) !important;
   border-radius: 11px !important;
   background:
@@ -2877,19 +2840,18 @@ table td,
 }
 
 @media (max-width: 760px) {
-  .app-shell .dashboard-container,
-  .app-shell .wallet-page,
-  .app-shell .transactions-page,
-  .app-shell .budgets-page,
-  .app-shell .review-page,
-  .app-shell .upload-page,
-  .app-shell .insights-page,
-  .app-shell .investments-page,
-  .app-shell .health-page,
-  .app-shell .forecast-page,
-  .app-shell .friends-page,
-  .app-shell .subscriptions-page,
-  .app-shell .goals-page {
+.app-shell .dashboard-container,
+.app-shell .wallet-page,
+.app-shell .transactions-page,
+.app-shell .budgets-page,
+.app-shell .review-page,
+.app-shell .upload-page,
+.app-shell .insights-page,
+.app-shell .investments-page,
+.app-shell .health-page,
+.app-shell .forecast-page,
+.app-shell .subscriptions-page,
+.app-shell .goals-page{
     width: min(100% - 24px, 1500px);
   }
 
@@ -3971,15 +3933,13 @@ body {
   min-height: 100vh;
   background: transparent;
 }
-
 .app-shell .dashboard-container,
 .app-shell .transactions-page,
 .app-shell .review-page,
 .app-shell .upload-page,
 .app-shell .insights-page,
 .app-shell .health-page,
-.app-shell .friends-page,
-.app-shell .merchants-page {
+.app-shell .merchants-page{
   width: min(1360px, calc(100% - 48px)) !important;
   animation: finance-page-enter 420ms ease both;
 }
@@ -4036,7 +3996,6 @@ body {
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   gap: 12px !important;
 }
-
 .premium-metric-card,
 .premium-panel,
 .transaction-form-panel,
@@ -4045,8 +4004,6 @@ body {
 .review-row,
 .upload-panel,
 .preview-panel,
-.friends-panel,
-.friend-detail-panel,
 .merchant-panel,
 .insights-section,
 .advisor-card,
@@ -4054,7 +4011,7 @@ body {
 .score-card,
 .health-card,
 .recommendation-card,
-.insight-card {
+.insight-card{
   border: 1px solid var(--border) !important;
   border-radius: 16px !important;
   background:
@@ -4067,7 +4024,6 @@ body {
     background-color 180ms ease,
     box-shadow 180ms ease !important;
 }
-
 .premium-metric-card,
 .premium-panel,
 .premium-insight-card,
@@ -4076,10 +4032,8 @@ body {
 .transaction-list-panel,
 .upload-panel,
 .preview-panel,
-.friends-panel,
-.friend-detail-panel,
 .merchant-panel,
-.insights-section {
+.insights-section{
   animation: finance-card-enter 480ms ease both;
 }
 
@@ -4160,17 +4114,14 @@ body {
   background: #060B0D !important;
   background-color: #060B0D !important;
 }
-
 .premium-metric-card:hover,
 .premium-panel:hover,
 .transaction-form-panel:hover,
 .transaction-list-panel:hover,
 .upload-panel:hover,
 .preview-panel:hover,
-.friends-panel:hover,
-.friend-detail-panel:hover,
 .merchant-panel:hover,
-.insights-section:hover {
+.insights-section:hover{
   transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.14) !important;
   box-shadow: 0 18px 38px rgba(0, 0, 0, 0.30) !important;
@@ -4500,46 +4451,35 @@ textarea:focus {
 .premium-dashboard .premium-right-rail {
   padding-left: 4px;
 }
-
-/* Page architecture: wrapper sections become layout only; real controls, rows and tables are the cards. */
 .transactions-page .transaction-list-panel,
 .review-page .review-panel,
 .upload-page .preview-panel,
-.friends-page .friends-panel,
-.friends-page .friend-detail-panel,
-.merchants-page .merchant-panel {
+.merchants-page .merchant-panel{
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
   padding: 0 !important;
 }
-
 .transactions-page .transaction-list-panel:hover,
 .review-page .review-panel:hover,
 .upload-page .preview-panel:hover,
-.friends-page .friends-panel:hover,
-.friends-page .friend-detail-panel:hover,
-.merchants-page .merchant-panel:hover {
+.merchants-page .merchant-panel:hover{
   transform: none !important;
   border-color: transparent !important;
   box-shadow: none !important;
 }
-
 .transactions-page .transaction-filters,
 .transactions-page .transaction-table-wrapper,
 .review-page .bulk-review-actions,
 .review-page .review-row,
 .upload-page .preview-table-wrapper,
 .upload-page .failed-row,
-.friends-page .friend-form,
-.friends-page .friends-list,
-.friends-page .friend-transaction-list,
 .merchants-page .merchant-list,
 .merchants-page .merchant-rename-row,
 .merchants-page .merchant-stats,
 .merchants-page .merchant-aliases,
-.merchants-page .merchant-transactions {
+.merchants-page .merchant-transactions{
   border: 1px solid var(--border) !important;
   border-radius: 16px !important;
   background:
@@ -4547,13 +4487,10 @@ textarea:focus {
     linear-gradient(180deg, #111719 0%, #0E1416 100%) !important;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.20) !important;
 }
-
 .transactions-page .transaction-list-panel,
 .review-page .review-panel,
 .upload-page .preview-panel,
-.friends-page .friends-panel,
-.friends-page .friend-detail-panel,
-.merchants-page .merchant-panel {
+.merchants-page .merchant-panel{
   display: grid;
   gap: 14px;
 }
@@ -4562,11 +4499,8 @@ textarea:focus {
 .upload-page .preview-table-wrapper {
   overflow: hidden;
 }
-
-.friends-page .friends-list,
-.friends-page .friend-transaction-list,
 .merchants-page .merchant-list,
-.merchants-page .merchant-transactions {
+.merchants-page .merchant-transactions{
   padding: 12px;
 }
 
@@ -4661,7 +4595,6 @@ textarea:focus {
   gap: 12px !important;
   align-items: stretch;
 }
-
 .premium-dashboard .premium-metric-card,
 .premium-dashboard .dashboard-card,
 .premium-dashboard .snapshot-grid div,
@@ -4673,14 +4606,11 @@ textarea:focus {
 .review-page .review-row,
 .upload-page .preview-table-wrapper,
 .upload-page .failed-row,
-.friends-page .friend-form,
-.friends-page .friends-list,
-.friends-page .friend-transaction-list,
 .merchants-page .merchant-list,
 .merchants-page .merchant-rename-row,
 .merchants-page .merchant-stats,
 .merchants-page .merchant-aliases,
-.merchants-page .merchant-transactions {
+.merchants-page .merchant-transactions{
   border: 1px solid var(--widget-border) !important;
   border-radius: 14px !important;
   background: var(--widget-bg) !important;
@@ -4987,7 +4917,6 @@ textarea:focus {
   .app-shell .upload-page,
   .app-shell .insights-page,
   .app-shell .health-page,
-  .app-shell .friends-page,
   .app-shell .merchants-page {
     width: min(100% - 32px, 1480px) !important;
     max-width: none !important;
@@ -5006,7 +4935,6 @@ textarea:focus {
   }
 
   .premium-chart-grid,
-  .friends-layout,
   .merchant-layout,
   .upload-layout {
     grid-template-columns: 1fr !important;
@@ -5028,15 +4956,13 @@ textarea:focus {
     padding-left: 0 !important;
     padding-bottom: 92px !important;
   }
-
-  .app-shell .dashboard-container,
-  .app-shell .transactions-page,
-  .app-shell .review-page,
-  .app-shell .upload-page,
-  .app-shell .insights-page,
-  .app-shell .health-page,
-  .app-shell .friends-page,
-  .app-shell .merchants-page {
+.app-shell .dashboard-container,
+.app-shell .transactions-page,
+.app-shell .review-page,
+.app-shell .upload-page,
+.app-shell .insights-page,
+.app-shell .health-page,
+.app-shell .merchants-page{
     width: min(100% - 24px, 1480px) !important;
     margin-right: auto !important;
     margin-left: auto !important;
@@ -5126,27 +5052,23 @@ textarea:focus {
     width: 100% !important;
     min-width: 0 !important;
   }
-
-  .premium-metrics-grid,
-  .friends-summary,
-  .merchant-stats,
-  .upload-summary,
-  .advisor-response-grid,
-  .advisor-recommendation-grid,
-  .advisor-lower-grid,
-  .health-summary-grid,
-  .score-breakdown-grid {
+.premium-metrics-grid,
+.merchant-stats,
+.upload-summary,
+.advisor-response-grid,
+.advisor-recommendation-grid,
+.advisor-lower-grid,
+.health-summary-grid,
+.score-breakdown-grid{
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
-
-  .snapshot-grid,
-  .transactions-main,
-  .transaction-filters,
-  .bulk-review-actions,
-  .review-row,
-  .merchant-rename-row,
-  .advisor-action-form,
-  .friend-form {
+.snapshot-grid,
+.transactions-main,
+.transaction-filters,
+.bulk-review-actions,
+.review-row,
+.merchant-rename-row,
+.advisor-action-form{
     grid-template-columns: 1fr !important;
   }
 
@@ -5158,14 +5080,13 @@ textarea:focus {
 }
 
 @media (max-width: 720px) {
-  .app-shell .dashboard-container,
-  .app-shell .transactions-page,
-  .app-shell .review-page,
-  .app-shell .upload-page,
-  .app-shell .insights-page,
-  .app-shell .health-page,
-  .app-shell .friends-page,
-  .app-shell .merchants-page {
+.app-shell .dashboard-container,
+.app-shell .transactions-page,
+.app-shell .review-page,
+.app-shell .upload-page,
+.app-shell .insights-page,
+.app-shell .health-page,
+.app-shell .merchants-page{
     width: min(100% - 18px, 1480px) !important;
   }
 
@@ -5176,21 +5097,18 @@ textarea:focus {
     font-size: clamp(24px, 8vw, 34px) !important;
     line-height: 1.08 !important;
   }
-
-  .premium-metrics-grid,
-  .premium-chart-grid,
-  .premium-right-rail,
-  .friends-summary,
-  .friends-layout,
-  .merchant-layout,
-  .merchant-stats,
-  .upload-layout,
-  .upload-summary,
-  .advisor-response-grid,
-  .advisor-recommendation-grid,
-  .advisor-lower-grid,
-  .health-summary-grid,
-  .score-breakdown-grid {
+.premium-metrics-grid,
+.premium-chart-grid,
+.premium-right-rail,
+.merchant-layout,
+.merchant-stats,
+.upload-layout,
+.upload-summary,
+.advisor-response-grid,
+.advisor-recommendation-grid,
+.advisor-lower-grid,
+.health-summary-grid,
+.score-breakdown-grid{
     grid-template-columns: 1fr !important;
   }
 
@@ -5210,19 +5128,15 @@ textarea:focus {
   .premium-category-row {
     grid-template-columns: 12px minmax(0, 1fr) auto auto !important;
   }
-
-  .friends-summary strong,
-  .premium-dashboard .premium-metric-card strong,
-  .metric-card-copy strong,
-  .snapshot-grid strong {
+.premium-dashboard .premium-metric-card strong,
+.metric-card-copy strong,
+.snapshot-grid strong{
     font-size: clamp(20px, 7vw, 26px) !important;
   }
-
-  .friend-row,
-  .history-item,
-  .merchant-list button,
-  .advisor-history-list button,
-  .advisor-saved-list article {
+.history-item,
+.merchant-list button,
+.advisor-history-list button,
+.advisor-saved-list article{
     gap: 10px !important;
   }
 }
@@ -5261,34 +5175,27 @@ textarea:focus {
   .premium-dashboard .metric-sparkline {
     width: 70px !important;
   }
-
-  .premium-dashboard .dashboard-card,
-  .premium-dashboard .premium-metric-card,
-  .premium-dashboard .premium-insight-card,
-  .premium-dashboard .snapshot-grid div,
-  .transaction-form-panel,
-  .transaction-list-panel,
-  .review-panel,
-  .upload-panel,
-  .preview-panel,
-  .friends-panel,
-  .friend-detail-panel,
-  .merchant-panel,
-  .advisor-card,
-  .advisor-section,
-  .advisor-question-card {
+.premium-dashboard .dashboard-card,
+.premium-dashboard .premium-metric-card,
+.premium-dashboard .premium-insight-card,
+.premium-dashboard .snapshot-grid div,
+.transaction-form-panel,
+.transaction-list-panel,
+.review-panel,
+.upload-panel,
+.preview-panel,
+.merchant-panel,
+.advisor-card,
+.advisor-section,
+.advisor-question-card{
     padding: 14px !important;
     border-radius: 14px !important;
   }
-
-  .friend-row,
-  .history-item {
+.history-item{
     grid-template-columns: 1fr !important;
     align-items: stretch !important;
   }
-
-  .friend-row .table-button.danger,
-  .history-actions {
+.history-actions{
     justify-self: start !important;
   }
 }
@@ -5312,7 +5219,6 @@ textarea:focus {
   --premium-red-glow: 0 0 12px rgba(255, 90, 82, 0.38);
   --premium-cyan-glow: 0 0 12px rgba(94, 234, 212, 0.32);
 }
-
 .premium-dashboard .premium-dashboard-main,
 .premium-dashboard .premium-dashboard-grid,
 .premium-dashboard .premium-metrics-grid,
@@ -5321,11 +5227,9 @@ textarea:focus {
 .premium-dashboard .dashboard-section,
 .premium-dashboard .rail-section,
 .transactions-page .transactions-main,
-.friends-page .friends-summary,
-.friends-page .friends-layout,
 .upload-page .upload-layout,
 .review-page .review-panel,
-.merchants-page .merchant-layout {
+.merchants-page .merchant-layout{
   border: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -5344,7 +5248,6 @@ textarea:focus {
   grid-auto-rows: 136px !important;
   gap: 12px !important;
 }
-
 .premium-dashboard .premium-metric-card,
 .premium-dashboard .dashboard-card,
 .premium-dashboard .ai-snapshot-card,
@@ -5360,12 +5263,6 @@ textarea:focus {
 .upload-page .upload-card,
 .upload-page .preview-table-wrapper,
 .upload-page .history-item,
-.friends-page .friends-panel,
-.friends-page .friend-detail-panel,
-.friends-page .friend-row,
-.friends-page .friend-form,
-.friends-page .friends-list,
-.friends-page .friend-transaction-list,
 .merchants-page .merchant-panel,
 .merchants-page .merchant-list,
 .merchants-page .merchant-stats,
@@ -5376,7 +5273,7 @@ textarea:focus {
 .advisor-section,
 .advisor-question-card,
 .health-page .score-card,
-.health-page .score-breakdown-card {
+.health-page .score-breakdown-card{
   border: 1px solid var(--premium-card-border) !important;
   border-radius: 16px !important;
   background: var(--premium-card-bg) !important;
@@ -5970,8 +5867,6 @@ textarea:focus {
     width: 72px !important;
   }
 }
-
-/* Minimal copy pass: remove page/card subtitles so the UI reads cleaner. */
 .page-heading .eyebrow,
 .page-heading > p,
 .premium-dashboard-header .eyebrow,
@@ -5992,13 +5887,12 @@ textarea:focus {
 .upload-page .page-heading p,
 .upload-card > p,
 .transactions-header p,
-.friends-page .page-heading p,
 .categories-page .page-heading p,
 .ai-insights-page .page-heading p,
 .health-page .page-heading p,
 .helper-text,
 [class*="subtitle"],
-[class*="description"] {
+[class*="description"]{
   display: none !important;
 }
 
@@ -6068,7 +5962,6 @@ body::before,
 .app-shell::after {
   display: none !important;
 }
-
 .app-shell .dashboard-container,
 .app-shell .transactions-page,
 .app-shell .review-page,
@@ -6077,9 +5970,8 @@ body::before,
 .app-shell .advisor-page,
 .app-shell .ai-insights-page,
 .app-shell .health-page,
-.app-shell .friends-page,
 .premium-dashboard,
-.transactions-main {
+.transactions-main{
   background: transparent !important;
 }
 
@@ -6096,7 +5988,6 @@ body::before,
   --finance-card-shadow: 0 16px 34px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.035);
   --finance-card-shadow-hover: 0 20px 42px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.045);
 }
-
 .premium-dashboard .premium-metric-card,
 .premium-dashboard .dashboard-card,
 .premium-dashboard .ai-snapshot-card,
@@ -6106,9 +5997,6 @@ body::before,
 .upload-page .upload-card,
 .review-page .review-panel,
 .categories-page .review-panel,
-.friends-page .friends-panel,
-.friends-page .friend-card,
-.friends-page .friends-summary > div,
 .advisor-card,
 .advisor-question-card,
 .health-page .score-card,
@@ -6116,22 +6004,19 @@ body::before,
 .transactions-page .transaction-form-card,
 .transactions-page .transactions-toolbar,
 .transactions-page .transactions-table-card,
-.transactions-page .transaction-table-card {
+.transactions-page .transaction-table-card{
   background: var(--finance-card-bg) !important;
   border: 1px solid var(--finance-card-border-soft) !important;
   box-shadow: var(--finance-card-shadow) !important;
   backdrop-filter: none !important;
 }
-
 .premium-dashboard .premium-insight-card,
 .premium-dashboard .premium-category-list.compact,
 .premium-dashboard .snapshot-grid > div,
-.friends-page .friend-card,
 .transactions-page tbody tr,
-.upload-page .upload-history-item {
+.upload-page .upload-history-item{
   background: var(--finance-card-bg-deep) !important;
 }
-
 .premium-dashboard .premium-metric-card::before,
 .premium-dashboard .premium-metric-card::after,
 .premium-dashboard .dashboard-card::before,
@@ -6143,22 +6028,16 @@ body::before,
 .premium-dashboard .premium-category-list.compact::before,
 .premium-dashboard .premium-category-list.compact::after,
 .upload-page .upload-card::before,
-.upload-page .upload-card::after,
-.friends-page .friends-panel::before,
-.friends-page .friends-panel::after,
-.friends-page .friend-card::before,
-.friends-page .friend-card::after {
+.upload-page .upload-card::after{
   display: none !important;
   opacity: 0 !important;
   background: none !important;
 }
-
 .premium-dashboard .premium-metric-card:hover,
 .premium-dashboard .dashboard-card:hover,
 .premium-dashboard .ai-snapshot-card:hover,
 .premium-dashboard .premium-insight-card:hover,
-.upload-page .upload-card:hover,
-.friends-page .friend-card:hover {
+.upload-page .upload-card:hover{
   transform: translateY(-2px);
   border-color: var(--finance-card-border) !important;
   box-shadow: var(--finance-card-shadow-hover) !important;
@@ -6212,19 +6091,16 @@ body::before,
     transform: translateY(0);
   }
 }
-
-/* Unified app theme: every page now uses the same graphite/lime visual system. */
 .app-shell main,
 .app-shell .transactions-page,
 .app-shell .review-page,
 .app-shell .categories-page,
 .app-shell .upload-page,
-.app-shell .friends-page,
 .app-shell .advisor-page,
 .app-shell .insights-page,
 .app-shell .ai-insights-page,
 .app-shell .health-page,
-.app-shell .auth-page {
+.app-shell .auth-page{
   color: #eef4f0 !important;
 }
 
@@ -6249,7 +6125,6 @@ body::before,
 .app-shell .empty-state {
   color: rgba(210, 220, 216, 0.68) !important;
 }
-
 .transaction-form-panel,
 .transaction-list-panel,
 .transaction-filters,
@@ -6272,14 +6147,6 @@ body::before,
 .upload-history-item,
 .statement-dropzone,
 .import-profile-card,
-.friends-summary > div,
-.friends-panel,
-.friends-list,
-.friend-card,
-.friend-row,
-.friend-detail-panel,
-.friend-empty,
-.friend-transaction-list,
 .simple-advisor-shell,
 .simple-chat-window,
 .simple-chat-composer,
@@ -6299,31 +6166,27 @@ body::before,
 .health-page .health-metric-card,
 .health-page .score-tip-card,
 .auth-card,
-.surface-card {
+.surface-card{
   background: var(--finance-card-bg) !important;
   border: 1px solid var(--finance-card-border-soft) !important;
   border-radius: 18px !important;
   box-shadow: var(--finance-card-shadow) !important;
   backdrop-filter: none !important;
 }
-
 .review-row,
 .category-color-row,
 .history-item,
 .upload-history-item,
-.friend-card,
-.friend-row,
 .simple-chat-message > div:last-child,
 .simple-advice-list > div,
 .advisor-history-card,
 .advisor-recommendation-card,
 .preview-table tbody tr,
 .transaction-table tbody tr,
-.transactions-table tbody tr {
+.transactions-table tbody tr{
   background: var(--finance-card-bg-deep) !important;
   border-color: rgba(49, 59, 61, 0.82) !important;
 }
-
 .transaction-form-panel::before,
 .transaction-form-panel::after,
 .transaction-list-panel::before,
@@ -6338,10 +6201,6 @@ body::before,
 .upload-panel::after,
 .upload-card::before,
 .upload-card::after,
-.friends-summary::before,
-.friends-summary::after,
-.friends-panel::before,
-.friends-panel::after,
 .simple-advisor-shell::before,
 .simple-advisor-shell::after,
 .simple-chat-window::before,
@@ -6351,12 +6210,11 @@ body::before,
 .health-page .score-card::before,
 .health-page .score-card::after,
 .auth-card::before,
-.auth-card::after {
+.auth-card::after{
   display: none !important;
   opacity: 0 !important;
   background: none !important;
 }
-
 .transaction-form-panel:hover,
 .transaction-list-panel:hover,
 .review-panel:hover,
@@ -6365,15 +6223,12 @@ body::before,
 .upload-card:hover,
 .history-item:hover,
 .upload-history-item:hover,
-.friends-summary > div:hover,
-.friends-panel:hover,
-.friend-card:hover,
 .simple-advisor-shell:hover,
 .simple-advice-card:hover,
 .advisor-card:hover,
 .health-page .score-card:hover,
 .health-page .score-breakdown-card:hover,
-.auth-card:hover {
+.auth-card:hover{
   border-color: var(--finance-card-border) !important;
   box-shadow: var(--finance-card-shadow-hover) !important;
 }
@@ -6408,7 +6263,7 @@ body::before,
   border-radius: 12px;
 }
 
-.app-shell button:not(.nav-link):not(.nav-bottom-button):not(.logout-button):not(.premium-link):not(.plain-button):not(.friend-select-button),
+.app-shell button:not(.nav-link):not(.nav-bottom-button):not(.logout-button):not(.premium-link):not(.plain-button),
 .app-shell .primary-button,
 .app-shell .submit-button,
 .app-shell .save-button,
@@ -6420,7 +6275,7 @@ body::before,
   font-weight: 520 !important;
 }
 
-.app-shell button:not(.nav-link):not(.nav-bottom-button):not(.logout-button):not(.premium-link):not(.plain-button):not(.friend-select-button):hover,
+.app-shell button:not(.nav-link):not(.nav-bottom-button):not(.logout-button):not(.premium-link):not(.plain-button):hover,
 .app-shell .primary-button:hover,
 .app-shell .submit-button:hover,
 .app-shell .save-button:hover,
@@ -6529,13 +6384,11 @@ body::before,
   border: 1px solid rgba(255, 86, 78, 0.34) !important;
   color: #ffaaa4 !important;
 }
-
 .empty-state,
-.friend-empty,
 .advisor-empty,
 .upload-empty,
 .review-empty,
-.no-data-state {
+.no-data-state{
   background: rgba(7, 10, 11, 0.72) !important;
   border: 1px dashed rgba(72, 84, 86, 0.8) !important;
   border-radius: 16px !important;
@@ -6569,17 +6422,15 @@ body::before,
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .transaction-form-panel,
-  .transaction-list-panel,
-  .review-panel,
-  .upload-panel,
-  .upload-card,
-  .friends-summary > div,
-  .friends-panel,
-  .simple-advisor-shell,
-  .simple-chat-window,
-  .health-page .score-card,
-  .auth-card {
+.transaction-form-panel,
+.transaction-list-panel,
+.review-panel,
+.upload-panel,
+.upload-card,
+.simple-advisor-shell,
+.simple-chat-window,
+.health-page .score-card,
+.auth-card{
     animation: finance-card-enter 380ms ease both;
   }
 }
@@ -6669,7 +6520,6 @@ body::before,
   --finance-card-shadow: 0 12px 28px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.025);
   --finance-card-shadow-hover: 0 14px 32px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
-
 .premium-dashboard .premium-metric-card,
 .premium-dashboard .dashboard-card,
 .premium-dashboard .ai-snapshot-card,
@@ -6683,13 +6533,10 @@ body::before,
 .review-row,
 .upload-panel,
 .upload-card,
-.friends-summary > div,
-.friends-panel,
-.friend-card,
 .simple-advisor-shell,
 .simple-advice-card,
 .health-page .score-card,
-.health-page .score-breakdown-card {
+.health-page .score-breakdown-card{
   background: var(--finance-card-bg) !important;
   border-color: var(--finance-card-border-soft) !important;
   box-shadow: var(--finance-card-shadow) !important;
@@ -6782,15 +6629,13 @@ textarea,
   font-weight: 460 !important;
   line-height: 1.08 !important;
 }
-
 .app-shell h2,
 .app-shell .section-heading h2,
 .app-shell .premium-panel-header h2,
 .app-shell .dashboard-card h2,
 .app-shell .upload-panel h2,
-.app-shell .friends-panel h2,
 .app-shell .review-panel h2,
-.app-shell .simple-advisor-shell h2 {
+.app-shell .simple-advisor-shell h2{
   font-size: var(--type-section-title) !important;
   font-weight: 560 !important;
   line-height: 1.18 !important;
@@ -7192,216 +7037,13 @@ textarea,
   width: 42px !important;
   height: 42px !important;
 }
-
-/* Friends page: keep rows independent, dark, and consistent with the app theme. */
-.friends-page .friends-list,
-.friends-page .friends-layout {
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-.friends-page .friend-row {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) auto !important;
-  gap: 12px !important;
-  align-items: center !important;
-  padding: 12px 14px !important;
-  border: 1px solid rgba(42, 50, 52, 0.86) !important;
-  border-radius: 14px !important;
-  background: linear-gradient(145deg, rgba(15, 20, 21, 0.96), rgba(8, 11, 12, 0.99)) !important;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14) !important;
-}
-
-.friends-page .friend-row:hover {
-  border-color: rgba(155, 239, 56, 0.34) !important;
-  background: linear-gradient(145deg, rgba(18, 24, 24, 0.98), rgba(9, 13, 14, 0.99)) !important;
-}
-
-.friends-page .friend-row > button:first-child {
-  display: grid !important;
-  gap: 3px !important;
-  min-width: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  color: #f6faf7 !important;
-  box-shadow: none !important;
-  text-align: left !important;
-}
-
-.friends-page .friend-row > button:first-child:hover {
-  transform: none !important;
-  filter: none !important;
-}
-
-.friends-page .friend-row > button:first-child strong {
-  color: #f6faf7 !important;
-  font-size: 15px !important;
-  font-weight: 520 !important;
-  line-height: 1.2 !important;
-}
-
-.friends-page .friend-row > button:first-child span {
-  color: rgba(210, 220, 216, 0.62) !important;
-  font-size: 13px !important;
-  line-height: 1.2 !important;
-}
-
-.friends-page .friend-row .table-button.danger {
-  min-height: 34px !important;
-  padding: 0 14px !important;
-  border: 1px solid rgba(255, 86, 78, 0.34) !important;
-  border-radius: 11px !important;
-  background: rgba(255, 86, 78, 0.07) !important;
-  color: #ff8f88 !important;
-  box-shadow: none !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-}
-
-.friends-page .friend-row .table-button.danger:hover {
-  background: rgba(255, 86, 78, 0.13) !important;
-  border-color: rgba(255, 86, 78, 0.48) !important;
-  transform: none !important;
-}
-
-/* Friends final pass: directory rows are simple selectable rows, not green cards. */
-.friends-page .friends-panel,
-.friends-page .friends-list,
-.friends-page .friend-form {
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.friends-page .friends-list {
-  display: grid !important;
-  gap: 8px !important;
-  padding: 0 !important;
-}
-
-.friends-page .friend-row {
-  grid-template-columns: 1fr !important;
-  padding: 0 !important;
-  border: 1px solid rgba(49, 59, 61, 0.78) !important;
-  border-radius: 14px !important;
-  background:
-    linear-gradient(145deg, rgba(14, 19, 20, 0.94), rgba(6, 9, 10, 0.98)) !important;
-  box-shadow: none !important;
-}
-
-.friends-page .friend-row:hover,
-.friends-page .friend-row.active {
-  border-color: rgba(183, 245, 54, 0.32) !important;
-  background:
-    linear-gradient(145deg, rgba(18, 24, 23, 0.96), rgba(7, 11, 12, 0.99)) !important;
-  transform: none !important;
-}
-
-.friends-page .friend-select-button,
-.friends-page .friend-row > button:first-child {
-  width: 100% !important;
-  min-height: 58px !important;
-  padding: 12px 14px !important;
-  border: 0 !important;
-  border-radius: 14px !important;
-  background: transparent !important;
-  color: #f4f7f4 !important;
-  box-shadow: none !important;
-}
-
-.friends-page .friend-select-button:hover,
-.friends-page .friend-row > button:first-child:hover {
-  background: rgba(183, 245, 54, 0.045) !important;
-}
-
-.friends-page .friend-row .table-button.danger {
-  display: none !important;
-}
-
-/* Flatten multi-card wrappers: containers organize content; only items look like cards. */
-.friends-page .friend-detail-panel,
-.friends-page .friends-panel,
 .upload-page .upload-layout,
 .transactions-page .transactions-main,
 .review-page .review-list,
-.categories-page .review-list {
+.categories-page .review-list{
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
-}
-
-.friends-page .friend-detail-panel {
-  padding: 0 !important;
-}
-
-.friends-page .friend-detail-panel .section-heading {
-  display: flex !important;
-  align-items: flex-start !important;
-  justify-content: space-between !important;
-  gap: 16px !important;
-  margin: 0 0 14px !important;
-  padding: 0 !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-.friends-page .friend-detail-panel .section-heading h2 {
-  margin: 0 !important;
-  font-size: 21px !important;
-  font-weight: 560 !important;
-}
-
-.friends-page .friend-detail-panel .section-heading strong {
-  color: #eaf2ed !important;
-  font-size: 18px !important;
-  font-weight: 520 !important;
-  white-space: nowrap !important;
-}
-
-.friends-page .friend-transaction-list {
-  gap: 8px !important;
-  padding: 0 !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-.friends-page .friend-transaction-row {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) auto !important;
-  gap: 12px !important;
-  align-items: center !important;
-  padding: 13px 14px !important;
-  border: 1px solid rgba(42, 50, 52, 0.72) !important;
-  border-radius: 12px !important;
-  background: rgba(12, 16, 17, 0.72) !important;
-  box-shadow: none !important;
-}
-
-.friends-page .friend-transaction-row strong {
-  display: block !important;
-  color: #eef4f0 !important;
-  font-size: 14px !important;
-  font-weight: 480 !important;
-  line-height: 1.35 !important;
-}
-
-.friends-page .friend-transaction-row span {
-  margin-top: 4px !important;
-  color: rgba(210, 220, 216, 0.58) !important;
-  font-size: 12.5px !important;
-}
-
-.friends-page .friend-transaction-row b {
-  color: #dfe8e3 !important;
-  font-size: 14px !important;
-  font-weight: 520 !important;
-  white-space: nowrap !important;
 }
 
 /* AI Advisor: full-page chat canvas, no outer message wrapper. */
@@ -7819,43 +7461,36 @@ textarea,
   }
 }
 
-/* Final Friends directory guard: selectable rows should never inherit green action-button styling. */
-.app-shell .friends-page .friends-list .friend-row {
-  display: block !important;
-  width: 100% !important;
-  padding: 0 !important;
-  border: 1px solid rgba(49, 59, 61, 0.78) !important;
-  border-radius: 14px !important;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.035), transparent 34%),
-    linear-gradient(145deg, rgba(14, 19, 20, 0.94), rgba(6, 9, 10, 0.98)) !important;
-  box-shadow: none !important;
+/* Transactions table: keep filters visible and make the ledger itself scroll. */
+.transactions-page .transaction-list-panel {
+  min-width: 0 !important;
   overflow: hidden !important;
 }
 
-.app-shell .friends-page .friends-list .friend-row:hover,
-.app-shell .friends-page .friends-list .friend-row.active {
-  border-color: rgba(183, 245, 54, 0.30) !important;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(183, 245, 54, 0.055), transparent 36%),
-    linear-gradient(145deg, rgba(18, 24, 23, 0.96), rgba(7, 11, 12, 0.99)) !important;
-}
-
-.app-shell .friends-page .friends-list .friend-select-button {
-  display: grid !important;
+.transactions-page .transaction-table-wrapper {
+  display: block !important;
   width: 100% !important;
-  min-height: 58px !important;
-  padding: 12px 14px !important;
-  border: 0 !important;
-  border-radius: 14px !important;
+  max-width: 100% !important;
+  height: min(680px, calc(100vh - 145px)) !important;
+  max-height: min(680px, calc(100vh - 145px)) !important;
+  overflow-x: scroll !important;
+  overflow-y: scroll !important;
+  overscroll-behavior: contain !important;
+  scrollbar-gutter: stable both-edges !important;
+  -webkit-overflow-scrolling: touch !important;
+  border: 1px solid rgba(58, 68, 70, 0.42) !important;
+  border-radius: 18px !important;
   background: transparent !important;
-  color: #f4f7f4 !important;
   box-shadow: none !important;
-  text-align: left !important;
-  transform: none !important;
-  filter: none !important;
 }
 
-.app-shell .friends-page .friends-list .friend-select-button:hover {
-  background: rgba(183, 245, 54, 0.035) !important;
+.transactions-page .transaction-table {
+  width: max-content !important;
+  min-width: 1220px !important;
+}
+
+.transactions-page .transaction-table th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 2 !important;
 }

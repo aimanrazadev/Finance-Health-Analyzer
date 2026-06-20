@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
 import '../styles/NeedsReview.css';
 
-const INCOME_CATEGORY_NAMES = ['Refunds', 'Friends', 'Salary', 'Shopping', 'Other'];
+const INCOME_CATEGORY_NAMES = ['Refunds', 'Salary', 'Shopping', 'Friend', 'Friends', 'Other'];
 const SAVINGS_CATEGORY_NAMES = ['Investments'];
 const confidencePercent = (value) => `${Math.round((value ?? 0.3) * 100)}%`;
 const methodLabel = (method) => ({
@@ -178,7 +178,7 @@ const Categories = () => {
           {loading ? (
             <div className="empty-state">Loading category queue...</div>
           ) : transactions.length === 0 ? (
-            <div className="empty-state">All transactions are categorized confidently.</div>
+            <div className="empty-state">No transactions need category review.</div>
           ) : (
             <>
               <div className="bulk-review-actions">

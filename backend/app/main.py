@@ -14,7 +14,6 @@ from app.api.uploads import router as uploads_router
 from app.db.schema_maintenance import ensure_database_schema
 from app.models import models
 from app.services.category_service import seed_default_categories
-from app.services.friend_service import sync_friends_category_transactions
 from app.services.transaction_merchant_cleanup_service import clean_existing_transaction_merchants
 
 ensure_database_schema()
@@ -24,7 +23,6 @@ def seed_categories():
     try:
         seed_default_categories(db)
         clean_existing_transaction_merchants(db)
-        sync_friends_category_transactions(db)
     finally:
         db.close()
 

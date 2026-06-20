@@ -178,7 +178,6 @@ p {
   border: 1px dashed var(--border-strong);
   border-radius: var(--radius);
 }
-
 section,
 article,
 aside,
@@ -187,8 +186,6 @@ aside,
 .analytics-section,
 .transaction-form-panel,
 .transaction-list-panel,
-.friend-detail-panel,
-.friends-panel,
 .subscription-card,
 .subscription-chart-panel,
 .budget-form-panel,
@@ -197,17 +194,15 @@ aside,
 .planning-card,
 .investment-form-panel,
 .investment-list-panel,
-.friends-card,
 .upload-card,
 .recommendation-card,
 .insight-card,
 .score-card,
-.forecast-card {
+.forecast-card{
   position: relative;
   overflow: hidden;
   border-radius: var(--radius);
 }
-
 section::before,
 article::before,
 aside::before,
@@ -216,8 +211,6 @@ aside::before,
 .analytics-section::before,
 .transaction-form-panel::before,
 .transaction-list-panel::before,
-.friend-detail-panel::before,
-.friends-panel::before,
 .subscription-card::before,
 .subscription-chart-panel::before,
 .budget-form-panel::before,
@@ -226,12 +219,11 @@ aside::before,
 .planning-card::before,
 .investment-form-panel::before,
 .investment-list-panel::before,
-.friends-card::before,
 .upload-card::before,
 .recommendation-card::before,
 .insight-card::before,
 .score-card::before,
-.forecast-card::before {
+.forecast-card::before{
   content: '';
   position: absolute;
   inset: 0;
@@ -240,7 +232,6 @@ aside::before,
   background: transparent;
   pointer-events: none;
 }
-
 section > *,
 article > *,
 aside > *,
@@ -249,8 +240,6 @@ aside > *,
 .analytics-section > *,
 .transaction-form-panel > *,
 .transaction-list-panel > *,
-.friend-detail-panel > *,
-.friends-panel > *,
 .subscription-card > *,
 .subscription-chart-panel > *,
 .budget-form-panel > *,
@@ -259,12 +248,11 @@ aside > *,
 .planning-card > *,
 .investment-form-panel > *,
 .investment-list-panel > *,
-.friends-card > *,
 .upload-card > *,
 .recommendation-card > *,
 .insight-card > *,
 .score-card > *,
-.forecast-card > * {
+.forecast-card > *{
   position: relative;
   z-index: 1;
 }
@@ -314,7 +302,6 @@ main,
 .app-shell {
   background: rgb(10, 10, 10);
 }
-
 section,
 article,
 aside,
@@ -323,8 +310,6 @@ aside,
 .analytics-section,
 .transaction-form-panel,
 .transaction-list-panel,
-.friend-detail-panel,
-.friends-panel,
 .subscription-card,
 .subscription-chart-panel,
 .budget-form-panel,
@@ -333,7 +318,6 @@ aside,
 .planning-card,
 .investment-form-panel,
 .investment-list-panel,
-.friends-card,
 .upload-card,
 .preview-panel,
 .upload-panel,
@@ -341,12 +325,11 @@ aside,
 .insight-card,
 .score-card,
 .forecast-card,
-.empty-state {
+.empty-state{
   border-color: rgb(43, 44, 44) !important;
   background-color: rgb(23, 23, 23) !important;
   color: var(--text);
 }
-
 .review-panel,
 .review-row,
 .bulk-review-actions,
@@ -372,17 +355,14 @@ aside,
 .recommendation-card,
 .investment-goal-card,
 .investment-insight,
-.friends-list-item,
-.friend-transaction-row,
 .assistant-message,
 .assistant-action-preview,
 .assistant-confirm-bar,
-.assistant-input {
+.assistant-input{
   border-color: rgb(43, 44, 44) !important;
   background: rgb(23, 23, 23) !important;
   color: var(--text) !important;
 }
-
 .review-row strong,
 .transaction-table td,
 .transaction-table th,
@@ -396,11 +376,9 @@ aside,
 .recommendation-card h2,
 .insight-card p,
 .investment-goal-card h3,
-.friends-list-item strong,
-.assistant-message p {
+.assistant-message p{
   color: var(--text) !important;
 }
-
 .review-row span,
 .review-count,
 .transaction-table span,
@@ -416,8 +394,7 @@ aside,
 .subscription-meta span,
 .recommendation-card p,
 .insight-card small,
-.investment-goal-card p,
-.friends-list-item span {
+.investment-goal-card p{
   color: var(--text-muted) !important;
 }
 
@@ -434,8 +411,6 @@ textarea {
   background: rgb(17, 17, 17) !important;
   color: var(--text) !important;
 }
-
-/* Reference-inspired product UI system */
 section,
 article,
 aside,
@@ -444,8 +419,6 @@ aside,
 .analytics-section,
 .transaction-form-panel,
 .transaction-list-panel,
-.friend-detail-panel,
-.friends-panel,
 .subscription-card,
 .subscription-chart-panel,
 .budget-form-panel,
@@ -456,7 +429,6 @@ aside,
 .investment-list-panel,
 .investment-connect-panel,
 .investment-goal-card,
-.friends-card,
 .upload-card,
 .preview-panel,
 .upload-panel,
@@ -483,18 +455,14 @@ aside,
 .subscription-summary div,
 .insight-summary div,
 .investment-summary-grid article,
-.friend-row,
-.debt-table-wrapper {
+.debt-table-wrapper{
   border: 1px solid var(--app-card-border) !important;
   border-radius: var(--app-card-radius) !important;
   background: var(--app-card-bg) !important;
   box-shadow: none !important;
 }
-
 .transaction-form-panel,
 .transaction-list-panel,
-.friend-detail-panel,
-.friends-panel,
 .subscription-card,
 .subscription-chart-panel,
 .budget-form-panel,
@@ -516,7 +484,7 @@ aside,
 .health-score-card,
 .health-breakdown-panel,
 .health-tips-panel,
-.insights-section {
+.insights-section{
   padding: var(--app-card-padding) !important;
 }
 
@@ -569,20 +537,6 @@ button,
   color: #ffffff !important;
 }
 
-.app-shell .friends-page .friend-select-button {
-  border: 0 !important;
-  background: transparent !important;
-  color: var(--text) !important;
-  box-shadow: none !important;
-}
-
-.app-shell .friends-page .friend-row {
-  border: 1px solid rgba(49, 59, 61, 0.78) !important;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.035), transparent 34%),
-    linear-gradient(145deg, rgba(14, 19, 20, 0.94), rgba(6, 9, 10, 0.98)) !important;
-}
-
 table,
 .transaction-table,
 .preview-table,
@@ -609,7 +563,6 @@ table td,
   border-color: var(--app-card-border) !important;
   color: var(--text) !important;
 }
-
 .page-heading h1,
 .section-heading h2,
 .transaction-form-panel h2,
@@ -623,8 +576,7 @@ table td,
 .health-score-card strong,
 .subscription-summary strong,
 .insight-summary strong,
-.investment-summary-grid strong,
-.friends-summary strong {
+.investment-summary-grid strong{
   color: #ffffff !important;
   font-weight: var(--font-regular) !important;
 }
@@ -637,4 +589,3 @@ small,
 .user-email {
   color: var(--text-muted) !important;
 }
-

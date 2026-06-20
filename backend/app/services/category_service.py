@@ -8,12 +8,12 @@ from app.schemas.schemas import CategoryCreate
 
 DEFAULT_CATEGORY_DEFINITIONS = [
     {"name": "Refunds", "description": "Refunds and reversed charges", "color": "#86efac", "icon": "rotate-ccw"},
-    {"name": "Friends", "description": "Money sent to or received from saved friends", "color": "#ddd6fe", "icon": "users"},
     {"name": "Bills", "description": "Utilities, recharge, and recurring bills", "color": "#fcd34d", "icon": "receipt"},
     {"name": "Subscriptions", "description": "Streaming, software, and recurring subscriptions", "color": "#c4b5fd", "icon": "repeat"},
     {"name": "Education", "description": "Courses, books, and learning expenses", "color": "#93c5fd", "icon": "graduation-cap"},
     {"name": "Entertainment", "description": "Movies, events, games, and leisure", "color": "#f9a8d4", "icon": "ticket"},
     {"name": "Food", "description": "Restaurants, cafes, and food delivery", "color": "#fca5a5", "icon": "utensils"},
+    {"name": "Friends", "description": "Person-to-person transactions grouped by friend", "color": "#67e8f9", "icon": "users"},
     {"name": "Laundry", "description": "Laundry and cleaning services", "color": "#cbd5e1", "icon": "shirt"},
     {"name": "Healthcare", "description": "Medical, pharmacy, and wellness expenses", "color": "#6ee7b7", "icon": "heart-pulse"},
     {"name": "Investments", "description": "Investments and portfolio transactions", "color": "#a5b4fc", "icon": "trending-up"},
@@ -30,12 +30,12 @@ HEX_COLOR_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 VISIBLE_CATEGORY_ORDER = [
     "Refunds",
-    "Friends",
     "Bills",
     "Subscriptions",
     "Education",
     "Entertainment",
     "Food",
+    "Friends",
     "Laundry",
     "Healthcare",
     "Investments",

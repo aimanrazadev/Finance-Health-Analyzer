@@ -12,7 +12,7 @@ from app.schemas.schemas import (
     UploadPreviewResponse,
 )
 from app.services.file_parser_service import detect_file_type, parse_statement_file, validate_statement_file
-from app.services.friend_service import auto_attach_transaction_if_friend
+from app.services.friend_service import auto_attach_transaction_if_friend, create_or_update_friend_from_transaction, is_friends_category
 from app.services.import_profile_service import save_import_profile_from_columns
 from app.services.merchant_extractor_service import extract_transaction_merchant
 from app.services.transaction_type_service import normalize_transaction_type
@@ -107,35 +107,35 @@ def confirm_statement_upload(
 
         final_transaction_type = normalize_transaction_type(db, row.transaction_type, row.category_id)
 
-        transactions.append(
-            Transaction(
-                user_id=current_user.id,
-                amount=row.amount,
-                category_id=row.category_id,
-                description=row.description,
-                merchant=merchant_name,
-                extracted_merchant=merchant_name,
-                reference_no=row.reference_no,
-                withdrawal_amount=row.withdrawal_amount,
-                deposit_amount=row.deposit_amount,
-                balance=row.balance,
-                transaction_type=final_transaction_type,
-                date=row.date or row.transaction_date,
-                uploaded_file_id=uploaded_file.id,
-                source=row.source or file_type,
-                payment_method=None,
-                category_confidence=row.category_confidence or 0.30,
-                categorization_method=row.categorization_method or "needs_review",
-                review_status="approved" if (row.category_confidence or 0.30) >= 0.80 and (row.categorization_method or "needs_review") != "needs_review" else "needs_review",
-                is_needs_review=(row.category_confidence or 0.30) < 0.80 or (row.categorization_method or "needs_review") == "needs_review",
-            )
+        transaction = Transaction(
+            user_id=current_user.id,
+            amount=row.amount,
+            category_id=row.category_id,
+            description=row.description,
+            merchant=merchant_name,
+            extracted_merchant=merchant_name,
+            reference_no=row.reference_no,
+            withdrawal_amount=row.withdrawal_amount,
+            deposit_amount=row.deposit_amount,
+            balance=row.balance,
+            transaction_type=final_transaction_type,
+            date=row.date or row.transaction_date,
+            uploaded_file_id=uploaded_file.id,
+            source=row.source or file_type,
+            payment_method=None,
+            category_confidence=row.category_confidence or 0.30,
+            categorization_method=row.categorization_method or "needs_review",
+            review_status="approved" if (row.category_confidence or 0.30) >= 0.80 and (row.categorization_method or "needs_review") != "needs_review" else "needs_review",
+            is_needs_review=(row.category_confidence or 0.30) < 0.80 or (row.categorization_method or "needs_review") == "needs_review",
         )
-
-    if transactions:
-        db.add_all(transactions)
+        db.add(transaction)
         db.flush()
-        for transaction in transactions:
+        if row.category_id is not None and is_friends_category(db, row.category_id):
+            create_or_update_friend_from_transaction(db, current_user.id, transaction)
+        else:
             auto_attach_transaction_if_friend(db, current_user.id, transaction)
+        transactions.append(transaction)
+
     uploaded_file.transaction_count = len(transactions)
     uploaded_file.successful_rows = len(transactions)
     db.commit()

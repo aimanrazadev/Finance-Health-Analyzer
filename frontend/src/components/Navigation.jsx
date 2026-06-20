@@ -23,8 +23,8 @@ const iconPaths = {
     <path key="categories-3" d="M9 15h6" />,
   ],
   friends: [
-    <path key="friends-1" d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />,
-    <circle key="friends-2" cx="9.5" cy="7" r="4" />,
+    <path key="friends-1" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />,
+    <circle key="friends-2" cx="9" cy="7" r="4" />,
     <path key="friends-3" d="M22 21v-2a4 4 0 0 0-3-3.87" />,
     <path key="friends-4" d="M16 3.13a4 4 0 0 1 0 7.75" />,
   ],

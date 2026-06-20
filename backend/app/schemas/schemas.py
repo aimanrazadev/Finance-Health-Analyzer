@@ -143,17 +143,18 @@ class TransactionResponse(BaseModel):
     user_id: int
     amount: float
     category_id: Optional[int]
+    friend_id: Optional[int] = None
     merchant_id: Optional[int] = None
     description: str
     merchant: Optional[str]
     extracted_merchant: Optional[str] = None
-    friend_id: Optional[int] = None
-    is_friend_transaction: Optional[bool] = False
+    normalized_friend_name: Optional[str] = None
     transaction_type: str
     date: datetime
     category_confidence: Optional[float] = None
     categorization_method: Optional[str] = None
     review_status: Optional[str] = None
+    is_friend_transaction: Optional[bool] = False
     is_needs_review: Optional[bool] = False
     created_at: datetime
 
@@ -165,21 +166,14 @@ class TransactionCategoryCorrectionRequest(BaseModel):
     category_id: int
 
 
-# ==================== Friend Tracking Schemas ====================
+# ==================== Friends Schemas ====================
 
 class FriendCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=150)
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    notes: Optional[str] = None
 
 
 class FriendUpdate(BaseModel):
-    name: Optional[str] = Field(default=None, min_length=1, max_length=150)
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    notes: Optional[str] = None
-    is_active: Optional[bool] = None
+    name: str = Field(..., min_length=1, max_length=150)
 
 
 class FriendResponse(BaseModel):
@@ -187,25 +181,31 @@ class FriendResponse(BaseModel):
     user_id: int
     name: str
     normalized_name: str
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    notes: Optional[str] = None
-    is_active: bool
+    transaction_count: int = 0
+    total_amount: float = 0
+    last_transaction_at: Optional[datetime] = None
+    is_hidden: bool = False
     created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class FriendDetailResponse(FriendResponse):
-    summary: dict[str, float | int]
-    transactions: List[TransactionResponse]
+class FriendCreateResponse(BaseModel):
+    friend: FriendResponse
+    linked_transactions: int
+    message: str
+
+
+class FriendDetailResponse(BaseModel):
+    friend: FriendResponse
+    transactions: List[TransactionResponse] = []
 
 
 class FriendDashboardResponse(BaseModel):
     active_friends: int
     linked_transactions: int
-    total_friend_amount: float
+    friends: List[FriendResponse] = []
 
 
 # ==================== Category + Categorization Schemas ====================

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Navigation from '../components/Navigation';
 import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
@@ -11,12 +11,6 @@ const monthOptions = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ].map((label, index) => ({ label, value: index + 1 }));
 const yearOptions = Array.from({ length: 7 }, (_, index) => currentYear - 5 + index);
-
-const moneyFormatter = new Intl.NumberFormat('en-IN', {
-  style: 'currency',
-  currency: 'INR',
-  maximumFractionDigits: 0,
-});
 
 const suggestedQuestions = [
   'How can I save more this month?',
@@ -47,40 +41,11 @@ const Insights = () => {
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [question, setQuestion] = useState('');
   const [activeChatId, setActiveChatId] = useState(null);
-  const [advisorResponse, setAdvisorResponse] = useState(null);
-  const [recommendations, setRecommendations] = useState([]);
-  const [chats, setChats] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [actionInput, setActionInput] = useState('');
-  const [actionResult, setActionResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [historyLoading, setHistoryLoading] = useState(true);
   const [error, setError] = useState('');
 
   const headers = getAuthHeaders(token);
-
-  const loadHistory = async () => {
-    setHistoryLoading(true);
-    try {
-      const [chatResponse, recommendationResponse] = await Promise.all([
-        api.get('/advisor/chats', { headers }),
-        api.get('/advisor/recommendations', { headers }),
-      ]);
-      setChats(chatResponse.data);
-      setRecommendations(recommendationResponse.data);
-    } catch (err) {
-      console.error(err);
-      setError('Unable to load advisor history.');
-    } finally {
-      setHistoryLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (token) {
-      loadHistory();
-    }
-  }, [token]);
 
   const askAdvisor = async (event) => {
     event.preventDefault();
@@ -95,10 +60,8 @@ const Insights = () => {
         month: selectedMonth,
         year: selectedYear,
       }, { headers });
-      setAdvisorResponse(response.data.response);
       setActiveChatId(response.data.chat.id);
       setQuestion('');
-      await loadHistory();
       await openChat(response.data.chat.id);
     } catch (err) {
       console.error(err);
@@ -114,10 +77,6 @@ const Insights = () => {
       const response = await api.get(`/advisor/chats/${chatId}`, { headers });
       setActiveChatId(chatId);
       setMessages(response.data.messages);
-      const lastAssistant = [...response.data.messages].reverse().find((message) => message.role === 'assistant');
-      if (lastAssistant) {
-        setAdvisorResponse(parseAssistantContent(lastAssistant.content));
-      }
     } catch (err) {
       console.error(err);
       setError('Unable to open advisor chat.');
@@ -126,34 +85,8 @@ const Insights = () => {
 
   const startNewChat = async () => {
     setActiveChatId(null);
-    setAdvisorResponse(null);
     setMessages([]);
     setQuestion('');
-    setActionResult(null);
-  };
-
-  const updateRecommendationStatus = async (id, status) => {
-    try {
-      await api.patch(`/advisor/recommendations/${id}`, { status }, { headers });
-      await loadHistory();
-    } catch (err) {
-      console.error(err);
-      setError('Unable to update recommendation.');
-    }
-  };
-
-  const runAdvisorAction = async (event) => {
-    event.preventDefault();
-    if (!actionInput.trim()) return;
-    setError('');
-    try {
-      const response = await api.post('/advisor/actions', { message: actionInput.trim() }, { headers });
-      setActionResult(response.data);
-      setActionInput('');
-    } catch (err) {
-      console.error(err);
-      setError('Unable to run advisor action.');
-    }
   };
 
   const handleQuestionKeyDown = (event) => {
@@ -162,8 +95,6 @@ const Insights = () => {
       event.currentTarget.form?.requestSubmit();
     }
   };
-
-  const pendingRecommendations = recommendations.filter((item) => item.status !== 'dismissed');
 
   return (
     <div>

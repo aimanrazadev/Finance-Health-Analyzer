@@ -23,50 +23,23 @@ from app.api.auth import get_current_user
 from app.services.categorization import categorize_transaction as smart_categorize_transaction
 from app.services.category_service import create_category as create_category_service
 from app.services.category_service import get_visible_categories
+from app.services.friend_service import create_or_update_friend_from_transaction, is_friends_category
 from app.services.learning_service import save_category_correction
 from app.services.merchant_extractor_service import normalize_merchant_name
-from app.services.merchant_extractor_service import extract_merchant_name
 from app.services.ml_categorization_service import MIN_TRAINING_LABELS, retrain_after_correction, train_user_category_model
 from app.services.transaction_type_service import normalize_transaction_type
-from app.services.friend_service import attach_transaction_to_friend, create_friend
-from app.services.friend_detection_service import extract_friend_name_from_text
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
-
-def _is_friends_category(category: Category | None) -> bool:
-    return bool(category and category.name and category.name.strip().lower() == "friends")
-
-
-def _sync_friend_after_category_correction(
-    db: Session,
-    user_id: int,
-    transaction: Transaction,
-    category: Category,
-) -> None:
-    """When a row is corrected to Friends, create/link the friend immediately."""
-    if not _is_friends_category(category):
-        return
-
-    friend_name = extract_friend_name_from_text(
-        transaction.description,
-        transaction.extracted_merchant or transaction.merchant,
-    )
-    if not friend_name:
-        friend_name = transaction.extracted_merchant or transaction.merchant or transaction.description
-    if not friend_name:
-        return
-
-    friend = create_friend(db, user_id, friend_name)
-    attach_transaction_to_friend(db, user_id, friend, transaction)
-
-@router.get("/", response_model=List[CategoryResponse])
+@router.get("", response_model=List[CategoryResponse])
+@router.get("/", response_model=List[CategoryResponse], include_in_schema=False)
 def get_categories(db: Session = Depends(get_db)):
     """Fetch user-facing categories in the product's preferred order."""
     return get_visible_categories(db)
 
 
-@router.post("/", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def create_category(
     category_data: CategoryCreate,
     current_user: User = Depends(get_current_user),
@@ -122,8 +95,7 @@ def correct_transaction_category(
     if not transaction:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
 
-    category = db.query(Category).filter(Category.id == request.new_category_id).first()
-    if not category:
+    if not db.query(Category).filter(Category.id == request.new_category_id).first():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Selected category does not exist")
 
     old_category_id = transaction.category_id
@@ -146,7 +118,13 @@ def correct_transaction_category(
     transaction.review_status = "approved"
     transaction.merchant = transaction.merchant or correction.merchant
     transaction.is_needs_review = False
-    _sync_friend_after_category_correction(db, current_user.id, transaction, category)
+
+    if is_friends_category(db, request.new_category_id):
+        try:
+            friend, _ = create_or_update_friend_from_transaction(db, current_user.id, transaction)
+            transaction.friend_id = friend.id
+        except ValueError as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
     retrain_after_correction(current_user.id)
     db.commit()
@@ -174,8 +152,7 @@ def bulk_correct_transaction_categories(
             .filter(Transaction.id == item.transaction_id, Transaction.user_id == current_user.id)
             .first()
         )
-        category = db.query(Category).filter(Category.id == item.new_category_id).first()
-        if not transaction or not category:
+        if not transaction or not db.query(Category).filter(Category.id == item.new_category_id).first():
             continue
 
         correction = save_category_correction(
@@ -198,7 +175,11 @@ def bulk_correct_transaction_categories(
         transaction.merchant = transaction.merchant or correction.merchant
         transaction.review_status = "approved"
         transaction.is_needs_review = False
-        _sync_friend_after_category_correction(db, current_user.id, transaction, category)
+        if is_friends_category(db, item.new_category_id):
+            try:
+                create_or_update_friend_from_transaction(db, current_user.id, transaction)
+            except ValueError:
+                continue
         updated_count += 1
 
     retrain_after_correction(current_user.id)
@@ -225,9 +206,13 @@ def get_needs_review_transactions(
         Transaction.category_confidence < 0.80,
         Transaction.review_status == "needs_review",
         Transaction.is_needs_review == True,  # noqa: E712
+        Transaction.categorization_method == "needs_review",
         Transaction.category_id.is_(None),
     ]
-    query = query.filter(or_(*filters))
+    query = query.filter(
+        or_(Transaction.is_friend_transaction == False, Transaction.is_friend_transaction.is_(None)),  # noqa: E712
+        or_(*filters),
+    )
     return query.order_by(Transaction.date.desc()).all()
 
 

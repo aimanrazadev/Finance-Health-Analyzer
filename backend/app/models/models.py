@@ -27,11 +27,13 @@ class Transaction(Base):
     user_id = Column(Integer, nullable=False, index=True)
     amount = Column(Float, nullable=False)
     category_id = Column(Integer, nullable=True, index=True)
+    friend_id = Column(Integer, nullable=True, index=True)
     merchant_id = Column(Integer, nullable=True, index=True)
     uploaded_file_id = Column(Integer, nullable=True, index=True)
     description = Column(String(255), nullable=False)
     merchant = Column(String(150), nullable=True)
     extracted_merchant = Column(String(150), nullable=True)
+    normalized_friend_name = Column(String(150), nullable=True, index=True)
     reference_no = Column(String(150), nullable=True)
     withdrawal_amount = Column(Float, nullable=True)
     deposit_amount = Column(Float, nullable=True)
@@ -40,10 +42,9 @@ class Transaction(Base):
     date = Column(DateTime, nullable=False)
     payment_method = Column(String(100), nullable=True)
     source = Column(String(50), default="manual")
-    friend_id = Column(Integer, nullable=True, index=True)
-    is_friend_transaction = Column(Boolean, default=False)
     category_confidence = Column(Float, default=0.30)
     categorization_method = Column(String(50), default="needs_review")
+    is_friend_transaction = Column(Boolean, default=False)
     is_needs_review = Column(Boolean, default=False)
     review_status = Column(String(50), default="approved")
     created_at = Column(DateTime, server_default=func.now())
@@ -59,6 +60,56 @@ class Category(Base):
     description = Column(Text, nullable=True)
     color = Column(String(7), nullable=True)
     icon = Column(String(50), nullable=True)
+
+
+class Friend(Base):
+    """A normalized person/group the user tracks across matching transactions."""
+    __tablename__ = "friends"
+    __table_args__ = (UniqueConstraint("user_id", "normalized_name", name="uq_friends_user_normalized_name"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False, index=True)
+    name = Column(String(150), nullable=False)
+    normalized_name = Column(String(150), nullable=False, index=True)
+    transaction_count = Column(Integer, default=0)
+    total_amount = Column(Float, default=0.0)
+    last_transaction_at = Column(DateTime, nullable=True)
+    is_hidden = Column(Boolean, default=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class FriendTransactionLink(Base):
+    """Safe link table so friend grouping history survives friend edits."""
+    __tablename__ = "friend_transaction_links"
+    __table_args__ = (
+        UniqueConstraint("friend_id", "transaction_id", name="uq_friend_transaction_link"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False, index=True)
+    friend_id = Column(Integer, nullable=False, index=True)
+    transaction_id = Column(Integer, nullable=False, index=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+class FriendMerchantLearning(Base):
+    """Learned normalized merchant/person pattern for future friend auto-linking."""
+    __tablename__ = "friend_merchant_learning"
+    __table_args__ = (
+        UniqueConstraint("user_id", "normalized_merchant", name="uq_friend_learning_user_merchant"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False, index=True)
+    friend_id = Column(Integer, nullable=False, index=True)
+    merchant_name = Column(String(150), nullable=False)
+    normalized_merchant = Column(String(150), nullable=False, index=True)
+    confidence = Column(Float, default=0.95)
+    usage_count = Column(Integer, default=0)
+    last_used_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
 class ImportProfile(Base):
@@ -243,60 +294,6 @@ class CategoryLearningRule(Base):
     confidence = Column(Float, default=1.0)
     times_used = Column(Integer, default=0)
     usage_count = Column(Integer, default=0)
-    last_used_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-
-class Friend(Base):
-    """Saved person/contact used to group friend-related transactions."""
-    __tablename__ = "friends"
-    __table_args__ = (
-        UniqueConstraint("user_id", "normalized_name", name="uq_friends_user_normalized_name"),
-    )
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    name = Column(String(150), nullable=False)
-    normalized_name = Column(String(150), nullable=False, index=True)
-    email = Column(String(150), nullable=True)
-    phone = Column(String(50), nullable=True)
-    notes = Column(Text, nullable=True)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-
-class FriendTransactionLink(Base):
-    """Stable link between a friend and a matched bank transaction."""
-    __tablename__ = "friend_transaction_links"
-    __table_args__ = (
-        UniqueConstraint("user_id", "transaction_id", name="uq_friend_links_user_transaction"),
-    )
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    friend_id = Column(Integer, nullable=False, index=True)
-    transaction_id = Column(Integer, nullable=False, index=True)
-    amount = Column(Float, nullable=True)
-    transaction_type = Column(String(50), nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
-
-
-class FriendMerchantLearning(Base):
-    """Merchant/person text learned from transactions linked to a friend."""
-    __tablename__ = "friend_merchant_learning"
-    __table_args__ = (
-        UniqueConstraint("user_id", "friend_id", "normalized_merchant", name="uq_friend_learning_user_friend_merchant"),
-    )
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    friend_id = Column(Integer, nullable=False, index=True)
-    merchant_pattern = Column(String(150), nullable=False)
-    normalized_merchant = Column(String(150), nullable=False, index=True)
-    confidence = Column(Float, default=0.95)
-    usage_count = Column(Integer, default=1)
     last_used_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

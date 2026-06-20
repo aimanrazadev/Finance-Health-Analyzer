@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
 import '../styles/UploadStatement.css';
 
-const INCOME_CATEGORY_NAMES = ['Refunds', 'Friends', 'Salary', 'Shopping', 'Other'];
+const INCOME_CATEGORY_NAMES = ['Refunds', 'Salary', 'Shopping', 'Friend', 'Friends', 'Other'];
 const SAVINGS_CATEGORY_NAMES = ['Investments'];
 
 const moneyFormatter = new Intl.NumberFormat('en-IN', {

@@ -12,11 +12,9 @@ from app.services.categorization import (
     categorize_transaction,
     learn_user_category_preference,
 )
+from app.services.friend_service import auto_attach_transaction_if_friend, create_or_update_friend_from_transaction, is_friends_category
 from app.services.learning_service import save_category_correction
 from app.services.merchant_extractor_service import extract_transaction_merchant
-from app.services.friend_service import auto_attach_transaction_if_friend
-from app.services.friend_service import attach_transaction_to_friend, create_friend
-from app.services.friend_detection_service import extract_friend_name_from_text
 from app.services.transaction_type_service import normalize_transaction_type
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
@@ -53,30 +51,8 @@ def review_status_from_result(category_confidence: float, categorization_method:
     return ("needs_review" if needs_review else "approved"), needs_review
 
 
-def sync_friend_if_friends_category(
-    db: Session,
-    user_id: int,
-    transaction: Transaction,
-    category_id: int,
-) -> None:
-    category = db.query(Category).filter(Category.id == category_id).first()
-    if not category or category.name.strip().lower() != "friends":
-        return
-
-    friend_name = extract_friend_name_from_text(
-        transaction.description,
-        transaction.extracted_merchant or transaction.merchant,
-    )
-    if not friend_name:
-        friend_name = transaction.extracted_merchant or transaction.merchant or transaction.description
-    if not friend_name:
-        return
-
-    friend = create_friend(db, user_id, friend_name)
-    attach_transaction_to_friend(db, user_id, friend, transaction)
-
-
-@router.post("/", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def create_transaction(
     transaction_data: TransactionCreate,
     current_user: User = Depends(get_current_user),
@@ -133,13 +109,17 @@ def create_transaction(
     )
     db.add(transaction)
     db.flush()
-    auto_attach_transaction_if_friend(db, current_user.id, transaction)
+    if category_id is not None and is_friends_category(db, category_id):
+        create_or_update_friend_from_transaction(db, current_user.id, transaction)
+    else:
+        auto_attach_transaction_if_friend(db, current_user.id, transaction)
     db.commit()
     db.refresh(transaction)
     return transaction
 
 
-@router.get("/", response_model=List[TransactionResponse])
+@router.get("", response_model=List[TransactionResponse])
+@router.get("/", response_model=List[TransactionResponse], include_in_schema=False)
 def get_transactions(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -250,6 +230,11 @@ def update_transaction(
         transaction.categorization_method or "needs_review",
     )
 
+    if new_category_id is not None and is_friends_category(db, new_category_id):
+        create_or_update_friend_from_transaction(db, current_user.id, transaction)
+    else:
+        auto_attach_transaction_if_friend(db, current_user.id, transaction)
+
     db.commit()
     db.refresh(transaction)
     return transaction
@@ -264,10 +249,12 @@ def get_transactions_for_review(
         db.query(Transaction)
         .filter(
             Transaction.user_id == current_user.id,
+            or_(Transaction.is_friend_transaction == False, Transaction.is_friend_transaction.is_(None)),  # noqa: E712
             or_(
                 Transaction.review_status == "needs_review",
                 Transaction.is_needs_review == True,  # noqa: E712
                 Transaction.category_confidence < 0.80,
+                Transaction.categorization_method == "needs_review",
             ),
         )
         .order_by(Transaction.date.desc())
@@ -301,7 +288,8 @@ def correct_transaction_category_from_transactions(
     transaction.categorization_method = "manual"
     transaction.review_status = "approved"
     transaction.is_needs_review = False
-    sync_friend_if_friends_category(db, current_user.id, transaction, correction_data.category_id)
+    if is_friends_category(db, correction_data.category_id):
+        create_or_update_friend_from_transaction(db, current_user.id, transaction)
     db.commit()
     db.refresh(transaction)
     return transaction

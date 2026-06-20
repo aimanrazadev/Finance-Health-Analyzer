@@ -107,14 +107,6 @@ const getMonthLabel = (month) => (
   Number(month) === 0 ? 'All year' : monthOptions.find((item) => item.value === Number(month))?.label || 'This month'
 );
 
-const getDateRangeLabel = (month, year) => {
-  if (Number(month) === 0) return `Jan 1 - Dec 31, ${year}`;
-  const firstDay = new Date(year, month - 1, 1);
-  const lastDay = new Date(year, month, 0);
-  const monthName = firstDay.toLocaleString('en-US', { month: 'short' });
-  return `${monthName} 1 - ${monthName} ${lastDay.getDate()}, ${year}`;
-};
-
 const getPreviousMonthLabel = (month, year) => {
   if (Number(month) === 0) return String(Number(year) - 1);
   return new Date(year, Number(month) - 2, 1).toLocaleString('en-US', { month: 'short' });

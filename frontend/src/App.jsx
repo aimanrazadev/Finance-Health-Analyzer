@@ -12,10 +12,10 @@ const Register = lazy(() => import('./pages/Register'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Transactions = lazy(() => import('./pages/Transactions'));
 const UploadStatement = lazy(() => import('./pages/UploadStatement'));
-const Friends = lazy(() => import('./pages/Friends'));
 const FinancialHealth = lazy(() => import('./pages/FinancialHealth'));
 const AIAdvisor = lazy(() => import('./pages/Insights'));
 const Categories = lazy(() => import('./pages/Categories'));
+const Friends = lazy(() => import('./pages/Friends'));
 
 function App() {
   return (
@@ -61,6 +61,8 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/merchants" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/needs-review" element={<Navigate to="/categories" replace />} />
             <Route
               path="/friends"
               element={
@@ -69,8 +71,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/merchants" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/needs-review" element={<Navigate to="/categories" replace />} />
             <Route
               path="/financial-health"
               element={
