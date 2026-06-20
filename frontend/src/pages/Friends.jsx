@@ -186,11 +186,18 @@ const Friends = () => {
               ) : filteredFriends.length === 0 ? (
                 <div className="friends-empty">No friends found yet.</div>
               ) : filteredFriends.map((friend) => (
-                <button
-                  type="button"
+                <div
+                  role="button"
+                  tabIndex={0}
                   className={`friend-row ${selectedFriend?.id === friend.id ? 'active' : ''}`}
                   key={friend.id}
                   onClick={() => setSelectedFriend(friend)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      setSelectedFriend(friend);
+                    }
+                  }}
                 >
                   <span>
                     <strong>{friend.name}</strong>
@@ -199,7 +206,7 @@ const Friends = () => {
                     </small>
                   </span>
                   <em>{formatMoney(friend.total_amount)}</em>
-                </button>
+                </div>
               ))}
             </div>
           </section>
@@ -224,19 +231,34 @@ const Friends = () => {
                   </div>
                 </div>
 
-                <div className="friend-transaction-list">
+                <div className="friend-transaction-list friend-transaction-table-wrapper">
                   {(detail.transactions || []).length === 0 ? (
                     <div className="friends-empty">No linked transactions yet.</div>
-                  ) : detail.transactions.map((transaction) => (
-                    <article className="friend-transaction-row" key={transaction.id}>
-                      <div>
-                        <strong>{transaction.extracted_merchant || transaction.merchant || detail.friend.name}</strong>
-                        <span>{transaction.description}</span>
-                        <small>{formatDate(transaction.date)} - {transaction.transaction_type}</small>
-                      </div>
-                      <strong>{formatMoney(transaction.amount)}</strong>
-                  </article>
-                  ))}
+                  ) : (
+                    <table className="friend-transaction-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Description</th>
+                          <th>Type</th>
+                          <th>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {detail.transactions.map((transaction) => (
+                          <tr key={transaction.id}>
+                            <td>{formatDate(transaction.date)}</td>
+                            <td>
+                              <strong>{transaction.extracted_merchant || transaction.merchant || detail.friend.name}</strong>
+                              <span>{transaction.description}</span>
+                            </td>
+                            <td>{transaction.transaction_type}</td>
+                            <td>{formatMoney(transaction.amount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               </>
             )}

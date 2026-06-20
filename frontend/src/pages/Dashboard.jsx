@@ -43,7 +43,7 @@ const emptyMerchants = { top_merchants: [], most_frequent_merchants: [], highest
 const emptySubscriptions = { subscription_count: 0, total_monthly_cost: 0, subscriptions: [] };
 
 const monthOptions = [
-  { value: 0, label: 'All year' },
+  { value: 0, label: 'All' },
   { value: 1, label: 'January' },
   { value: 2, label: 'February' },
   { value: 3, label: 'March' },
@@ -60,6 +60,7 @@ const monthOptions = [
 
 const currentYear = now.getFullYear();
 const yearOptions = Array.from({ length: currentYear - 1999 + 2 }, (_, index) => currentYear + 1 - index);
+const ALL_YEARS = 'all';
 
 const moneyFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
@@ -104,7 +105,7 @@ const MetricIcon = ({ name }) => {
 };
 
 const getMonthLabel = (month) => (
-  Number(month) === 0 ? 'All year' : monthOptions.find((item) => item.value === Number(month))?.label || 'This month'
+  Number(month) === 0 ? 'All' : monthOptions.find((item) => item.value === Number(month))?.label || 'This month'
 );
 
 const getPreviousMonthLabel = (month, year) => {
@@ -162,10 +163,9 @@ const Dashboard = () => {
   const [trendSummary, setTrendSummary] = useState(emptyTrendSummary);
   const [merchantAnalytics, setMerchantAnalytics] = useState(emptyMerchants);
   const [subscriptionAnalytics, setSubscriptionAnalytics] = useState(emptySubscriptions);
-  const [periodMode, setPeriodMode] = useState('month');
+  const [periodMode, setPeriodMode] = useState('hidden');
   const [selectedMonth, setSelectedMonth] = useState(emptySummary.month);
   const [selectedYear, setSelectedYear] = useState(emptySummary.year);
-  const [selectedDate, setSelectedDate] = useState(now.toISOString().slice(0, 10));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -176,25 +176,20 @@ const Dashboard = () => {
       setLoading(true);
       setError('');
       const headers = getAuthHeaders(token);
-      const selectedDayDate = new Date(`${selectedDate}T00:00:00`);
-      const params = periodMode === 'lifetime'
-        ? { month: -1, year: selectedYear }
-        : periodMode === 'day'
-          ? {
-            month: selectedDayDate.getMonth() + 1,
-            year: selectedDayDate.getFullYear(),
-            day: selectedDayDate.getDate(),
-          }
-          : periodMode === 'year'
-            ? { month: 0, year: selectedYear }
-            : { month: selectedMonth, year: selectedYear };
-      const trendYear = periodMode === 'day' ? selectedDayDate.getFullYear() : selectedYear;
+      const isAllTime = selectedYear === ALL_YEARS;
+      const numericYear = isAllTime ? now.getFullYear() : Number(selectedYear);
+      const params = isAllTime
+        ? { month: -1 }
+        : { month: selectedMonth, year: numericYear };
+      const trendRequest = isAllTime
+        ? Promise.resolve({ data: emptyTrendSummary })
+        : api.get('/dashboard/charts/monthly-trends', { headers, params: { year: numericYear } });
 
       try {
         const results = await Promise.allSettled([
           api.get('/dashboard/summary', { headers, params }),
           api.get('/dashboard/charts', { headers, params }),
-          api.get('/dashboard/charts/monthly-trends', { headers, params: { year: trendYear } }),
+          trendRequest,
           api.get('/dashboard/merchants', { headers, params }),
           api.get('/dashboard/subscriptions', { headers, params }),
         ]);
@@ -235,7 +230,7 @@ const Dashboard = () => {
     return () => {
       cancelled = true;
     };
-  }, [token, periodMode, selectedDate, selectedMonth, selectedYear]);
+  }, [token, selectedMonth, selectedYear]);
 
   const categoryBreakdown = charts.category_breakdown || [];
   const trendData = charts.monthly_trends?.length ? charts.monthly_trends : (trendSummary.trends || []);
@@ -244,22 +239,19 @@ const Dashboard = () => {
   const hasTrendData = trendData.some((item) => Number(item.income || 0) || Number(item.expenses || 0));
   const healthScore = Number(summary.financial_health_score || 0);
   const healthRotation = Math.min(Math.max(healthScore, 0), 100) * 3.6;
-  const selectedDayDate = new Date(`${selectedDate}T00:00:00`);
+  const isAllTime = selectedYear === ALL_YEARS;
+  const numericSelectedYear = isAllTime ? now.getFullYear() : Number(selectedYear);
   const monthLabel = getMonthLabel(selectedMonth);
-  const periodLabel = periodMode === 'lifetime'
-    ? 'all time'
-    : periodMode === 'day'
-      ? selectedDayDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
-      : periodMode === 'year'
-        ? `all ${selectedYear}`
-        : `${monthLabel} ${selectedYear}`;
-  const comparisonMonth = periodMode === 'day' ? selectedDayDate.getMonth() + 1 : selectedMonth;
-  const comparisonYear = periodMode === 'day' ? selectedDayDate.getFullYear() : selectedYear;
-  const previousMonthLabel = periodMode === 'lifetime'
+  const periodLabel = isAllTime
+    ? 'all uploaded data'
+    : selectedMonth === 0
+      ? `all of ${numericSelectedYear}`
+      : `${monthLabel} ${numericSelectedYear}`;
+  const previousMonthLabel = isAllTime
     ? 'earlier data'
-    : periodMode === 'year'
-      ? `${selectedYear - 1}`
-      : getPreviousMonthLabel(comparisonMonth, comparisonYear);
+    : selectedMonth === 0
+      ? `${numericSelectedYear - 1}`
+      : getPreviousMonthLabel(selectedMonth, numericSelectedYear);
 
   const metrics = [
     {
@@ -335,6 +327,32 @@ const Dashboard = () => {
             <p>Here&apos;s your financial overview for {periodLabel}</p>
           </div>
           <div className="premium-header-actions">
+            <label className="premium-year-control active-dashboard-filter">
+              <span>Year</span>
+              <select
+                aria-label="Select dashboard year"
+                value={selectedYear}
+                onChange={(event) => setSelectedYear(event.target.value === ALL_YEARS ? ALL_YEARS : Number(event.target.value))}
+              >
+                <option value={ALL_YEARS}>All</option>
+                {yearOptions.map((year) => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </label>
+            <label className="premium-date-control month-period-control active-dashboard-filter">
+              <span>Month</span>
+              <select
+                aria-label="Select dashboard month"
+                value={isAllTime ? 0 : selectedMonth}
+                disabled={isAllTime}
+                onChange={(event) => setSelectedMonth(Number(event.target.value))}
+              >
+                {monthOptions.map((month) => (
+                  <option key={month.value} value={month.value}>{month.label}</option>
+                ))}
+              </select>
+            </label>
             <label className="premium-date-control period-mode-control">
               <span className="control-glyph" aria-hidden="true">□</span>
               <select aria-label="Select dashboard period type" value={periodMode} onChange={(event) => setPeriodMode(event.target.value)}>

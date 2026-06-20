@@ -7467,12 +7467,24 @@ textarea,
   overflow: hidden !important;
 }
 
+.app-shell .transactions-page {
+  width: min(1720px, calc(100% - 24px)) !important;
+  max-width: none !important;
+  padding-right: 12px !important;
+  padding-left: 12px !important;
+}
+
+.transactions-page .transactions-main {
+  grid-template-columns: minmax(260px, 330px) minmax(760px, 1fr) !important;
+  gap: 16px !important;
+}
+
 .transactions-page .transaction-table-wrapper {
   display: block !important;
   width: 100% !important;
   max-width: 100% !important;
-  height: min(680px, calc(100vh - 145px)) !important;
-  max-height: min(680px, calc(100vh - 145px)) !important;
+  height: min(760px, calc(100vh - 118px)) !important;
+  max-height: min(760px, calc(100vh - 118px)) !important;
   overflow-x: scroll !important;
   overflow-y: scroll !important;
   overscroll-behavior: contain !important;
@@ -7493,4 +7505,249 @@ textarea,
   position: sticky !important;
   top: 0 !important;
   z-index: 2 !important;
+}
+
+/* Friends page refinement: fewer visible wrappers, quieter system surfaces. */
+.app-shell .friends-page {
+  width: min(1520px, calc(100% - 24px)) !important;
+  max-width: none !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.friends-page .friends-workspace,
+.friends-page .friends-directory,
+.friends-page .friend-detail {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.friends-page .friends-workspace {
+  grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr) !important;
+  gap: 24px !important;
+  align-items: stretch !important;
+}
+
+.friends-page .friends-directory,
+.friends-page .friend-detail {
+  overflow: hidden !important;
+}
+
+.friends-page .friend-detail {
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  min-height: calc(100vh - 228px) !important;
+}
+
+.friends-page .friend-detail-header {
+  margin-bottom: 0 !important;
+  padding: 0 0 14px !important;
+  border-bottom: 1px solid rgba(58, 68, 70, 0.58) !important;
+}
+
+.friends-page .friends-stats article {
+  min-height: 92px !important;
+  padding: 0 0 18px !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(58, 68, 70, 0.48) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.friends-page .friends-stats {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.friends-page .friend-form input,
+.friends-page .friend-search {
+  height: 52px !important;
+  border: 1px solid rgba(58, 68, 70, 0.72) !important;
+  border-radius: 12px !important;
+  background: rgba(5, 8, 9, 0.82) !important;
+}
+
+.friends-page .friend-row,
+.friends-page button.friend-row {
+  border: 1px solid rgba(58, 68, 70, 0.58) !important;
+  border-radius: 12px !important;
+  background: linear-gradient(145deg, rgba(15, 20, 21, 0.94), rgba(7, 10, 11, 0.99)) !important;
+  background-color: rgba(10, 14, 15, 0.96) !important;
+  color: #eef4f0 !important;
+  box-shadow: none !important;
+}
+
+.app-shell .friends-page .friend-row[role="button"],
+.app-shell .friends-page button.friend-row {
+  border: 1px solid rgba(58, 68, 70, 0.58) !important;
+  border-radius: 12px !important;
+  background: linear-gradient(145deg, rgba(15, 20, 21, 0.94), rgba(7, 10, 11, 0.99)) !important;
+  background-color: rgba(10, 14, 15, 0.96) !important;
+  color: #eef4f0 !important;
+  box-shadow: none !important;
+}
+
+.friends-page .friend-row.active,
+.friends-page .friend-row:hover,
+.friends-page button.friend-row.active,
+.friends-page button.friend-row:hover {
+  border-color: rgba(183, 245, 54, 0.34) !important;
+  background: linear-gradient(145deg, rgba(18, 23, 24, 0.98), rgba(8, 11, 12, 0.99)) !important;
+  background-color: rgba(12, 17, 18, 0.98) !important;
+}
+
+.friends-page .friend-row.active,
+.friends-page button.friend-row.active {
+  box-shadow: inset 3px 0 0 rgba(183, 245, 54, 0.88) !important;
+}
+
+.friends-page .friend-row em {
+  color: rgba(183, 245, 54, 0.82) !important;
+}
+
+.friends-page .friends-list,
+.friends-page .friend-transaction-list {
+  max-height: calc(100vh - 284px) !important;
+}
+
+.friends-page .friend-transaction-table-wrapper {
+  display: block !important;
+  overflow: auto !important;
+  border: 1px solid rgba(58, 68, 70, 0.58) !important;
+  border-top: 0 !important;
+  border-radius: 0 0 14px 14px !important;
+  background: rgba(5, 8, 9, 0.36) !important;
+  box-shadow: none !important;
+  max-height: calc(100vh - 330px) !important;
+}
+
+.friends-page .friend-transaction-table {
+  width: 100% !important;
+  min-width: 620px !important;
+  border-collapse: collapse !important;
+}
+
+.friends-page .friend-transaction-table th,
+.friends-page .friend-transaction-table td {
+  padding: 13px 16px !important;
+  border-bottom: 1px solid rgba(58, 68, 70, 0.46) !important;
+  background: transparent !important;
+  color: #eef4f0 !important;
+  font-size: 13px !important;
+}
+
+.friends-page .friend-transaction-table th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 2 !important;
+  background: rgba(8, 11, 12, 0.98) !important;
+  color: rgba(210, 220, 216, 0.68) !important;
+  font-size: 12px !important;
+  font-weight: 560 !important;
+  text-transform: uppercase !important;
+}
+
+.friends-page .friend-transaction-table tbody tr:hover {
+  background: rgba(183, 245, 54, 0.035) !important;
+}
+
+.friends-page .friend-transaction-table tbody tr:last-child td {
+  border-bottom: 0 !important;
+}
+
+.friends-page .friend-transaction-table td:nth-child(1),
+.friends-page .friend-transaction-table td:nth-child(3),
+.friends-page .friend-transaction-table span {
+  color: rgba(210, 220, 216, 0.68) !important;
+}
+
+.friends-page .friend-transaction-table td:nth-child(2) strong,
+.friends-page .friend-transaction-table td:nth-child(2) span {
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.friends-page .friend-transaction-table td:nth-child(2) strong {
+  margin-bottom: 4px !important;
+  color: #f6faf7 !important;
+  font-size: 14px !important;
+  font-weight: 560 !important;
+}
+
+.friends-page .friend-transaction-table td:nth-child(4),
+.friends-page .friend-transaction-table th:nth-child(4) {
+  text-align: right !important;
+  white-space: nowrap !important;
+}
+
+.friends-page .friend-transaction-table td:nth-child(3) {
+  text-transform: capitalize !important;
+}
+
+.friends-page .primary-button,
+.friends-page .secondary-button {
+  min-height: 44px !important;
+  border-radius: 12px !important;
+  font-weight: 560 !important;
+}
+
+.friends-page .primary-button {
+  color: #091006 !important;
+}
+
+/* Dashboard filters: keep only the active Year + Month selectors. */
+.premium-dashboard .premium-header-actions {
+  display: grid !important;
+  grid-template-columns: minmax(150px, 180px) minmax(180px, 220px) !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+.premium-dashboard .premium-header-actions > label:not(.active-dashboard-filter),
+.premium-dashboard .premium-header-actions > .premium-period-pill {
+  display: none !important;
+}
+
+.premium-dashboard .active-dashboard-filter {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 46px !important;
+  padding: 0 12px !important;
+  border: 1px solid rgba(58, 68, 70, 0.72) !important;
+  border-radius: 12px !important;
+  background: linear-gradient(145deg, rgba(15, 20, 21, 0.94), rgba(7, 10, 11, 0.99)) !important;
+  box-shadow: none !important;
+}
+
+.premium-dashboard .active-dashboard-filter span {
+  color: rgba(210, 220, 216, 0.74) !important;
+  font-size: 13px !important;
+  font-weight: 560 !important;
+}
+
+.premium-dashboard .active-dashboard-filter select {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 44px !important;
+  padding: 0 28px 0 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #eef4f0 !important;
+  font-size: 14px !important;
+  font-weight: 560 !important;
+  outline: 0 !important;
+}
+
+.premium-dashboard .active-dashboard-filter select:disabled {
+  color: rgba(210, 220, 216, 0.54) !important;
+  cursor: not-allowed !important;
 }
