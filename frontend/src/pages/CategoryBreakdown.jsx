@@ -1,9 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import Navigation from '../components/Navigation';
 import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
 import { getCategoryChartColor } from '../utils/categoryDisplay';
+import './CategoryBreakdown.css';
 
 const now = new Date();
 
@@ -30,6 +43,15 @@ const moneyFormatter = new Intl.NumberFormat('en-IN', {
 });
 
 const formatMoney = (value) => moneyFormatter.format(Number(value || 0));
+
+const compactMoneyFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
+
+const formatCompactMoney = (value) => compactMoneyFormatter.format(Number(value || 0));
 
 const parsePeriod = (searchParams) => {
   const monthParam = searchParams.get('month');
@@ -88,6 +110,12 @@ const CategoryBreakdown = () => {
   }, [token, month, year]);
 
   const categories = breakdown.categories || [];
+  const totalExpenses = Number(breakdown.total_expenses || 0);
+  const categoryChartData = categories.map((category, index) => ({
+    name: category.category_name,
+    value: Number(category.total || 0),
+    color: category.color || getCategoryChartColor(category.category_name, index),
+  }));
 
   return (
     <div>
@@ -104,10 +132,59 @@ const CategoryBreakdown = () => {
 
         {error && <div className="surface-message error">{error}</div>}
 
-        <section className="category-breakdown-summary">
-          <span>Total Expenses</span>
-          <strong>{formatMoney(breakdown.total_expenses)}</strong>
-          <em>{categories.length} categories</em>
+        <section className="category-breakdown-summary category-summary-card">
+          <div className="category-summary-copy">
+            <span>Total Expenses</span>
+            <strong>{formatMoney(totalExpenses)}</strong>
+            <em>{categories.length} categories in {periodLabel}</em>
+          </div>
+          {categories.length > 0 && (
+            <div className="category-summary-chart">
+              <div className="summary-donut">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryChartData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius="66%"
+                      outerRadius="88%"
+                      paddingAngle={2}
+                      stroke="oklch(.16 0 0)"
+                      strokeWidth={4}
+                      isAnimationActive={false}
+                    >
+                      {categoryChartData.map((entry) => (
+                        <Cell key={entry.name} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value) => formatMoney(value)}
+                      contentStyle={{
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: 14,
+                        background: 'oklch(.14 0 0)',
+                        color: 'oklch(.96 0 0)',
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="summary-donut-center">
+                  <strong>{formatCompactMoney(totalExpenses)}</strong>
+                  <span>Total</span>
+                </div>
+              </div>
+              <div className="summary-category-list">
+                {categoryChartData.map((category) => (
+                  <div className="summary-category-row" key={category.name}>
+                    <span className="category-breakdown-dot" style={{ background: category.color }} />
+                    <span>{category.name}</span>
+                    <strong>{formatCompactMoney(category.value)}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         <section className="category-breakdown-list">
@@ -130,22 +207,80 @@ const CategoryBreakdown = () => {
                   <strong>{formatMoney(category.total)}</strong>
                 </div>
 
-                <div className="merchant-bar-list">
+                <div className="merchant-chart-module">
                   {category.merchants.length === 0 ? (
                     <div className="chart-empty-state small">No merchants found in this category.</div>
-                  ) : category.merchants.map((merchant) => (
-                    <div className="merchant-bar-row" key={`${category.category_name}-${merchant.merchant_name}`}>
-                      <div className="merchant-bar-meta">
-                        <span>{merchant.merchant_name}</span>
-                        <em>{merchant.transaction_count} txn{merchant.transaction_count === 1 ? '' : 's'}</em>
+                  ) : (
+                    <>
+                      <div className="merchant-chart-frame">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={category.merchants.map((merchant) => ({
+                              merchant: merchant.merchant_name,
+                              shortMerchant: merchant.merchant_name.length > 14
+                                ? `${merchant.merchant_name.slice(0, 13)}...`
+                                : merchant.merchant_name,
+                              total: Number(merchant.total_spent || 0),
+                              transactions: Number(merchant.transaction_count || 0),
+                              percentage: Number(merchant.percentage || 0),
+                            }))}
+                            margin={{ top: 18, right: 14, left: 4, bottom: 10 }}
+                          >
+                            <defs>
+                              <linearGradient id={`barGradient-${category.category_id || index}`} x1="0" x2="0" y1="0" y2="1">
+                                <stop offset="0%" stopColor="#ffffff" stopOpacity={0.55} />
+                                <stop offset="12%" stopColor={categoryColor} stopOpacity={1} />
+                                <stop offset="100%" stopColor={categoryColor} stopOpacity={0.55} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+                            <XAxis
+                              dataKey="shortMerchant"
+                              tick={{ fill: 'oklch(.76 0 0)', fontSize: 11 }}
+                              axisLine={{ stroke: 'rgba(255,255,255,0.18)' }}
+                              tickLine={false}
+                              interval={0}
+                            />
+                            <YAxis
+                              tick={{ fill: 'oklch(.76 0 0)', fontSize: 11 }}
+                              axisLine={{ stroke: 'rgba(255,255,255,0.18)' }}
+                              tickLine={false}
+                              width={66}
+                              tickFormatter={(value) => formatCompactMoney(value)}
+                            />
+                            <Tooltip
+                              formatter={(value, name, props) => [
+                                formatMoney(value),
+                                `${props.payload.transactions} txn${props.payload.transactions === 1 ? '' : 's'} · ${props.payload.percentage.toFixed(1)}%`,
+                              ]}
+                              labelFormatter={(_label, payload) => payload?.[0]?.payload?.merchant || ''}
+                              contentStyle={{
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                borderRadius: 14,
+                                background: 'oklch(.14 0 0)',
+                                color: 'oklch(.96 0 0)',
+                              }}
+                              cursor={{ fill: 'rgba(255,255,255,0.035)' }}
+                            />
+                            <Bar dataKey="total" radius={[12, 12, 4, 4]} fill={`url(#barGradient-${category.category_id || index})`} isAnimationActive={false}>
+                              {category.merchants.map((merchant) => (
+                                <Cell key={merchant.merchant_name} fill={`url(#barGradient-${category.category_id || index})`} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
                       </div>
-                      <div className="merchant-bar-track" aria-hidden="true">
-                        <span style={{ width: `${Math.max(merchant.percentage, 2)}%`, background: categoryColor }} />
+                      <div className="merchant-detail-list">
+                        {category.merchants.map((merchant) => (
+                          <div className="merchant-detail-row" key={`${category.category_name}-${merchant.merchant_name}`}>
+                            <span>{merchant.merchant_name}</span>
+                            <em>{merchant.transaction_count} txn{merchant.transaction_count === 1 ? '' : 's'}</em>
+                            <strong>{formatMoney(merchant.total_spent)}</strong>
+                          </div>
+                        ))}
                       </div>
-                      <strong>{formatMoney(merchant.total_spent)}</strong>
-                      <em>{merchant.percentage.toFixed(1)}%</em>
-                    </div>
-                  ))}
+                    </>
+                  )}
                 </div>
               </article>
             );
