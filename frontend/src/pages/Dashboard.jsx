@@ -163,7 +163,6 @@ const Dashboard = () => {
   const [trendSummary, setTrendSummary] = useState(emptyTrendSummary);
   const [merchantAnalytics, setMerchantAnalytics] = useState(emptyMerchants);
   const [subscriptionAnalytics, setSubscriptionAnalytics] = useState(emptySubscriptions);
-  const [periodMode, setPeriodMode] = useState('hidden');
   const [selectedMonth, setSelectedMonth] = useState(emptySummary.month);
   const [selectedYear, setSelectedYear] = useState(emptySummary.year);
   const [loading, setLoading] = useState(true);
@@ -238,7 +237,15 @@ const Dashboard = () => {
   const hasCategoryData = categoryBreakdown.length > 0 && totalCategorySpend > 0;
   const hasTrendData = trendData.some((item) => Number(item.income || 0) || Number(item.expenses || 0));
   const healthScore = Number(summary.financial_health_score || 0);
-  const healthRotation = Math.min(Math.max(healthScore, 0), 100) * 3.6;
+  const boundedHealthScore = Math.min(Math.max(healthScore, 0), 100);
+  const healthRotation = boundedHealthScore * 3.6;
+  const healthToneColor = boundedHealthScore < 25
+    ? '#ff4d5a'
+    : boundedHealthScore < 50
+      ? '#ff9f43'
+      : boundedHealthScore < 75
+        ? '#f6e65a'
+        : '#9bef38';
   const isAllTime = selectedYear === ALL_YEARS;
   const numericSelectedYear = isAllTime ? now.getFullYear() : Number(selectedYear);
   const monthLabel = getMonthLabel(selectedMonth);
@@ -252,6 +259,11 @@ const Dashboard = () => {
     : selectedMonth === 0
       ? `${numericSelectedYear - 1}`
       : getPreviousMonthLabel(selectedMonth, numericSelectedYear);
+  const categoryBreakdownPath = `/category-breakdown?${new URLSearchParams(
+    isAllTime
+      ? { month: '-1' }
+      : { month: String(selectedMonth), year: String(numericSelectedYear) },
+  ).toString()}`;
 
   const metrics = [
     {
@@ -353,51 +365,6 @@ const Dashboard = () => {
                 ))}
               </select>
             </label>
-            <label className="premium-date-control period-mode-control">
-              <span className="control-glyph" aria-hidden="true">□</span>
-              <select aria-label="Select dashboard period type" value={periodMode} onChange={(event) => setPeriodMode(event.target.value)}>
-                <option value="month">Month</option>
-                <option value="year">Year</option>
-                <option value="day">Day</option>
-                <option value="lifetime">All</option>
-              </select>
-            </label>
-            {periodMode === 'month' && (
-              <label className="premium-date-control month-period-control">
-                <select aria-label="Select dashboard month" value={selectedMonth} onChange={(event) => setSelectedMonth(Number(event.target.value))}>
-                  {monthOptions.filter((month) => month.value > 0).map((month) => (
-                    <option key={month.value} value={month.value}>
-                      {month.label} {selectedYear}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            {(periodMode === 'month' || periodMode === 'year') && (
-              <label className="premium-year-control">
-                <select aria-label="Select dashboard year" value={selectedYear} onChange={(event) => setSelectedYear(Number(event.target.value))}>
-                  {yearOptions.map((year) => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              </label>
-            )}
-            {periodMode === 'day' && (
-              <label className="premium-date-control dashboard-day-control">
-                <input
-                  aria-label="Select dashboard day"
-                  type="date"
-                  value={selectedDate}
-                  onChange={(event) => setSelectedDate(event.target.value)}
-                />
-              </label>
-            )}
-            {periodMode === 'year' && (
-              <span className="premium-period-pill">Full year</span>
-            )}
-            {periodMode === 'lifetime' && (
-              <span className="premium-period-pill">All time</span>
-            )}
           </div>
         </header>
 
@@ -412,7 +379,7 @@ const Dashboard = () => {
             </div>
 
             <Link className="health-link-card dashboard-health-wide" to="/financial-health">
-              <section className="dashboard-card health-panel">
+              <section className="dashboard-card health-panel" style={{ '--health-tone': healthToneColor }}>
                 <div className="premium-panel-header">
                   <div>
                     <h2>Financial Health Score</h2>
@@ -426,7 +393,7 @@ const Dashboard = () => {
                 </div>
                 <strong className="health-label">{summary.financial_health_status || 'Needs Improvement'}</strong>
                 <p>{summary.financial_health_reason || 'Your score improves as income, savings, and spending patterns become healthier.'}</p>
-                <div className="health-scale" style={{ '--health-score': `${Math.min(Math.max(healthScore, 0), 100)}%` }}>
+                <div className="health-scale" style={{ '--health-score': `${boundedHealthScore}%` }}>
                   <span />
                   <span />
                   <span />
@@ -442,7 +409,7 @@ const Dashboard = () => {
                     <h2>Spending by Category</h2>
                     <p>{formatMoney(totalCategorySpend)} total expenses</p>
                   </div>
-                  <Link to="/categories">View breakdown</Link>
+                    <Link to={categoryBreakdownPath}>View breakdown</Link>
                 </div>
                 {!hasCategoryData ? (
                   <div className="chart-empty-state">No expense categories found for this period.</div>
@@ -517,23 +484,23 @@ const Dashboard = () => {
 
           </section>
 
-          <aside className="premium-right-rail">
+          <aside className="premium-right-rail dashboard-rail-combo">
             <section className="rail-section">
               <div className="premium-panel-header">
                 <div>
                   <h2>Top Merchants</h2>
-                  <p>Highest spending merchants this period.</p>
                 </div>
+                <span>This month</span>
               </div>
               <div className="premium-category-list compact">
                 {(merchantAnalytics.top_merchants || []).length === 0 ? (
                   <div className="chart-empty-state small">No merchant spending yet.</div>
                 ) : merchantAnalytics.top_merchants.slice(0, 5).map((merchant, index) => (
                   <div className="premium-category-row" key={merchant.merchant_name}>
-                    <span className="legend-dot" style={{ background: index === 0 ? '#a3e635' : '#8d969f' }} />
+                    <span className="legend-dot" style={{ background: index === 0 ? '#8b5cf6' : index === 1 ? '#9bef38' : '#8d969f' }} />
                     <span>{merchant.merchant_name}</span>
+                    <em>{merchant.frequency} txn{merchant.frequency === 1 ? '' : 's'}</em>
                     <strong>{formatCompactMoney(merchant.total_spent)}</strong>
-                    <em>{merchant.frequency}x</em>
                   </div>
                 ))}
               </div>
@@ -542,22 +509,19 @@ const Dashboard = () => {
             <section className="rail-section">
               <div className="premium-panel-header">
                 <div>
-                  <h2>Subscription Analysis</h2>
-                  <p>
-                    {subscriptionAnalytics.subscription_count || 0} active -
-                    {' '}{formatMoney(subscriptionAnalytics.total_monthly_cost || 0)} / month
-                  </p>
+                  <h2>Top Subscriptions</h2>
                 </div>
+                <span>This month</span>
               </div>
               <div className="premium-category-list compact">
                 {(subscriptionAnalytics.subscriptions || []).length === 0 ? (
-                  <div className="chart-empty-state small">No Subscriptions category payments found.</div>
-                ) : subscriptionAnalytics.subscriptions.slice(0, 4).map((subscription) => (
+                  <div className="chart-empty-state small">No subscription payments found.</div>
+                ) : subscriptionAnalytics.subscriptions.slice(0, 5).map((subscription) => (
                   <div className="premium-category-row" key={subscription.merchant_name}>
                     <span className="legend-dot" style={{ background: '#5eead4' }} />
                     <span>{subscription.merchant_name}</span>
-                    <strong>{formatCompactMoney(subscription.monthly_cost)}</strong>
                     <em>{Math.round((subscription.confidence || 0) * 100)}%</em>
+                    <strong>{formatCompactMoney(subscription.monthly_cost)}</strong>
                   </div>
                 ))}
               </div>

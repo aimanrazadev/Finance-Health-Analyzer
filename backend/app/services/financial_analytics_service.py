@@ -8,6 +8,9 @@ from app.models.models import Category, Subscription, Transaction
 from app.schemas.schemas import (
     CategoryAnalyticsItem,
     CategoryAnalyticsResponse,
+    CategoryMerchantBreakdownItem,
+    CategoryMerchantBreakdownResponse,
+    CategoryMerchantItem,
     DashboardDataResponse,
     MerchantAnalyticsItem,
     MerchantAnalyticsResponse,
@@ -109,6 +112,88 @@ def build_category_analytics(db: Session, user_id: int, month: int, year: int, d
         total_expenses=total_expenses,
         highest_spending_category=non_investment_items[0].category_name if non_investment_items else None,
         categories=items,
+    )
+
+
+def build_category_merchant_breakdown(db: Session, user_id: int, month: int, year: int, day: int | None = None) -> CategoryMerchantBreakdownResponse:
+    """Group expense spending by category, then by merchant within each category."""
+    start_date, end_date = month_bounds(month, year, day)
+    merchant_name = func.coalesce(Transaction.extracted_merchant, Transaction.merchant, Transaction.description, "Unknown merchant")
+    rows = (
+        db.query(
+            Transaction.category_id.label("category_id"),
+            func.coalesce(Category.name, "Uncategorized").label("category_name"),
+            Category.color.label("color"),
+            merchant_name.label("merchant_name"),
+            func.coalesce(func.sum(Transaction.amount), 0).label("total_spent"),
+            func.count(Transaction.id).label("transaction_count"),
+        )
+        .outerjoin(Category, Transaction.category_id == Category.id)
+        .filter(
+            Transaction.user_id == user_id,
+            Transaction.transaction_type == "expense",
+            Transaction.date >= start_date,
+            Transaction.date <= end_date,
+            func.lower(func.coalesce(Category.name, "")).notin_(INVESTMENT_CATEGORY_NAMES),
+        )
+        .group_by(Transaction.category_id, Category.name, Category.color, merchant_name)
+        .order_by(func.sum(Transaction.amount).desc())
+        .all()
+    )
+
+    category_map: dict[tuple[int | None, str], dict] = {}
+    for row in rows:
+        key = (row.category_id, row.category_name)
+        if key not in category_map:
+            category_map[key] = {
+                "category_id": row.category_id,
+                "category_name": row.category_name,
+                "color": row.color,
+                "total": 0.0,
+                "transaction_count": 0,
+                "merchants": [],
+            }
+        category = category_map[key]
+        merchant_total = round(float(row.total_spent or 0), 2)
+        merchant_count = int(row.transaction_count or 0)
+        category["total"] += merchant_total
+        category["transaction_count"] += merchant_count
+        category["merchants"].append({
+            "merchant_name": row.merchant_name or "Unknown merchant",
+            "total_spent": merchant_total,
+            "transaction_count": merchant_count,
+        })
+
+    total_expenses = round(sum(category["total"] for category in category_map.values()), 2)
+    categories = []
+    for category in sorted(category_map.values(), key=lambda item: item["total"], reverse=True):
+        category_total = round(category["total"], 2)
+        merchants = [
+            CategoryMerchantItem(
+                merchant_name=merchant["merchant_name"],
+                total_spent=merchant["total_spent"],
+                transaction_count=merchant["transaction_count"],
+                percentage=round((merchant["total_spent"] / category_total * 100), 2) if category_total else 0,
+            )
+            for merchant in sorted(category["merchants"], key=lambda item: item["total_spent"], reverse=True)[:8]
+        ]
+        categories.append(
+            CategoryMerchantBreakdownItem(
+                category_id=category["category_id"],
+                category_name=category["category_name"],
+                total=category_total,
+                percentage=round((category_total / total_expenses * 100), 2) if total_expenses else 0,
+                transaction_count=category["transaction_count"],
+                color=category["color"],
+                merchants=merchants,
+            )
+        )
+
+    return CategoryMerchantBreakdownResponse(
+        month=month,
+        year=year,
+        total_expenses=total_expenses,
+        categories=categories,
     )
 
 

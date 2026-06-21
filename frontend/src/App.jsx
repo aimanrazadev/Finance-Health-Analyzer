@@ -15,6 +15,7 @@ const UploadStatement = lazy(() => import('./pages/UploadStatement'));
 const FinancialHealth = lazy(() => import('./pages/FinancialHealth'));
 const AIAdvisor = lazy(() => import('./pages/Insights'));
 const Categories = lazy(() => import('./pages/Categories'));
+const CategoryBreakdown = lazy(() => import('./pages/CategoryBreakdown'));
 const Friends = lazy(() => import('./pages/Friends'));
 
 function App() {
@@ -58,6 +59,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Categories />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/category-breakdown"
+              element={
+                <ProtectedRoute>
+                  <CategoryBreakdown />
                 </ProtectedRoute>
               }
             />

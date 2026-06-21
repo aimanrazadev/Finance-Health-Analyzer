@@ -423,6 +423,30 @@ class CategoryAnalyticsResponse(BaseModel):
     categories: List[CategoryAnalyticsItem]
 
 
+class CategoryMerchantItem(BaseModel):
+    merchant_name: str
+    total_spent: float
+    transaction_count: int
+    percentage: float
+
+
+class CategoryMerchantBreakdownItem(BaseModel):
+    category_id: Optional[int]
+    category_name: str
+    total: float
+    percentage: float
+    transaction_count: int
+    color: Optional[str] = None
+    merchants: List[CategoryMerchantItem] = []
+
+
+class CategoryMerchantBreakdownResponse(BaseModel):
+    month: int
+    year: int
+    total_expenses: float
+    categories: List[CategoryMerchantBreakdownItem]
+
+
 class MerchantAnalyticsItem(BaseModel):
     merchant_name: str
     total_spent: float

@@ -45,7 +45,7 @@
 
 .transaction-list-panel {
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .transaction-form-panel h2 {
@@ -148,8 +148,9 @@
 
 .transaction-table-wrapper {
   width: 100%;
-  max-height: calc(100vh - 128px);
-  overflow: auto;
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: visible;
   scrollbar-gutter: stable both-edges;
 }
 

@@ -9,6 +9,7 @@ from app.db.database import get_db
 from app.models.models import User
 from app.schemas.schemas import (
     CategoryAnalyticsResponse,
+    CategoryMerchantBreakdownResponse,
     ChartDataPoint,
     DashboardDataResponse,
     DashboardChartsResponse,
@@ -31,6 +32,7 @@ from app.services.dashboard_summary_service import (
 )
 from app.services.financial_analytics_service import (
     build_category_analytics,
+    build_category_merchant_breakdown,
     build_complete_dashboard_data,
     build_merchant_analytics_detail,
     build_savings_analytics,
@@ -107,6 +109,18 @@ def get_category_analytics(
 ):
     selected_month, selected_year, selected_day = resolve_period(month, year, day)
     return build_category_analytics(db, current_user.id, selected_month, selected_year, selected_day)
+
+
+@router.get("/category-merchants", response_model=CategoryMerchantBreakdownResponse)
+def get_category_merchant_breakdown(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    day: Optional[int] = None,
+):
+    selected_month, selected_year, selected_day = resolve_period(month, year, day)
+    return build_category_merchant_breakdown(db, current_user.id, selected_month, selected_year, selected_day)
 
 
 @router.get("/merchants", response_model=MerchantAnalyticsResponse)
