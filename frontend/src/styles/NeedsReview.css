@@ -2,6 +2,7 @@
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
   padding: 28px 0 56px;
+  font-family: Montserrat, Inter, "Segoe UI", system-ui, sans-serif;
 }
 
 .review-panel {

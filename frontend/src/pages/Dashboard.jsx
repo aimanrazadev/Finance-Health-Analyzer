@@ -176,12 +176,6 @@ const DonutTooltip = ({ active, payload }) => {
   );
 };
 
-const CategoryBadge = ({ name, color }) => (
-  <span className="category-badge" style={{ '--category-color': color }}>
-    {name}
-  </span>
-);
-
 const makeRecommendations = (summary, subscriptionAnalytics, health) => {
   const recommendations = [];
   const savingsRate = Number(summary.savings_rate || 0);
@@ -482,7 +476,7 @@ const Dashboard = () => {
 
                     return (
                       <div className="category-row" key={entry.name}>
-                        <CategoryBadge name={entry.name} color={color} />
+                        <span className="dashboard-category-name" style={{ '--category-color': color }}>{entry.name}</span>
                         <strong>{formatCompactMoney(entry.value)}</strong>
                         <em>{percentage}%</em>
                       </div>
@@ -494,10 +488,10 @@ const Dashboard = () => {
           </article>
         </section>
 
-        <section className="dashboard-grid health-insights-grid">
+        <section className="dashboard-grid dashboard-health-grid">
           <Link
             to="/ai-insights"
-            className="dashboard-card health-score-card"
+            className="dashboard-card dashboard-health-card"
             aria-label="Open AI Insights and financial health details"
             style={{ '--health-tone': healthToneColor, '--health-deg': `${healthRotation}deg` }}
           >
@@ -506,31 +500,33 @@ const Dashboard = () => {
                 <h2>Financial Health Score</h2>
                 <p>Open AI Insights for the full score breakdown and financial signals</p>
               </div>
-              <span className="health-pill">{boundedHealthScore < 70 ? 'Needs action' : 'On track'}</span>
+              <span className="dashboard-health-pill">{boundedHealthScore < 70 ? 'Needs action' : 'On track'}</span>
             </div>
-            <div className="health-content-grid">
-              <div className="health-score-cluster">
-                <div className="health-ring">
-                  <strong>{Math.round(healthScore)}</strong>
-                  <span>/100</span>
+            <div className="dashboard-health-content">
+              <div className="dashboard-health-score-cluster">
+                <div className="dashboard-health-ring" aria-label={`Financial health score ${Math.round(healthScore)} out of 100`}>
+                  <div className="dashboard-health-ring-label" aria-hidden="true">
+                    <strong>{Math.round(healthScore)}</strong>
+                    <span>/100</span>
+                  </div>
                 </div>
-                <div className="health-copy">
+                <div className="dashboard-health-copy">
                   <strong>{health.status_label || 'Needs Improvement'}</strong>
                   <p>{health.breakdown?.[0]?.description || 'Your score improves as income, savings, subscriptions, and balance become healthier.'}</p>
-                  <div className="health-scale" style={{ '--health-score': `${boundedHealthScore}%` }}>
+                  <div className="dashboard-health-scale" style={{ '--health-score': `${boundedHealthScore}%` }}>
                     <span />
                   </div>
                 </div>
               </div>
 
-              <div className="health-insights-panel">
-                <div className="health-insights-heading">
+              <div className="dashboard-signals-panel">
+                <div className="dashboard-signals-heading">
                   <span>AI Insights</span>
                   <small>{recommendations.length} signals</small>
                 </div>
-                <div className="insight-list">
+                <div className="dashboard-signal-list">
                   {recommendations.map((item, index) => (
-                    <div className={`insight-item severity-${item.severity || 'neutral'}`} key={`${item.title}-${item.message}-${index}`}>
+                    <div className={`dashboard-signal-item severity-${item.severity || 'neutral'}`} key={`${item.title}-${item.message}-${index}`}>
                       <span>{index + 1}</span>
                       <div>
                         <strong>{item.title}</strong>

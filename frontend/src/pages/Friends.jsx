@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { CalendarDays, ChevronRight, Copy, EyeOff, Search } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
@@ -11,7 +12,14 @@ const moneyFormatter = new Intl.NumberFormat('en-IN', {
 });
 
 const formatMoney = (value) => moneyFormatter.format(Number(value || 0));
-const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : '-');
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString('en-GB') : '-');
+const formatMemberSince = (value) => (value
+  ? new Date(value).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+  : 'Unknown');
+const formatTransactionAmount = (transaction) => {
+  const amount = formatMoney(transaction.amount);
+  return transaction.transaction_type === 'expense' ? `-${amount}` : amount;
+};
 
 const Friends = () => {
   const { token } = useAuth();
@@ -25,6 +33,7 @@ const Friends = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [copiedFriendId, setCopiedFriendId] = useState(null);
 
   const chooseSelectedFriend = useCallback((friends, preferredFriendId) => {
     setSelectedFriend((current) => {
@@ -135,6 +144,22 @@ const Friends = () => {
     }
   };
 
+  const getFriendUpiId = (friend) => {
+    const normalizedName = friend?.normalized_name || friend?.name || 'friend';
+    return `${normalizedName.trim().toLowerCase().replace(/\s+/g, '.')}@upi`;
+  };
+
+  const copyFriendId = async (friend) => {
+    try {
+      await navigator.clipboard.writeText(getFriendUpiId(friend));
+      setCopiedFriendId(friend.id);
+      window.setTimeout(() => setCopiedFriendId(null), 1600);
+    } catch (err) {
+      console.error(err);
+      setError('Unable to copy the friend ID.');
+    }
+  };
+
   return (
     <div>
       <Navigation />
@@ -159,26 +184,33 @@ const Friends = () => {
 
         <section className="friends-workspace">
           <section className="friends-directory" aria-label="Friend directory">
-            <div className="friends-section-title">
-              <h2>Friend Directory</h2>
-              <span>{filteredFriends.length} shown</span>
-            </div>
             <form className="friend-form" onSubmit={addFriend}>
+              <div className="friends-section-title">
+                <h2>Friend Directory</h2>
+                <div>
+                  <span>{filteredFriends.length} shown</span>
+                  <button className="friend-add-button plain-button" disabled={saving}>
+                    {saving ? 'Saving...' : 'Add Friend'}
+                  </button>
+                </div>
+              </div>
               <input
                 value={friendName}
                 onChange={(event) => setFriendName(event.target.value)}
                 placeholder="Friend name"
+                aria-label="Friend name"
               />
-              <button className="primary-button" disabled={saving}>
-                {saving ? 'Saving...' : 'Add Friend'}
-              </button>
             </form>
-            <input
-              className="friend-search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search friends"
-            />
+            <label className="friend-search-control">
+              <Search aria-hidden="true" />
+              <input
+                className="friend-search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search friends"
+                aria-label="Search friends"
+              />
+            </label>
 
             <div className="friends-list">
               {loading ? (
@@ -186,18 +218,11 @@ const Friends = () => {
               ) : filteredFriends.length === 0 ? (
                 <div className="friends-empty">No friends found yet.</div>
               ) : filteredFriends.map((friend) => (
-                <div
-                  role="button"
-                  tabIndex={0}
-                  className={`friend-row ${selectedFriend?.id === friend.id ? 'active' : ''}`}
+                <button
+                  type="button"
+                  className={`friend-row plain-button ${selectedFriend?.id === friend.id ? 'active' : ''}`}
                   key={friend.id}
                   onClick={() => setSelectedFriend(friend)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      setSelectedFriend(friend);
-                    }
-                  }}
                 >
                   <span>
                     <strong>{friend.name}</strong>
@@ -206,7 +231,8 @@ const Friends = () => {
                     </small>
                   </span>
                   <em>{formatMoney(friend.total_amount)}</em>
-                </div>
+                  <ChevronRight className="friend-row-chevron" aria-hidden="true" />
+                </button>
               ))}
             </div>
           </section>
@@ -217,20 +243,39 @@ const Friends = () => {
             ) : (
               <>
                 <div className="friend-detail-header">
-                  <div>
+                  <div className="friend-identity">
                     <h2>{detail.friend.name}</h2>
-                    <p>
-                      {detail.friend.transaction_count || 0} transactions - Last {formatDate(detail.friend.last_transaction_at)}
+                    <div className="friend-id-row">
+                      <span>UPI ID: {getFriendUpiId(detail.friend)}</span>
+                      <button
+                        type="button"
+                        className="copy-friend-id plain-button"
+                        onClick={() => copyFriendId(detail.friend)}
+                        title={copiedFriendId === detail.friend.id ? 'Copied' : 'Copy UPI ID'}
+                        aria-label={copiedFriendId === detail.friend.id ? 'UPI ID copied' : 'Copy UPI ID'}
+                      >
+                        <Copy aria-hidden="true" />
+                      </button>
+                    </div>
+                    <p className="friend-member-since">
+                      <CalendarDays aria-hidden="true" />
+                      Member since {formatMemberSince(detail.friend.created_at)}
                     </p>
                   </div>
                   <div className="friend-detail-total">
                     <strong>{formatMoney(detail.friend.total_amount)}</strong>
-                    <button className="secondary-button danger" onClick={() => hideFriend(detail.friend.id)}>
-                      Hide
+                    <span>Total Balance</span>
+                    <button className="hide-details-button plain-button" onClick={() => hideFriend(detail.friend.id)}>
+                      <EyeOff aria-hidden="true" />
+                      Hide Details
                     </button>
                   </div>
                 </div>
 
+                <div className="friend-transactions-heading">
+                  <h3>All Transactions</h3>
+                  <span>{detail.friend.transaction_count || 0} linked</span>
+                </div>
                 <div className="friend-transaction-list friend-transaction-table-wrapper">
                   {(detail.transactions || []).length === 0 ? (
                     <div className="friends-empty">No linked transactions yet.</div>
@@ -252,8 +297,8 @@ const Friends = () => {
                               <strong>{transaction.extracted_merchant || transaction.merchant || detail.friend.name}</strong>
                               <span>{transaction.description}</span>
                             </td>
-                            <td>{transaction.transaction_type}</td>
-                            <td>{formatMoney(transaction.amount)}</td>
+                            <td className={`transaction-type ${transaction.transaction_type}`}>{transaction.transaction_type}</td>
+                            <td className={transaction.transaction_type}>{formatTransactionAmount(transaction)}</td>
                           </tr>
                         ))}
                       </tbody>

@@ -2,11 +2,10 @@
 
 .dashboard-page {
   --dash-bg: oklch(.1 0 0);
-  --dash-card: linear-gradient(145deg, oklch(.22 0 0), oklch(.16 0 0));
-  --dash-card-selected: linear-gradient(145deg, oklch(.3 0 0), oklch(.22 0 0));
+  --dash-card: linear-gradient(145deg, rgba(15, 20, 21, 0.92), rgba(8, 11, 12, 0.98));
   --dash-text: oklch(.96 0 0);
   --dash-muted: oklch(.76 0 0);
-  --dash-border: rgba(255, 255, 255, 0.08);
+  --dash-border: rgba(58, 68, 70, 0.58);
   --dash-accent: #a3ff12;
   --dash-accent-soft: rgba(163, 255, 18, 0.12);
   --dash-danger: #ff5252;
@@ -15,12 +14,17 @@
   min-height: 100vh;
   margin: 0 auto;
   padding: 36px 0 72px;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
   color: var(--dash-text);
   font-family: Montserrat, Inter, "Segoe UI", system-ui, sans-serif;
 }
 
 .app-shell:has(.dashboard-page) {
-  background: var(--dash-bg);
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .dashboard-page * {
@@ -64,12 +68,9 @@
   min-width: 360px;
   padding: 10px;
   border: 1px solid var(--dash-border);
-  border-radius: 22px;
-  background: linear-gradient(145deg, oklch(.2 0 0), oklch(.14 0 0));
-  box-shadow:
-    inset 0 1px 2px rgba(255, 255, 255, 0.08),
-    0 4px 4px rgba(0, 0, 0, 0.30),
-    0 12px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 14px;
+  background: var(--dash-card);
+  box-shadow: none;
 }
 
 .dashboard-filters label {
@@ -125,42 +126,18 @@
   position: relative;
   min-width: 0;
   border: 1px solid var(--dash-border) !important;
-  border-radius: 22px !important;
+  border-radius: 14px !important;
   background: var(--dash-card) !important;
-  box-shadow:
-    inset 0 1px 2px rgba(255, 255, 255, 0.08),
-    0 4px 4px rgba(0, 0, 0, 0.30),
-    0 12px 12px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: none !important;
   color: var(--dash-text);
   overflow: hidden;
   transition: transform 0.3s ease-in-out, border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out, background 0.3s ease-in-out;
 }
 
-.dashboard-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 40%);
-  pointer-events: none;
-}
-
-.dashboard-card > * {
-  position: relative;
-  z-index: 1;
-}
-
-.dashboard-card-selected {
-  background: var(--dash-card-selected) !important;
-}
-
 .dashboard-card:hover {
   z-index: 2;
-  border-color: rgba(255, 255, 255, 0.13) !important;
-  box-shadow:
-    inset 0 1px 2px rgba(255, 255, 255, 0.10),
-    0 6px 6px rgba(0, 0, 0, 0.30),
-    0 16px 18px rgba(0, 0, 0, 0.18) !important;
+  border-color: rgba(183, 245, 54, 0.34) !important;
+  box-shadow: none !important;
 }
 
 .metric-grid {
@@ -258,24 +235,24 @@
   grid-column: 1 / -1;
 }
 
-.health-insights-grid {
+.dashboard-health-grid {
   grid-template-columns: 1fr;
 }
 
 .chart-card,
-.health-score-card,
+.dashboard-health-card,
 .table-card {
   padding: 24px;
 }
 
 .chart-card:hover,
-.health-score-card:hover,
+.dashboard-health-card:hover,
 .table-card:hover {
   transform: translateY(-2px);
 }
 
 .chart-card:active,
-.health-score-card:active,
+.dashboard-health-card:active,
 .table-card:active {
   transform: scale(0.97);
 }
@@ -437,7 +414,7 @@
   background: rgba(255, 255, 255, 0.026);
 }
 
-.category-badge {
+.dashboard-category-name {
   display: inline-flex;
   min-width: 0;
   align-items: center;
@@ -450,7 +427,7 @@
   white-space: nowrap;
 }
 
-.category-badge::before {
+.dashboard-category-name::before {
   content: '';
   flex: 0 0 10px;
   width: 10px;
@@ -474,20 +451,20 @@
   font-weight: 600;
 }
 
-.health-score-card {
+.dashboard-health-card {
   color: inherit;
   text-decoration: none;
   min-height: 300px;
 }
 
-.health-content-grid {
+.dashboard-health-content {
   display: grid;
   grid-template-columns: minmax(360px, 0.85fr) minmax(0, 1.15fr);
   align-items: stretch;
   gap: 24px;
 }
 
-.health-score-cluster {
+.dashboard-health-score-cluster {
   display: grid;
   grid-template-columns: 152px minmax(0, 1fr);
   align-items: center;
@@ -495,7 +472,7 @@
   min-width: 0;
 }
 
-.health-ring {
+.dashboard-health-ring {
   position: relative;
   display: grid;
   width: 148px;
@@ -507,7 +484,7 @@
     oklch(.13 0 0);
 }
 
-.health-ring::after {
+.dashboard-health-ring::after {
   content: '';
   position: absolute;
   inset: 14px;
@@ -516,28 +493,33 @@
   background: linear-gradient(145deg, oklch(.18 0 0), oklch(.12 0 0));
 }
 
-.health-ring strong,
-.health-ring span {
-  position: relative;
+.dashboard-health-ring-label {
+  position: absolute;
+  inset: 14px;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 50%;
 }
 
-.health-ring strong {
+.dashboard-health-ring-label strong {
   color: var(--health-tone);
   font-size: 36px;
   font-weight: 800;
   line-height: 1;
 }
 
-.health-ring span {
-  margin-top: 45px;
-  margin-left: -44px;
+.dashboard-health-ring-label span {
   color: var(--dash-muted);
   font-size: 12px;
   font-weight: 700;
+  line-height: 1;
 }
 
-.health-copy strong {
+.dashboard-health-copy strong {
   display: block;
   color: var(--health-tone);
   font-size: 23px;
@@ -545,7 +527,7 @@
   line-height: 1.1;
 }
 
-.health-copy p {
+.dashboard-health-copy p {
   margin-top: 10px;
   color: var(--dash-muted);
   font-size: 13px;
@@ -553,7 +535,7 @@
   line-height: 1.55;
 }
 
-.health-pill {
+.dashboard-health-pill {
   padding: 7px 10px;
   border: 1px solid color-mix(in srgb, var(--health-tone) 30%, transparent);
   border-radius: 999px;
@@ -561,7 +543,7 @@
   color: var(--health-tone) !important;
 }
 
-.health-scale {
+.dashboard-health-scale {
   position: relative;
   height: 9px;
   margin-top: 18px;
@@ -569,7 +551,7 @@
   background: linear-gradient(90deg, var(--dash-danger), var(--dash-warning), var(--dash-accent));
 }
 
-.health-scale span {
+.dashboard-health-scale span {
   position: absolute;
   top: 50%;
   left: clamp(7px, var(--health-score), calc(100% - 7px));
@@ -581,15 +563,16 @@
   transform: translate(-50%, -50%);
 }
 
-.health-insights-panel {
+.dashboard-signals-panel {
   min-width: 0;
   padding: 18px;
   border: 1px solid var(--dash-border);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.024);
+  border-radius: 14px;
+  background: var(--dash-card);
+  box-shadow: none;
 }
 
-.health-insights-heading {
+.dashboard-signals-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -597,25 +580,25 @@
   margin-bottom: 14px;
 }
 
-.health-insights-heading span {
+.dashboard-signals-heading span {
   color: var(--dash-text);
   font-size: 15px;
   font-weight: 800;
 }
 
-.health-insights-heading small {
+.dashboard-signals-heading small {
   color: var(--dash-accent);
   font-size: 12px;
   font-weight: 700;
 }
 
-.insight-list {
+.dashboard-signal-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.insight-item {
+.dashboard-signal-item {
   display: grid;
   grid-template-columns: 28px minmax(0, 1fr);
   gap: 10px;
@@ -623,18 +606,19 @@
   min-width: 0;
   padding: 11px;
   border: 1px solid var(--dash-border);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.026);
+  border-radius: 12px;
+  background: var(--dash-card);
+  box-shadow: none;
   transition: transform 0.3s ease-in-out, background-color 0.3s ease-in-out, border-color 0.3s ease-in-out;
 }
 
-.insight-item:hover {
+.dashboard-signal-item:hover {
   transform: translateY(-2px);
   border-color: rgba(163, 255, 18, 0.22);
-  background: rgba(255, 255, 255, 0.042);
+  background: linear-gradient(145deg, rgba(18, 23, 24, 0.98), rgba(8, 11, 12, 0.99));
 }
 
-.insight-item span {
+.dashboard-signal-item span {
   display: inline-grid;
   width: 28px;
   height: 28px;
@@ -646,22 +630,22 @@
   font-weight: 800;
 }
 
-.insight-item.severity-warning span {
+.dashboard-signal-item.severity-warning span {
   background: rgba(255, 164, 59, 0.14);
   color: var(--dash-warning);
 }
 
-.insight-item.severity-positive span {
+.dashboard-signal-item.severity-positive span {
   background: var(--dash-accent-soft);
   color: var(--dash-accent);
 }
 
-.insight-item.severity-neutral span {
+.dashboard-signal-item.severity-neutral span {
   background: rgba(255, 255, 255, 0.07);
   color: var(--dash-muted);
 }
 
-.insight-item strong {
+.dashboard-signal-item strong {
   display: block;
   margin-bottom: 4px;
   color: var(--dash-text);
@@ -670,7 +654,7 @@
   line-height: 1.2;
 }
 
-.insight-item p {
+.dashboard-signal-item p {
   color: var(--dash-muted);
   font-size: 12px;
   font-weight: 500;
@@ -680,7 +664,9 @@
 .dashboard-table-wrap {
   overflow-x: auto;
   border: 1px solid var(--dash-border);
-  border-radius: 16px;
+  border-radius: 14px;
+  background: var(--dash-card);
+  box-shadow: none;
 }
 
 .dashboard-table {
@@ -801,11 +787,11 @@
     grid-template-columns: 1fr;
   }
 
-  .health-content-grid {
+  .dashboard-health-content {
     grid-template-columns: 1fr;
   }
 
-  .insight-list {
+  .dashboard-signal-list {
     grid-template-columns: 1fr;
   }
 }
@@ -834,12 +820,12 @@
     grid-column: auto;
   }
 
-  .health-score-cluster,
+  .dashboard-health-score-cluster,
   .donut-layout {
     grid-template-columns: 1fr;
   }
 
-  .health-ring {
+  .dashboard-health-ring {
     justify-self: center;
   }
 }
@@ -857,7 +843,7 @@
   }
 
   .chart-card,
-  .health-score-card,
+  .dashboard-health-card,
   .table-card,
   .metric-card {
     padding: 18px;
