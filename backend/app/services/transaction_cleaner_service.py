@@ -70,17 +70,21 @@ def parse_date_flexible(value: Any) -> datetime:
     if isinstance(value, datetime):
         return value
     text = str(value).strip()
-    for fmt in ("%d %b %Y", "%d-%b-%Y", "%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"):
+    for fmt in (
+        "%d %b %Y",
+        "%d-%b-%Y",
+        "%Y-%m-%d",
+        "%d/%m/%Y",
+        "%d-%m-%Y",
+        "%d/%m/%y",
+        "%d-%m-%y",
+        "%b %d, %Y",
+    ):
         try:
             return datetime.strptime(text, fmt)
         except ValueError:
             continue
-    try:
-        import pandas as pd
-
-        return pd.to_datetime(text, errors="raise").to_pydatetime()
-    except Exception as exc:
-        raise ValueError(f"invalid date: {text}") from exc
+    raise ValueError(f"invalid date: {text}")
 
 
 def detect_type_and_amount(withdrawal: float | None, deposit: float | None, amount: float | None, raw_type: Any = None) -> tuple[str, float]:

@@ -4,10 +4,10 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.services.import_profile_service import resolve_import_mapping
 from app.services.transaction_cleaner_service import map_column_name, standardize_transaction
 
 
-HEADER_KEYWORDS = ("date", "description", "withdrawal", "deposit", "balance")
 TRANSACTION_START_RE = re.compile(r"^\s*(?P<number>\d+)\s+(?P<date>\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+(?P<body>.+)$")
 AMOUNT_RE = re.compile(r"(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{2})?")
 REFERENCE_RE = re.compile(r"\b(?:UPI|MB|FOS|IMPS|NEFT|RTGS|ACH|NACH)[-/A-Z0-9]*\b", re.IGNORECASE)
@@ -56,10 +56,11 @@ def _merge_continuation_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]
     return merged
 
 
-def _extract_rows_from_tables(content: bytes) -> list[dict[str, Any]]:
+def _extract_rows_from_tables(content: bytes) -> tuple[list[dict[str, Any]], list[str]]:
     import pdfplumber
 
     raw_rows: list[dict[str, Any]] = []
+    detected_columns: list[str] = []
     with pdfplumber.open(BytesIO(content)) as pdf:
         for page in pdf.pages:
             for table in page.extract_tables() or []:
@@ -69,7 +70,10 @@ def _extract_rows_from_tables(content: bytes) -> list[dict[str, Any]]:
                         continue
                     if header is None:
                         if _looks_like_header(row):
-                            header = [map_column_name(_cell(cell)) for cell in row]
+                            source_header = [_cell(cell) for cell in row]
+                            header = [map_column_name(cell) for cell in source_header]
+                            if not detected_columns:
+                                detected_columns = source_header
                         continue
 
                     record = {
@@ -80,7 +84,7 @@ def _extract_rows_from_tables(content: bytes) -> list[dict[str, Any]]:
                     if record and not _is_noise(" ".join(str(value) for value in record.values())):
                         raw_rows.append(record)
 
-    return _merge_continuation_rows(raw_rows)
+    return _merge_continuation_rows(raw_rows), detected_columns
 
 
 def _extract_text_lines(content: bytes) -> list[str]:
@@ -145,10 +149,19 @@ def _extract_rows_from_text(content: bytes) -> list[dict[str, Any]]:
     return rows
 
 
-def parse_pdf_statement(content: bytes, db: Session, user_id: int | None = None) -> dict[str, Any]:
-    raw_rows = _extract_rows_from_tables(content)
+def parse_pdf_statement(
+    content: bytes,
+    db: Session,
+    user_id: int | None = None,
+    file_name: str = "statement.pdf",
+) -> dict[str, Any]:
+    raw_rows, columns = _extract_rows_from_tables(content)
     if not raw_rows:
         raw_rows = _extract_rows_from_text(content)
+        columns = ["Date", "Description", "Reference No", "Withdrawal", "Deposit", "Balance"]
+
+    profile_context = resolve_import_mapping(db, user_id, file_name, "pdf", columns)
+    profile = profile_context["profile"]
 
     transactions: list[dict[str, Any]] = []
     failed_items: list[dict[str, Any]] = []
@@ -169,4 +182,12 @@ def parse_pdf_statement(content: bytes, db: Session, user_id: int | None = None)
         "total_rows": len(raw_rows),
         "transactions": transactions,
         "failed_items": failed_items,
+        "import_profile": {
+            "id": profile.id if profile else None,
+            "name": profile.profile_name if profile else f"{profile_context['bank_name']} PDF profile",
+            "confidence": profile_context["confidence"],
+            "column_mapping": profile_context["mapping"],
+            "bank_name": profile_context["bank_name"],
+            "columns": columns,
+        },
     }

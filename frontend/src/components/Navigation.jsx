@@ -28,12 +28,12 @@ const iconPaths = {
     <path key="friends-3" d="M22 21v-2a4 4 0 0 0-3-3.87" />,
     <path key="friends-4" d="M16 3.13a4 4 0 0 1 0 7.75" />,
   ],
-  advisor: [
-    <path key="advisor-1" d="M12 3l1.7 5.1L19 10l-5.3 1.9L12 17l-1.7-5.1L5 10l5.3-1.9L12 3Z" />,
-    <path key="advisor-2" d="M5 4v3" />,
-    <path key="advisor-3" d="M3.5 5.5h3" />,
-    <path key="advisor-4" d="M19 17v3" />,
-    <path key="advisor-5" d="M17.5 18.5h3" />,
+  insights: [
+    <path key="insights-1" d="M12 3l1.7 5.1L19 10l-5.3 1.9L12 17l-1.7-5.1L5 10l5.3-1.9L12 3Z" />,
+    <path key="insights-2" d="M5 4v3" />,
+    <path key="insights-3" d="M3.5 5.5h3" />,
+    <path key="insights-4" d="M19 17v3" />,
+    <path key="insights-5" d="M17.5 18.5h3" />,
   ],
 };
 
@@ -64,7 +64,7 @@ const primaryLinks = [
   { label: 'Transactions', path: '/transactions', icon: 'transactions' },
   { label: 'Categories', path: '/categories', icon: 'categories' },
   { label: 'Friends', path: '/friends', icon: 'friends' },
-  { label: 'AI Advisor', path: '/ai-advisor', icon: 'advisor' },
+  { label: 'AI Insights', path: '/ai-insights', icon: 'insights' },
 ];
 
 const Navigation = () => {

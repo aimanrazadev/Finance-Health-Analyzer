@@ -52,6 +52,9 @@ CATEGORY_KEYWORDS = {
     "Investments": [
         "iccl", "indian clearing", "investment", "mutual fund", "sip", "zerodha",
     ],
+    "Savings": [
+        "emergency fund", "fixed deposit", "recurring deposit", "savings", "savings transfer",
+    ],
     "Refunds": [
         "cashback", "refund", "reversal",
     ],

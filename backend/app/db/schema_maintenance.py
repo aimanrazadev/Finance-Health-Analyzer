@@ -68,6 +68,14 @@ def ensure_database_schema():
                 connection.execute(text(f"ALTER TABLE {table.name} ADD COLUMN {column_ddl}"))
 
         if "transactions" in existing_tables:
+            connection.execute(text("""
+                UPDATE transactions
+                SET transaction_type = CASE
+                    WHEN deposit_amount IS NOT NULL AND deposit_amount > 0 THEN 'income'
+                    ELSE 'expense'
+                END
+                WHERE transaction_type NOT IN ('income', 'expense')
+            """))
             connection.execute(text("UPDATE transactions SET is_friend_transaction = 0 WHERE is_friend_transaction IS NULL"))
             connection.execute(text("UPDATE transactions SET is_needs_review = 0 WHERE is_needs_review IS NULL"))
             connection.execute(text("UPDATE transactions SET review_status = 'approved' WHERE review_status IS NULL"))

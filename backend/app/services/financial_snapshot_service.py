@@ -4,7 +4,7 @@ from datetime import date
 from sqlalchemy.orm import Session
 
 from app.schemas.schemas import FinancialSnapshotResponse
-from app.services.dashboard_summary_service import build_dashboard_summary
+from app.services.analytics_service import build_dashboard_summary
 
 
 def build_financial_snapshot(db: Session, user_id: int, month: int, year: int) -> FinancialSnapshotResponse:
@@ -15,8 +15,9 @@ def build_financial_snapshot(db: Session, user_id: int, month: int, year: int) -
     elapsed_days = today.day if today.month == month and today.year == year else days_in_month
     pace_factor = days_in_month / max(elapsed_days, 1)
 
-    projected_spending = round(summary.total_expenses * pace_factor, 2)
-    projected_savings = round(summary.total_income - projected_spending, 2)
+    lifestyle_spending = sum(item.total for item in summary.category_breakdown)
+    projected_spending = round(lifestyle_spending * pace_factor, 2)
+    projected_savings = round(summary.total_savings * pace_factor, 2)
     projected_savings_rate = round((projected_savings / summary.total_income * 100), 2) if summary.total_income else 0
 
     if projected_savings_rate >= 25:
@@ -33,13 +34,13 @@ def build_financial_snapshot(db: Session, user_id: int, month: int, year: int) -
         alerts.append(f"{summary.top_category} is currently your top spending category.")
     if summary.top_merchant:
         alerts.append(f"{summary.top_merchant} is currently your top spending merchant.")
-    if projected_savings < 0:
-        alerts.append("Projected savings are negative; expenses may exceed income this month.")
+    if summary.total_savings == 0 and summary.total_income > 0:
+        alerts.append("No transactions are categorized as Savings or Investments this month.")
 
     return FinancialSnapshotResponse(
         month=month,
         year=year,
-        current_month_spending=summary.total_expenses,
+        current_month_spending=round(lifestyle_spending, 2),
         projected_month_end_spending=projected_spending,
         projected_month_end_savings=projected_savings,
         projected_savings_rate=projected_savings_rate,

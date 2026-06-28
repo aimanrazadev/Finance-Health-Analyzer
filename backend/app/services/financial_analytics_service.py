@@ -1,4 +1,3 @@
-from calendar import monthrange
 from datetime import datetime, timedelta
 
 from sqlalchemy import func
@@ -12,6 +11,7 @@ from app.schemas.schemas import (
     CategoryMerchantBreakdownResponse,
     CategoryMerchantItem,
     DashboardDataResponse,
+    DashboardRecentTransaction,
     MerchantAnalyticsItem,
     MerchantAnalyticsResponse,
     SavingsAnalyticsResponse,
@@ -19,32 +19,15 @@ from app.schemas.schemas import (
     SubscriptionAnalyticsResponse,
 )
 from app.services.dashboard_insights_service import build_dashboard_insights
-from app.services.dashboard_summary_service import (
-    INVESTMENT_CATEGORY_NAMES,
+from app.services.analytics_service import (
+    SAVINGS_ALLOCATION_CATEGORY_NAMES,
     SUBSCRIPTION_CATEGORY_NAMES,
     build_dashboard_charts,
     build_dashboard_summary,
+    build_monthly_trends,
+    period_bounds as month_bounds,
+    previous_period,
 )
-
-
-def month_bounds(month: int, year: int, day: int | None = None) -> tuple[datetime, datetime]:
-    if day and month > 0:
-        return datetime(year, month, day), datetime(year, month, day, 23, 59, 59)
-    if month == -1:
-        return datetime(1900, 1, 1), datetime(9999, 12, 31, 23, 59, 59)
-    if month == 0:
-        return datetime(year, 1, 1), datetime(year, 12, 31, 23, 59, 59)
-    return datetime(year, month, 1), datetime(year, month, monthrange(year, month)[1], 23, 59, 59)
-
-
-def previous_period(month: int, year: int) -> tuple[int, int]:
-    if month == -1:
-        return -1, year
-    if month == 0:
-        return 0, year - 1
-    if month == 1:
-        return 12, year - 1
-    return month - 1, year
 
 
 def build_savings_analytics(db: Session, user_id: int, month: int, year: int) -> SavingsAnalyticsResponse:
@@ -81,16 +64,14 @@ def build_category_analytics(db: Session, user_id: int, month: int, year: int, d
             Transaction.transaction_type == "expense",
             Transaction.date >= start_date,
             Transaction.date <= end_date,
+            func.lower(func.coalesce(Category.name, "")).notin_(SAVINGS_ALLOCATION_CATEGORY_NAMES),
         )
         .group_by(Transaction.category_id, Category.name, Category.color)
         .order_by(func.sum(Transaction.amount).desc())
         .all()
     )
 
-    total_expenses = round(
-        sum(float(row.total or 0) for row in rows if row.category_name.lower() not in INVESTMENT_CATEGORY_NAMES),
-        2,
-    )
+    total_expenses = round(sum(float(row.total or 0) for row in rows), 2)
     items = [
         CategoryAnalyticsItem(
             category_id=row.category_id,
@@ -103,14 +84,11 @@ def build_category_analytics(db: Session, user_id: int, month: int, year: int, d
         for row in rows
     ]
 
-    non_investment_items = [
-        item for item in items if item.category_name.lower() not in INVESTMENT_CATEGORY_NAMES
-    ]
     return CategoryAnalyticsResponse(
         month=month,
         year=year,
         total_expenses=total_expenses,
-        highest_spending_category=non_investment_items[0].category_name if non_investment_items else None,
+        highest_spending_category=items[0].category_name if items else None,
         categories=items,
     )
 
@@ -134,7 +112,7 @@ def build_category_merchant_breakdown(db: Session, user_id: int, month: int, yea
             Transaction.transaction_type == "expense",
             Transaction.date >= start_date,
             Transaction.date <= end_date,
-            func.lower(func.coalesce(Category.name, "")).notin_(INVESTMENT_CATEGORY_NAMES),
+            func.lower(func.coalesce(Category.name, "")).notin_(SAVINGS_ALLOCATION_CATEGORY_NAMES),
         )
         .group_by(Transaction.category_id, Category.name, Category.color, merchant_name)
         .order_by(func.sum(Transaction.amount).desc())
@@ -213,7 +191,7 @@ def build_merchant_analytics_detail(db: Session, user_id: int, month: int, year:
             Transaction.transaction_type == "expense",
             Transaction.date >= start_date,
             Transaction.date <= end_date,
-            func.lower(func.coalesce(Category.name, "")).notin_(INVESTMENT_CATEGORY_NAMES),
+            func.lower(func.coalesce(Category.name, "")).notin_(SAVINGS_ALLOCATION_CATEGORY_NAMES),
         )
         .group_by(merchant_name)
         .all()
@@ -322,6 +300,7 @@ def build_subscription_analytics(db: Session, user_id: int, month: int, year: in
                 amount=average_amount,
                 billing_period="monthly",
                 monthly_cost=average_amount,
+                annual_cost=round(average_amount * 12, 2),
                 transaction_count=int(row.transaction_count or 0),
                 confidence=confidence,
                 next_expected_payment=next_expected_payment,
@@ -336,12 +315,37 @@ def build_subscription_analytics(db: Session, user_id: int, month: int, year: in
         year=year,
         subscription_count=len(items),
         total_monthly_cost=round(sum(item.monthly_cost for item in items), 2),
+        total_annual_cost=round(sum(item.annual_cost for item in items), 2),
         subscriptions=items,
     )
 
 
 def build_complete_dashboard_data(db: Session, user_id: int, month: int, year: int, day: int | None = None) -> DashboardDataResponse:
     """Build one complete payload for the React dashboard."""
+    from app.services.financial_health_service import calculate_financial_health_score
+
+    start_date, end_date = month_bounds(month, year, day)
+    recent_rows = (
+        db.query(Transaction, Category)
+        .outerjoin(Category, Transaction.category_id == Category.id)
+        .filter(Transaction.user_id == user_id, Transaction.date >= start_date, Transaction.date <= end_date)
+        .order_by(Transaction.date.desc(), Transaction.id.desc())
+        .limit(8)
+        .all()
+    )
+    recent_transactions = [
+        DashboardRecentTransaction(
+            id=transaction.id,
+            date=transaction.date,
+            description=transaction.description,
+            merchant=transaction.extracted_merchant or transaction.merchant,
+            category_name=category.name if category else "Uncategorized",
+            transaction_type=transaction.transaction_type,
+            amount=round(float(transaction.amount or 0), 2),
+            closing_balance=transaction.balance,
+        )
+        for transaction, category in recent_rows
+    ]
     return DashboardDataResponse(
         summary=build_dashboard_summary(db, user_id, month, year, day),
         savings=build_savings_analytics(db, user_id, month, year),
@@ -349,5 +353,8 @@ def build_complete_dashboard_data(db: Session, user_id: int, month: int, year: i
         merchants=build_merchant_analytics_detail(db, user_id, month, year, day),
         subscriptions=build_subscription_analytics(db, user_id, month, year, day),
         charts=build_dashboard_charts(db, user_id, month, year, day),
+        trends=build_monthly_trends(db, user_id, year),
         insights=build_dashboard_insights(db, user_id, month, year, day),
+        health=calculate_financial_health_score(db, user_id, month, year),
+        recent_transactions=recent_transactions,
     )

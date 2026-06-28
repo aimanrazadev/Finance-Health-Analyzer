@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.ai.llm_client import LLMClient
 from app.models.models import AiInsight, Category, Transaction
+from app.services.analytics_service import SAVINGS_ALLOCATION_CATEGORY_NAMES, savings_total, transaction_total
 
 
 def previous_month(month: int, year: int) -> tuple[int, int]:
@@ -20,33 +21,12 @@ def month_bounds(month: int, year: int) -> tuple[datetime, datetime]:
 
 
 def get_expense_total(db: Session, user_id: int, month: int, year: int) -> float:
-    start_date, end_date = month_bounds(month, year)
-    return float(
-        db.query(func.coalesce(func.sum(Transaction.amount), 0))
-        .filter(
-            Transaction.user_id == user_id,
-            Transaction.transaction_type == "expense",
-            Transaction.date >= start_date,
-            Transaction.date <= end_date,
-        )
-        .scalar()
-        or 0
-    )
+    expenses = transaction_total(db, user_id, "expense", month, year)
+    return round(max(expenses - savings_total(db, user_id, month, year), 0), 2)
 
 
 def get_income_total(db: Session, user_id: int, month: int, year: int) -> float:
-    start_date, end_date = month_bounds(month, year)
-    return float(
-        db.query(func.coalesce(func.sum(Transaction.amount), 0))
-        .filter(
-            Transaction.user_id == user_id,
-            Transaction.transaction_type == "income",
-            Transaction.date >= start_date,
-            Transaction.date <= end_date,
-        )
-        .scalar()
-        or 0
-    )
+    return transaction_total(db, user_id, "income", month, year)
 
 
 def get_category_totals(db: Session, user_id: int, month: int, year: int) -> list[dict[str, Any]]:
@@ -63,6 +43,7 @@ def get_category_totals(db: Session, user_id: int, month: int, year: int) -> lis
             Transaction.transaction_type == "expense",
             Transaction.date >= start_date,
             Transaction.date <= end_date,
+            func.lower(func.coalesce(Category.name, "")).notin_(SAVINGS_ALLOCATION_CATEGORY_NAMES),
         )
         .group_by(Category.id, Category.name)
         .order_by(func.sum(Transaction.amount).desc())
@@ -107,11 +88,13 @@ def detect_top_merchant(db: Session, user_id: int, month: int, year: int) -> dic
     merchant_name = func.coalesce(Transaction.extracted_merchant, Transaction.merchant, "Unknown merchant")
     row = (
         db.query(merchant_name.label("merchant"), func.coalesce(func.sum(Transaction.amount), 0).label("total"))
+        .outerjoin(Category, Transaction.category_id == Category.id)
         .filter(
             Transaction.user_id == user_id,
             Transaction.transaction_type == "expense",
             Transaction.date >= start_date,
             Transaction.date <= end_date,
+            func.lower(func.coalesce(Category.name, "")).notin_(SAVINGS_ALLOCATION_CATEGORY_NAMES),
         )
         .group_by(merchant_name)
         .order_by(func.sum(Transaction.amount).desc())
@@ -129,9 +112,11 @@ def detect_unusual_spending(db: Session, user_id: int, month: int, year: int, cu
             extract("year", Transaction.date).label("year_number"),
             func.coalesce(func.sum(Transaction.amount), 0).label("total"),
         )
+        .outerjoin(Category, Transaction.category_id == Category.id)
         .filter(
             Transaction.user_id == user_id,
             Transaction.transaction_type == "expense",
+            func.lower(func.coalesce(Category.name, "")).notin_(SAVINGS_ALLOCATION_CATEGORY_NAMES),
         )
         .group_by(extract("year", Transaction.date), extract("month", Transaction.date))
         .order_by(extract("year", Transaction.date).desc(), extract("month", Transaction.date).desc())
@@ -162,6 +147,8 @@ def build_spending_summary(db: Session, user_id: int, month: int, year: int) -> 
     previous_expenses = get_expense_total(db, user_id, prev_month, prev_year)
     current_income = get_income_total(db, user_id, month, year)
     previous_income = get_income_total(db, user_id, prev_month, prev_year)
+    current_savings = savings_total(db, user_id, month, year)
+    previous_savings = savings_total(db, user_id, prev_month, prev_year)
     category_totals = get_category_totals(db, user_id, month, year)
     previous_categories = {
         item["category_name"]: item["total"]
@@ -188,9 +175,9 @@ def build_spending_summary(db: Session, user_id: int, month: int, year: int) -> 
         "expenses": current_expenses,
         "previous_expenses": previous_expenses,
         "expense_change_percentage": round(((current_expenses - previous_expenses) / previous_expenses) * 100, 2) if previous_expenses else None,
-        "savings": current_income - current_expenses,
-        "previous_savings": previous_income - previous_expenses,
-        "savings_change_percentage": round((((current_income - current_expenses) - (previous_income - previous_expenses)) / abs(previous_income - previous_expenses)) * 100, 2) if (previous_income - previous_expenses) else None,
+        "savings": current_savings,
+        "previous_savings": previous_savings,
+        "savings_change_percentage": round(((current_savings - previous_savings) / abs(previous_savings)) * 100, 2) if previous_savings else None,
         "highest_category": category_totals[0] if category_totals else None,
         "top_merchant": detect_top_merchant(db, user_id, month, year),
         "category_totals": category_totals,

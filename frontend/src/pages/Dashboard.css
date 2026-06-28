@@ -111,7 +111,14 @@
 .dashboard-grid {
   display: grid;
   gap: 24px;
-  margin-bottom: 24px;
+  margin: -8px -8px 16px;
+  padding: 8px;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible;
 }
 
 .dashboard-card {
@@ -148,6 +155,7 @@
 }
 
 .dashboard-card:hover {
+  z-index: 2;
   border-color: rgba(255, 255, 255, 0.13) !important;
   box-shadow:
     inset 0 1px 2px rgba(255, 255, 255, 0.10),
@@ -156,7 +164,7 @@
 }
 
 .metric-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .metric-card {
@@ -244,6 +252,10 @@
 
 .table-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.recent-transactions-card {
+  grid-column: 1 / -1;
 }
 
 .health-insights-grid {
@@ -463,6 +475,8 @@
 }
 
 .health-score-card {
+  color: inherit;
+  text-decoration: none;
   min-height: 300px;
 }
 
@@ -730,6 +744,17 @@
   color: var(--dash-warning) !important;
 }
 
+.dashboard-table .money.positive {
+  color: var(--dash-accent) !important;
+}
+
+.recent-transactions-table th:nth-child(2),
+.recent-transactions-table td:nth-child(2),
+.recent-transactions-table th:nth-child(3),
+.recent-transactions-table td:nth-child(3) {
+  text-align: left;
+}
+
 .merchant-dot {
   flex: 0 0 10px;
   width: 10px;
@@ -759,10 +784,16 @@
 }
 
 @media (max-width: 1260px) {
-  .metric-grid,
-  .chart-grid,
-  .table-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .metric-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .metric-card {
+    grid-column: span 2;
+  }
+
+  .metric-card:nth-child(-n + 2) {
+    grid-column: span 3;
   }
 
   .chart-grid,
@@ -796,6 +827,11 @@
 
   .metric-grid {
     grid-template-columns: 1fr;
+  }
+
+  .metric-card,
+  .metric-card:nth-child(-n + 2) {
+    grid-column: auto;
   }
 
   .health-score-cluster,

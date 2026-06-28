@@ -12,8 +12,7 @@ const Register = lazy(() => import('./pages/Register'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Transactions = lazy(() => import('./pages/Transactions'));
 const UploadStatement = lazy(() => import('./pages/UploadStatement'));
-const FinancialHealth = lazy(() => import('./pages/FinancialHealth'));
-const AIAdvisor = lazy(() => import('./pages/Insights'));
+const AIInsights = lazy(() => import('./pages/AIInsights'));
 const Categories = lazy(() => import('./pages/Categories'));
 const CategoryBreakdown = lazy(() => import('./pages/CategoryBreakdown'));
 const Friends = lazy(() => import('./pages/Friends'));
@@ -63,7 +62,7 @@ function App() {
               }
             />
             <Route
-              path="/category-breakdown"
+              path="/dashboard/category-analytics"
               element={
                 <ProtectedRoute>
                   <CategoryBreakdown />
@@ -81,22 +80,16 @@ function App() {
               }
             />
             <Route
-              path="/financial-health"
+              path="/ai-insights"
               element={
                 <ProtectedRoute>
-                  <FinancialHealth />
+                  <AIInsights />
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/ai-advisor"
-              element={
-                <ProtectedRoute>
-                  <AIAdvisor />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/insights" element={<Navigate to="/financial-health" replace />} />
+            <Route path="/category-breakdown" element={<Navigate to="/dashboard/category-analytics" replace />} />
+            <Route path="/financial-health" element={<Navigate to="/ai-insights" replace />} />
+            <Route path="/insights" element={<Navigate to="/ai-insights" replace />} />
 
             {/* Redirect */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />

@@ -140,7 +140,7 @@ def get_transactions(
             )
         )
 
-    if transaction_type in {"income", "expense", "savings"}:
+    if transaction_type in {"income", "expense"}:
         query = query.filter(Transaction.transaction_type == transaction_type)
 
     if category_id is not None:

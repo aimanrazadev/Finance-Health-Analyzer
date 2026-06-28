@@ -5,8 +5,6 @@ import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
 import '../styles/NeedsReview.css';
 
-const INCOME_CATEGORY_NAMES = ['Refunds', 'Salary', 'Shopping', 'Friend', 'Friends', 'Other'];
-const SAVINGS_CATEGORY_NAMES = ['Investments'];
 const confidencePercent = (value) => `${Math.round((value ?? 0.3) * 100)}%`;
 const methodLabel = (method) => ({
   learned: 'Learned',
@@ -111,29 +109,13 @@ const Categories = () => {
     setError('');
   };
 
-  const getCategoriesForType = (transactionType) => (
-    transactionType === 'savings'
-      ? categories.filter((category) => SAVINGS_CATEGORY_NAMES.includes(category.name))
-      : (
-        transactionType === 'income'
-          ? categories.filter((category) => INCOME_CATEGORY_NAMES.includes(category.name))
-          : categories
-      )
-  );
+  const getCategoriesForType = () => categories;
 
   const getCategoryById = (categoryId) => categories.find((category) => (
     String(category.id) === String(categoryId)
   ));
 
-  const bulkCategoryOptions = filteredTransactions.length > 0
-    && filteredTransactions.every((transaction) => transaction.transaction_type === 'savings')
-    ? categories.filter((category) => SAVINGS_CATEGORY_NAMES.includes(category.name))
-    : (
-      filteredTransactions.length > 0
-      && filteredTransactions.every((transaction) => transaction.transaction_type === 'income')
-        ? categories.filter((category) => INCOME_CATEGORY_NAMES.includes(category.name))
-        : categories
-    );
+  const bulkCategoryOptions = categories;
 
   const saveBulkCorrections = async () => {
     const entries = Object.entries(selectedCategories).filter(([, categoryId]) => categoryId);

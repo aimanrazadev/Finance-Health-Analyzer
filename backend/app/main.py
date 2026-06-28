@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from app.db.database import SessionLocal
 from app.api.auth import router as auth_router
-from app.api.advisor import router as advisor_router
 from app.api.ai_insights import router as ai_insights_router
 from app.api.categories import router as categories_router
 from app.api.dashboard import router as dashboard_router
@@ -52,7 +51,6 @@ app.add_middleware(
 
 # Include routes
 app.include_router(auth_router)
-app.include_router(advisor_router)
 app.include_router(ai_insights_router)
 app.include_router(categories_router)
 app.include_router(dashboard_router)
@@ -78,7 +76,6 @@ def home():
         "version": "1.0.0",
         "endpoints": {
             "auth": "/auth",
-            "advisor": "/advisor",
             "ai_insights": "/ai/insights",
             "categories": "/categories",
             "dashboard": "/dashboard",

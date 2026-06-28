@@ -1,28 +1,20 @@
-from calendar import monthrange
-from datetime import datetime
 from statistics import mean
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models.models import Category, FinancialScore, Transaction
+from app.models.models import FinancialScore
+from app.services.analytics_service import (
+    build_dashboard_summary,
+    previous_period,
+    subscription_summary,
+)
 
 
-def _month_bounds(month: int, year: int) -> tuple[datetime, datetime]:
-    return datetime(year, month, 1), datetime(year, month, monthrange(year, month)[1], 23, 59, 59)
-
-
-def _previous_month(month: int, year: int) -> tuple[int, int]:
-    if month == 1:
-        return 12, year - 1
-    return month - 1, year
-
-
-def _clamp_score(value: float) -> int:
+def _clamp(value: float) -> int:
     return max(0, min(100, int(round(value))))
 
 
-def _status_label(score: int) -> str:
+def _status(score: int) -> str:
     if score >= 85:
         return "Excellent"
     if score >= 70:
@@ -32,147 +24,137 @@ def _status_label(score: int) -> str:
     return "Needs Improvement"
 
 
-def _cash_flow(db: Session, user_id: int, month: int, year: int) -> tuple[float, float]:
-    start, end = _month_bounds(month, year)
-    income = (
-        db.query(func.coalesce(func.sum(Transaction.amount), 0))
-        .filter(Transaction.user_id == user_id, Transaction.transaction_type == "income", Transaction.date >= start, Transaction.date <= end)
-        .scalar()
-    )
-    expenses = (
-        db.query(func.coalesce(func.sum(Transaction.amount), 0))
-        .filter(Transaction.user_id == user_id, Transaction.transaction_type == "expense", Transaction.date >= start, Transaction.date <= end)
-        .scalar()
-    )
-    return float(income or 0), float(expenses or 0)
-
-
-def _score_savings_rate(income: float, expenses: float) -> tuple[int, str]:
+def _savings_rate_score(income: float, savings: float) -> tuple[int, str]:
     if income <= 0:
-        return 45, "Add income transactions to measure savings rate accurately."
-    savings_rate = ((income - expenses) / income) * 100
-    if savings_rate >= 30:
+        return 0, "Add income transactions to measure the intentional savings rate."
+    rate = savings / income * 100
+    if rate >= 20:
         score = 100
-    elif savings_rate >= 20:
+    elif rate >= 15:
         score = 85
-    elif savings_rate >= 10:
+    elif rate >= 10:
         score = 70
-    elif savings_rate >= 0:
+    elif rate >= 5:
         score = 50
+    elif rate > 0:
+        score = 35
     else:
-        score = 25
-    return score, f"Savings rate is {savings_rate:.1f}% for this month."
+        score = 20
+    return score, f"Savings and Investments equal {rate:.1f}% of income."
 
 
-def _score_expense_control(income: float, expenses: float) -> tuple[int, str]:
+def _subscription_score(income: float, monthly_cost: float) -> tuple[int, str]:
+    if monthly_cost <= 0:
+        return 100, "No recurring subscription cost was detected in this period."
     if income <= 0:
-        return 45, "Add income transactions to compare expenses against income."
-    expense_ratio = expenses / income
-    if expense_ratio <= 0.60:
-        score = 100
-    elif expense_ratio <= 0.80:
-        score = 78
-    elif expense_ratio <= 1:
-        score = 55
-    else:
-        score = 25
-    return score, f"Expenses used {expense_ratio * 100:.1f}% of income this month."
-
-
-def _score_spending_stability(db: Session, user_id: int, month: int, year: int, current_expenses: float) -> tuple[int, str]:
-    values = []
-    cursor_month, cursor_year = month, year
-    for _ in range(3):
-        cursor_month, cursor_year = _previous_month(cursor_month, cursor_year)
-        _income, expenses = _cash_flow(db, user_id, cursor_month, cursor_year)
-        if expenses > 0:
-            values.append(expenses)
-    if not values:
-        return 60, "More monthly history will improve spending stability scoring."
-    baseline = mean(values)
-    change = abs(current_expenses - baseline) / baseline if baseline else 0
-    score = _clamp_score(100 - change * 120)
-    return score, f"Current expenses compared with recent monthly average of INR {baseline:.2f}."
-
-
-def _score_subscription_impact(db: Session, user_id: int, month: int, year: int, income: float) -> tuple[int, str]:
-    start, end = _month_bounds(month, year)
-    subscription_total = float(
-        db.query(func.coalesce(func.sum(Transaction.amount), 0))
-        .join(Category, Transaction.category_id == Category.id)
-        .filter(
-            Transaction.user_id == user_id,
-            Transaction.transaction_type == "expense",
-            Transaction.date >= start,
-            Transaction.date <= end,
-            func.lower(Category.name) == "subscriptions",
-        )
-        .scalar()
-        or 0
-    )
-
-    if subscription_total <= 0:
-        return 100, "No Subscriptions category payments found this month."
-    if income <= 0:
-        return 60, f"Subscriptions category payments total INR {subscription_total:.2f}; add income to score impact."
-
-    share = subscription_total / income * 100
+        return 20, f"Subscriptions total INR {monthly_cost:,.2f}; income is needed to measure their impact."
+    share = monthly_cost / income * 100
     if share <= 5:
-        score = 95
+        score = 100
     elif share <= 10:
         score = 80
-    elif share <= 20:
+    elif share <= 15:
         score = 60
+    elif share <= 20:
+        score = 40
     else:
-        score = 35
-    return score, f"Subscriptions category payments are {share:.1f}% of monthly income."
+        score = 20
+    return score, f"Subscriptions equal {share:.1f}% of income."
 
 
-def _tips_for_scores(scores: dict[str, int]) -> list[str]:
-    tips = []
-    if scores["savings_score"] < 70:
-        tips.append("Try moving a fixed amount to savings immediately after income arrives.")
-    if scores["expense_score"] < 70:
-        tips.append("Review your largest spending categories and cut the least useful recurring costs first.")
-    if scores["stability_score"] < 70:
-        tips.append("Review unusual spending spikes and separate one-time purchases from recurring expenses.")
-    if scores["subscription_score"] < 70:
-        tips.append("Review recurring subscriptions and cancel services you no longer use.")
-    return tips or ["Your finances look steady. Keep tracking monthly habits to maintain this score."]
+def _lifestyle_expenses(summary) -> float:
+    return max(float(summary.total_expenses) - float(summary.total_savings), 0.0)
+
+
+def _stability_score(db: Session, user_id: int, month: int, year: int, current: float) -> tuple[int, str]:
+    if month == -1:
+        return 60, "Select a month or year to compare spending stability over time."
+    history: list[float] = []
+    cursor_month, cursor_year = month, year
+    for _ in range(3):
+        cursor_month, cursor_year = previous_period(cursor_month, cursor_year)
+        previous = build_dashboard_summary(db, user_id, cursor_month, cursor_year)
+        value = _lifestyle_expenses(previous)
+        if value > 0:
+            history.append(value)
+    if not history:
+        return 60, "More prior-period spending data is needed for a stable comparison."
+    baseline = mean(history)
+    variation = abs(current - baseline) / baseline if baseline else 0
+    if variation <= 0.10:
+        score = 100
+    elif variation <= 0.25:
+        score = 80
+    elif variation <= 0.45:
+        score = 55
+    else:
+        score = 30
+    return score, f"Lifestyle spending is compared with a recent average of INR {baseline:,.2f}."
+
+
+def _balance_score(current_balance: float, income: float) -> tuple[int, str]:
+    if current_balance <= 0:
+        return 20, "The latest bank closing balance for this period is zero or negative."
+    if income <= 0:
+        return 50, f"Latest bank closing balance is INR {current_balance:,.2f}; add income to measure its strength."
+    ratio = current_balance / income
+    if ratio >= 1:
+        score = 100
+    elif ratio >= 0.50:
+        score = 85
+    elif ratio >= 0.25:
+        score = 70
+    elif ratio >= 0.10:
+        score = 55
+    else:
+        score = 40
+    return score, f"Latest bank closing balance equals {ratio * 100:.1f}% of period income."
 
 
 def _breakdown(label: str, score: int, description: str) -> dict:
-    return {
-        "label": label,
-        "score": score,
-        "status": _status_label(score),
-        "description": description,
-    }
+    return {"label": label, "score": score, "status": _status(score), "description": description}
+
+
+def _tips(scores: dict[str, int]) -> list[str]:
+    tips: list[str] = []
+    if scores["savings_score"] < 70:
+        tips.append("Categorize planned transfers under Savings or Investments to track intentional saving habits.")
+    if scores["subscription_score"] < 70:
+        tips.append("Review recurring subscriptions and remove services you no longer use.")
+    if scores["stability_score"] < 70:
+        tips.append("Review unusual spending spikes and separate one-time purchases from recurring costs.")
+    if scores["balance_score"] < 70:
+        tips.append("Build a larger closing-balance buffer before taking on new recurring commitments.")
+    return tips or ["Your core financial signals are steady. Keep categorizing transactions consistently."]
 
 
 def calculate_financial_health_score(db: Session, user_id: int, month: int, year: int) -> dict:
-    income, expenses = _cash_flow(db, user_id, month, year)
-    savings_score, savings_description = _score_savings_rate(income, expenses)
-    expense_score, expense_description = _score_expense_control(income, expenses)
-    stability_score, stability_description = _score_spending_stability(db, user_id, month, year, expenses)
-    subscription_score, subscription_description = _score_subscription_impact(db, user_id, month, year, income)
-
-    overall_score = _clamp_score(
-        savings_score * 0.35
-        + expense_score * 0.30
-        + stability_score * 0.20
-        + subscription_score * 0.15
+    summary = build_dashboard_summary(db, user_id, month, year)
+    recurring = subscription_summary(db, user_id, month, year)
+    savings_score, savings_description = _savings_rate_score(summary.total_income, summary.total_savings)
+    subscription_score, subscription_description = _subscription_score(
+        summary.total_income,
+        float(recurring["monthly_total"]),
     )
+    stability_score, stability_description = _stability_score(
+        db,
+        user_id,
+        month,
+        year,
+        _lifestyle_expenses(summary),
+    )
+    balance_score, balance_description = _balance_score(summary.current_balance, summary.total_income)
+    overall_score = _clamp((savings_score + subscription_score + stability_score + balance_score) / 4)
 
     record = FinancialScore(
         user_id=user_id,
         overall_score=overall_score,
         savings_score=savings_score,
-        budget_score=expense_score,
+        budget_score=balance_score,
         stability_score=stability_score,
         subscription_score=subscription_score,
-        debt_score=100,
-        emergency_fund_score=0,
+        debt_score=balance_score,
+        emergency_fund_score=balance_score,
     )
     db.add(record)
     db.commit()
@@ -180,28 +162,23 @@ def calculate_financial_health_score(db: Session, user_id: int, month: int, year
 
     scores = {
         "savings_score": savings_score,
-        "expense_score": expense_score,
-        "stability_score": stability_score,
         "subscription_score": subscription_score,
+        "stability_score": stability_score,
+        "balance_score": balance_score,
     }
     return {
         "id": record.id,
         "month": month,
         "year": year,
         "overall_score": overall_score,
-        "status_label": _status_label(overall_score),
-        "savings_score": savings_score,
-        "budget_score": expense_score,
-        "stability_score": stability_score,
-        "subscription_score": subscription_score,
-        "debt_score": 100,
-        "emergency_fund_score": 0,
+        "status_label": _status(overall_score),
+        **scores,
         "breakdown": [
             _breakdown("Savings rate", savings_score, savings_description),
-            _breakdown("Expense control", expense_score, expense_description),
+            _breakdown("Subscription control", subscription_score, subscription_description),
             _breakdown("Spending stability", stability_score, stability_description),
-            _breakdown("Subscription impact", subscription_score, subscription_description),
+            _breakdown("Financial balance", balance_score, balance_description),
         ],
-        "improvement_tips": _tips_for_scores(scores),
+        "improvement_tips": _tips(scores),
         "calculated_at": record.calculated_at,
     }

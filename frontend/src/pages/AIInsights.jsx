@@ -23,21 +23,22 @@ const moneyFormatter = new Intl.NumberFormat('en-IN', {
 const formatMoney = (value) => moneyFormatter.format(Number(value || 0));
 const formatPercent = (value) => `${Number(value || 0).toFixed(1)}%`;
 
-const FinancialHealth = () => {
+const AIInsights = () => {
   const { token } = useAuth();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [score, setScore] = useState(null);
   const [summary, setSummary] = useState(null);
   const [snapshot, setSnapshot] = useState(null);
-  const [insights, setInsights] = useState([]);
+  const [generatedInsights, setGeneratedInsights] = useState([]);
+  const [healthSignals, setHealthSignals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
 
-    const loadHealthIntelligence = async () => {
+    const loadAIInsights = async () => {
       setLoading(true);
       setError('');
       try {
@@ -46,26 +47,29 @@ const FinancialHealth = () => {
           month: selectedMonth,
           year: selectedYear,
         };
-        const [scoreResponse, summaryResponse, snapshotResponse, insightsResponse] = await Promise.all([
+        const [scoreResponse, summaryResponse, snapshotResponse, signalsResponse, insightsResponse] = await Promise.all([
           api.get('/financial-health/score', { headers, params }),
           api.get('/dashboard/summary', { headers, params }),
           api.get('/dashboard/snapshot', { headers, params }),
           api.get('/dashboard/insights', { headers, params }),
+          api.get('/ai/insights', { headers, params }),
         ]);
         if (!cancelled) {
           setScore(scoreResponse.data);
           setSummary(summaryResponse.data);
           setSnapshot(snapshotResponse.data);
-          setInsights(insightsResponse.data?.insights || []);
+          setHealthSignals(signalsResponse.data?.insights || []);
+          setGeneratedInsights(insightsResponse.data?.insights || []);
         }
       } catch (err) {
         console.error(err);
         if (!cancelled) {
-          setError('Unable to calculate financial health and insights.');
+          setError('Unable to load AI insights and financial health data.');
           setScore(null);
           setSummary(null);
           setSnapshot(null);
-          setInsights([]);
+          setGeneratedInsights([]);
+          setHealthSignals([]);
         }
       } finally {
         if (!cancelled) {
@@ -75,7 +79,7 @@ const FinancialHealth = () => {
     };
 
     if (token) {
-      loadHealthIntelligence();
+      loadAIInsights();
     }
 
     return () => {
@@ -89,9 +93,9 @@ const FinancialHealth = () => {
       <main className="health-page">
         <div className="page-heading">
           <div>
-            <p className="eyebrow">Financial health score</p>
-            <h1>Financial Health</h1>
-            <p>Understand savings strength, expense control, spending stability, and recurring payment load.</p>
+            <p className="eyebrow">Financial intelligence</p>
+            <h1>AI Insights</h1>
+            <p>Your health score, financial snapshot, and generated spending insights in one view.</p>
           </div>
           <div className="health-actions">
             <label>
@@ -116,7 +120,7 @@ const FinancialHealth = () => {
         {error && <div className="surface-message error">{error}</div>}
 
         {loading ? (
-          <div className="empty-state">Calculating financial health...</div>
+          <div className="empty-state">Preparing AI insights...</div>
         ) : !score ? (
           <div className="empty-state">Add income and expense transactions to calculate your financial health score.</div>
         ) : (
@@ -163,8 +167,8 @@ const FinancialHealth = () => {
 
             <section className="health-insights-panel">
               <div className="section-heading">
-                <h2>AI Insights</h2>
-                <p>Financial snapshot and readable signals for the selected month.</p>
+                <h2>Monthly Financial Snapshot</h2>
+                <p>Key figures for the selected month.</p>
               </div>
 
               <div className="health-snapshot-grid">
@@ -194,14 +198,42 @@ const FinancialHealth = () => {
                 </article>
               </div>
 
+              <div className="insight-section-heading">
+                <div>
+                  <h2>Generated AI Insights</h2>
+                  <p>Personalized observations generated from your transaction data.</p>
+                </div>
+                <span>{generatedInsights.length} insights</span>
+              </div>
+              <div className="health-insights-list generated-insights-list">
+                {generatedInsights.length === 0 ? (
+                  <div className="empty-state">Add transactions to generate AI insights.</div>
+                ) : generatedInsights.map((insight, index) => (
+                  <article className="health-insight-card" key={insight.id || `${insight.insight_type}-${index}`}>
+                    <span className="health-insight-index">{index + 1}</span>
+                    <div>
+                      <h3>{insight.insight_type?.replaceAll('_', ' ') || 'Insight'}</h3>
+                      <p>{insight.insight_text}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              <div className="insight-section-heading">
+                <div>
+                  <h2>Health Signals</h2>
+                  <p>Score-linked signals calculated from your current financial patterns.</p>
+                </div>
+                <span>{healthSignals.length} signals</span>
+              </div>
               <div className="health-insights-list">
-                {insights.length === 0 ? (
-                  <div className="empty-state">Upload or add transactions to generate AI insights.</div>
-                ) : insights.map((insight, index) => (
+                {healthSignals.length === 0 ? (
+                  <div className="empty-state">Add transactions to calculate health signals.</div>
+                ) : healthSignals.map((insight, index) => (
                   <article className="health-insight-card" key={`${insight.title}-${index}`}>
                     <span className="health-insight-index">{index + 1}</span>
                     <div>
-                      <h3>{insight.title || 'Insight'}</h3>
+                      <h3>{insight.title || 'Health signal'}</h3>
                       <p>{insight.message}</p>
                     </div>
                   </article>
@@ -215,4 +247,4 @@ const FinancialHealth = () => {
   );
 };
 
-export default FinancialHealth;
+export default AIInsights;

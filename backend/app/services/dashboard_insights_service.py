@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.schemas.schemas import DashboardInsightItem, DashboardInsightsResponse
-from app.services.dashboard_summary_service import build_dashboard_summary
+from app.services.analytics_service import build_dashboard_summary
 
 
 def _change_percentage(current: float, previous: float) -> float | None:
@@ -96,17 +96,10 @@ def build_dashboard_insights(db: Session, user_id: int, month: int, year: int, d
                 severity="warning",
             ))
 
-    if current.financial_health_reason and len(insights) < 5:
-        insights.append(DashboardInsightItem(
-            title="Health score",
-            message=f"{current.financial_health_status}: {current.financial_health_reason}",
-            severity="positive" if current.financial_health_score >= 80 else "warning" if current.financial_health_score < 50 else "neutral",
-        ))
-
     if current.transaction_count == 0:
         insights.append(DashboardInsightItem(
             title="No activity yet",
-            message="Add or upload transactions to generate smart dashboard insights.",
+            message="Add transactions to generate smart dashboard insights.",
             severity="neutral",
         ))
 

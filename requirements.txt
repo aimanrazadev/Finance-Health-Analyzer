@@ -19,14 +19,12 @@ python-multipart
 aiofiles
 
 # Data processing and ML
-pandas
 scikit-learn
 rapidfuzz
 joblib
 
-# PDF and Excel processing
+# PDF processing
 pdfplumber
-openpyxl
 
 # Environment and external APIs
 python-dotenv

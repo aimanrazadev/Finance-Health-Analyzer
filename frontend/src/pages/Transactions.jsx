@@ -7,9 +7,6 @@ import { useUI } from '../hooks/useUI';
 import api, { getAuthHeaders } from '../utils/api';
 import '../styles/Transactions.css';
 
-const INCOME_CATEGORY_NAMES = ['Refunds', 'Salary', 'Shopping', 'Friend', 'Friends', 'Other'];
-const SAVINGS_CATEGORY_NAMES = ['Investments'];
-
 const defaultFormState = {
   amount: '',
   category_id: '',
@@ -116,26 +113,9 @@ const Transactions = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'category_id') {
-      const selectedCategory = categories.find((category) => category.id === Number(value));
-      setFormData((prev) => ({
-        ...prev,
-        category_id: value,
-        transaction_type: selectedCategory?.name === 'Investments' ? 'savings' : prev.transaction_type,
-      }));
-      return;
-    }
-
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-      ...(name === 'transaction_type' && value === 'savings'
-        ? {
-            category_id: (
-              categories.find((category) => category.name === 'Investments')?.id || prev.category_id
-            ),
-          }
-        : {}),
     }));
   };
 
@@ -144,17 +124,12 @@ const Transactions = () => {
     setError('');
     setSuccess('');
 
-    const selectedCategory = categories.find((category) => category.id === Number(formData.category_id));
-    const normalizedType = SAVINGS_CATEGORY_NAMES.includes(selectedCategory?.name)
-      ? 'savings'
-      : formData.transaction_type;
-
     const payload = {
       amount: parseFloat(formData.amount),
       category_id: formData.category_id ? Number(formData.category_id) : null,
       description: formData.description,
       merchant: formData.merchant || null,
-      transaction_type: normalizedType,
+      transaction_type: formData.transaction_type,
       date: new Date(formData.date).toISOString(),
     };
 
@@ -181,14 +156,13 @@ const Transactions = () => {
   };
 
   const handleEdit = (transaction) => {
-    const category = categories.find((item) => item.id === transaction.category_id);
     setEditingId(transaction.id);
     setFormData({
       amount: transaction.amount.toString(),
       category_id: transaction.category_id || '',
       description: transaction.description,
       merchant: transaction.merchant || '',
-      transaction_type: SAVINGS_CATEGORY_NAMES.includes(category?.name) ? 'savings' : transaction.transaction_type,
+      transaction_type: transaction.transaction_type,
       date: formatDateLocal(transaction.date),
     });
     setSuccess('');
@@ -252,27 +226,13 @@ const Transactions = () => {
     }
   };
 
-  const getCategoriesForType = (transactionType) => (
-    transactionType === 'savings'
-      ? categories.filter((category) => SAVINGS_CATEGORY_NAMES.includes(category.name))
-      : (
-    transactionType === 'income'
-      ? categories.filter((category) => INCOME_CATEGORY_NAMES.includes(category.name))
-      : categories
-      )
-  );
+  const getCategoriesForType = () => categories;
 
   const getTransactionCategory = (transaction) => (
     categories.find((category) => category.id === transaction.category_id)
   );
 
-  const getNormalizedTransactionType = (transaction) => {
-    const category = getTransactionCategory(transaction);
-    if (SAVINGS_CATEGORY_NAMES.includes(category?.name)) {
-      return 'savings';
-    }
-    return transaction.transaction_type || 'expense';
-  };
+  const getNormalizedTransactionType = (transaction) => transaction.transaction_type || 'expense';
 
   const mlLearnedCount = transactions.filter((transaction) => (
     transaction.categorization_method === 'ml_model'
@@ -351,7 +311,6 @@ const Transactions = () => {
                 >
                   <option value="expense">Expense</option>
                   <option value="income">Income</option>
-                  <option value="savings">Savings</option>
                 </select>
               </label>
 
@@ -396,7 +355,6 @@ const Transactions = () => {
                 <option value="">All types</option>
                 <option value="expense">Expense</option>
                 <option value="income">Income</option>
-                <option value="savings">Savings</option>
               </select>
               <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
                 <option value="">All categories</option>

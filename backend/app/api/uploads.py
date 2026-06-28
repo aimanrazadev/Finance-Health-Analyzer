@@ -11,7 +11,7 @@ from app.schemas.schemas import (
     UploadedFileResponse,
     UploadPreviewResponse,
 )
-from app.services.file_parser_service import detect_file_type, parse_statement_file, validate_statement_file
+from app.services.file_parser_service import MAX_UPLOAD_SIZE_BYTES, parse_statement_file, validate_statement_file
 from app.services.friend_service import auto_attach_transaction_if_friend, create_or_update_friend_from_transaction, is_friends_category
 from app.services.import_profile_service import save_import_profile_from_columns
 from app.services.merchant_extractor_service import extract_transaction_merchant
@@ -27,8 +27,8 @@ async def preview_statement_upload(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    content = await file.read()
-    file_name = file.filename or "statement"
+    content = await file.read(MAX_UPLOAD_SIZE_BYTES + 1)
+    file_name = file.filename or "statement.pdf"
     parsed = parse_statement_file(file_name, content, db, user_id=current_user.id)
     import_profile = parsed.get("import_profile") or {}
     return UploadPreviewResponse(
@@ -38,6 +38,7 @@ async def preview_statement_upload(
         import_profile_id=import_profile.get("id"),
         import_profile_name=import_profile.get("name"),
         import_confidence=import_profile.get("confidence") or 0,
+        bank_name=import_profile.get("bank_name"),
         column_mapping=import_profile.get("column_mapping") or {},
         total_rows=parsed["total_rows"],
         successful_rows=parsed["successful_rows"],
@@ -72,8 +73,8 @@ def confirm_statement_upload(
     db: Session = Depends(get_db),
 ):
     validate_statement_file(upload_data.file_name, upload_data.file_size)
-    file_type = upload_data.file_type or detect_file_type(upload_data.file_name)
-    if upload_data.column_mapping and file_type in {"csv", "excel"}:
+    file_type = "pdf"
+    if upload_data.column_mapping:
         save_import_profile_from_columns(
             db,
             current_user.id,
@@ -121,7 +122,7 @@ def confirm_statement_upload(
             transaction_type=final_transaction_type,
             date=row.date or row.transaction_date,
             uploaded_file_id=uploaded_file.id,
-            source=row.source or file_type,
+            source="pdf",
             payment_method=None,
             category_confidence=row.category_confidence or 0.30,
             categorization_method=row.categorization_method or "needs_review",

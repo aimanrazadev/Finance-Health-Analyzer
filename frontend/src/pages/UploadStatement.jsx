@@ -4,8 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
 import '../styles/UploadStatement.css';
 
-const INCOME_CATEGORY_NAMES = ['Refunds', 'Salary', 'Shopping', 'Friend', 'Friends', 'Other'];
-const SAVINGS_CATEGORY_NAMES = ['Investments'];
+const MAX_PDF_SIZE = 10 * 1024 * 1024;
 
 const moneyFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
@@ -85,16 +84,30 @@ const UploadStatement = () => {
   }, []);
 
   const handleFileChange = (event) => {
-    setSelectedFile(event.target.files?.[0] || null);
+    const file = event.target.files?.[0] || null;
     setPreview(null);
     setError('');
     setSuccess('');
+
+    if (file && !file.name.toLowerCase().endsWith('.pdf')) {
+      setSelectedFile(null);
+      event.target.value = '';
+      setError('Choose a PDF bank statement. Other file formats are not supported.');
+      return;
+    }
+    if (file && file.size > MAX_PDF_SIZE) {
+      setSelectedFile(null);
+      event.target.value = '';
+      setError('PDF statements must be 10 MB or less.');
+      return;
+    }
+    setSelectedFile(file);
   };
 
   const handlePreview = async (event) => {
     event.preventDefault();
     if (!selectedFile) {
-      setError('Choose a CSV, Excel, or PDF statement first.');
+      setError('Choose a PDF bank statement first.');
       return;
     }
 
@@ -134,7 +147,8 @@ const UploadStatement = () => {
       const response = await api.post('/uploads/confirm', {
         file_name: preview.file_name,
         file_size: preview.file_size,
-        file_type: preview.file_type,
+        file_type: 'pdf',
+        bank_name: preview.bank_name,
         column_mapping: preview.column_mapping || {},
         total_rows: preview.total_rows,
         failed_rows: preview.failed_rows,
@@ -192,7 +206,6 @@ const UploadStatement = () => {
               category_id: categoryId ? Number(categoryId) : null,
               category: selectedCategory?.name || 'Uncategorized',
               category_name: selectedCategory?.name || 'Uncategorized',
-              transaction_type: selectedCategory?.name === 'Investments' ? 'savings' : row.transaction_type,
               category_confidence: categoryId ? 1 : row.category_confidence,
               categorization_method: categoryId ? 'manual' : row.categorization_method,
             }
@@ -211,15 +224,7 @@ const UploadStatement = () => {
     manual: 'Manual',
     needs_review: 'Needs Review',
   }[method] || 'Needs Review');
-  const getCategoriesForType = (transactionType) => (
-    transactionType === 'savings'
-      ? categories.filter((category) => SAVINGS_CATEGORY_NAMES.includes(category.name))
-      : (
-        transactionType === 'income'
-          ? categories.filter((category) => INCOME_CATEGORY_NAMES.includes(category.name))
-          : categories
-      )
-  );
+  const getCategoriesForType = () => categories;
 
   return (
     <div>
@@ -228,8 +233,8 @@ const UploadStatement = () => {
         <div className="page-heading">
           <div>
             <p className="eyebrow">Statement import</p>
-            <h1>Upload bank statement</h1>
-            <p>Preview, clean, categorize, and confirm CSV, Excel, or PDF statement transactions before saving.</p>
+            <h1>Upload PDF statement</h1>
+            <p>Review extracted transactions and categories before adding them to your account.</p>
           </div>
         </div>
 
@@ -238,10 +243,16 @@ const UploadStatement = () => {
 
         <section className="upload-layout">
           <div className="upload-panel">
-            <h2>Select statement</h2>
+            <div className="upload-panel-heading">
+              <div>
+                <h2>Select statement</h2>
+                <span>PDF only, up to 10 MB</span>
+              </div>
+              <span className="pdf-format-badge">PDF</span>
+            </div>
             <form onSubmit={handlePreview} className="upload-form">
               <label className="statement-dropzone">
-                <input type="file" accept=".csv,.xlsx,.xls,.pdf" onChange={handleFileChange} />
+                <input type="file" accept="application/pdf,.pdf" onChange={handleFileChange} />
                 <span className="dropzone-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24">
                     <path d="M12 3v12" />
@@ -249,15 +260,15 @@ const UploadStatement = () => {
                     <path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
                   </svg>
                 </span>
-                <span className="dropzone-title">Drag and drop your statement here</span>
+                <span className="dropzone-title">Drop your PDF statement here</span>
                 <span className="dropzone-or">or</span>
                 <span className="dropzone-button">Choose file</span>
                 <span className="dropzone-file-name">
-                  {selectedFile ? selectedFile.name : 'No file selected'}
+                  {selectedFile ? `${selectedFile.name} / ${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : 'No file selected'}
                 </span>
               </label>
-              <button type="submit" className="primary-button" disabled={loadingPreview}>
-                {loadingPreview ? 'Reading file...' : 'Show upload preview'}
+              <button type="submit" className="primary-button" disabled={loadingPreview || !selectedFile}>
+                {loadingPreview ? 'Reading PDF...' : 'Preview transactions'}
               </button>
             </form>
           </div>
@@ -272,7 +283,7 @@ const UploadStatement = () => {
                   <div className="history-item" key={item.id}>
                     <div>
                       <strong>{item.filename}</strong>
-                      <span>{item.file_type || 'statement'} · {new Date(item.upload_date).toLocaleString()}</span>
+                      <span>PDF / {new Date(item.upload_date).toLocaleString()}</span>
                     </div>
                     <div className="history-actions">
                       <b>{item.successful_rows || item.transaction_count} saved</b>
@@ -294,14 +305,14 @@ const UploadStatement = () => {
           <div className="upload-panel import-profile-panel">
             <h2>Import profiles</h2>
             {importProfiles.length === 0 ? (
-              <div className="empty-state">Profiles are created after confirmed CSV or Excel uploads.</div>
+              <div className="empty-state">PDF bank profiles appear after a confirmed upload.</div>
             ) : (
               <div className="history-list">
                 {importProfiles.slice(0, 4).map((profile) => (
                   <div className="history-item" key={profile.id}>
                     <div>
                       <strong>{profile.profile_name}</strong>
-                      <span>{profile.bank_name || 'Bank format'} · {Math.round((profile.confidence_score || 0) * 100)}% confidence</span>
+                      <span>{profile.bank_name || 'Bank format'} / {Math.round((profile.confidence_score || 0) * 100)}% confidence</span>
                     </div>
                     <b>{profile.usage_count} uses</b>
                   </div>
@@ -317,7 +328,7 @@ const UploadStatement = () => {
               <div>
                 <h2>Upload preview</h2>
                 <p>
-                  {preview.file_name} · {preview.file_type?.toUpperCase()} import
+                  {preview.file_name} / PDF import
                 </p>
               </div>
               <div className="preview-actions">

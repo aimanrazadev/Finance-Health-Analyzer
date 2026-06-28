@@ -73,7 +73,7 @@ const CategoryBreakdown = () => {
   const [error, setError] = useState('');
 
   const periodLabel = useMemo(() => {
-    if (month === -1) return 'all uploaded data';
+    if (month === -1) return 'all transaction data';
     if (month === 0) return `all of ${year}`;
     return `${monthNames[month] || 'This month'} ${year}`;
   }, [month, year]);

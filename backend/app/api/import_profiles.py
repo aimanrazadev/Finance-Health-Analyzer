@@ -17,7 +17,7 @@ def get_import_profiles(
 ):
     profiles = (
         db.query(ImportProfile)
-        .filter(ImportProfile.user_id == current_user.id)
+        .filter(ImportProfile.user_id == current_user.id, ImportProfile.file_type == "pdf")
         .order_by(ImportProfile.last_used_at.desc(), ImportProfile.created_at.desc())
         .all()
     )
@@ -36,7 +36,7 @@ def create_import_profile(
         user_id=current_user.id,
         profile_name=payload.profile_name,
         bank_name=payload.bank_name,
-        file_type=payload.file_type,
+        file_type="pdf",
         header_signature=payload.header_signature,
         column_mapping=json.dumps(payload.column_mapping, ensure_ascii=True),
         preferences=json.dumps(payload.preferences, ensure_ascii=True),

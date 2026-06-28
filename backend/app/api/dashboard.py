@@ -24,7 +24,7 @@ from app.schemas.schemas import (
     SubscriptionAnalyticsResponse,
 )
 from app.services.dashboard_insights_service import build_dashboard_insights
-from app.services.dashboard_summary_service import (
+from app.services.analytics_service import (
     build_dashboard_charts,
     build_dashboard_summary,
     build_merchant_analytics,

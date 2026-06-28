@@ -13,6 +13,7 @@ ALLOWED_AI_CATEGORIES = [
     "Laundry",
     "Healthcare",
     "Investments",
+    "Savings",
     "Salary",
     "Groceries",
     "Shopping",

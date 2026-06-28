@@ -4006,8 +4006,6 @@ body {
 .preview-panel,
 .merchant-panel,
 .insights-section,
-.advisor-card,
-.advisor-question-card,
 .score-card,
 .health-card,
 .recommendation-card,
@@ -4038,8 +4036,7 @@ body {
 }
 
 .premium-metric-card:nth-child(2),
-.premium-chart-grid,
-.advisor-sidebar {
+.premium-chart-grid {
   animation-delay: 60ms;
 }
 
@@ -5027,7 +5024,6 @@ textarea:focus {
   .premium-dashboard-header,
   .page-heading,
   .transactions-header,
-  .advisor-hero,
   .section-heading {
     align-items: stretch !important;
     flex-direction: column !important;
@@ -5036,7 +5032,6 @@ textarea:focus {
 
   .premium-header-actions,
   .dashboard-filters,
-  .advisor-toolbar,
   .preview-actions,
   .form-actions {
     width: 100% !important;
@@ -5055,9 +5050,6 @@ textarea:focus {
 .premium-metrics-grid,
 .merchant-stats,
 .upload-summary,
-.advisor-response-grid,
-.advisor-recommendation-grid,
-.advisor-lower-grid,
 .health-summary-grid,
 .score-breakdown-grid{
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -5067,8 +5059,7 @@ textarea:focus {
 .transaction-filters,
 .bulk-review-actions,
 .review-row,
-.merchant-rename-row,
-.advisor-action-form{
+.merchant-rename-row{
     grid-template-columns: 1fr !important;
   }
 
@@ -5092,8 +5083,7 @@ textarea:focus {
 
   .premium-dashboard-header h1,
   .page-heading h1,
-  .transactions-header h1,
-  .advisor-hero h1 {
+  .transactions-header h1 {
     font-size: clamp(24px, 8vw, 34px) !important;
     line-height: 1.08 !important;
   }
@@ -5104,9 +5094,6 @@ textarea:focus {
 .merchant-stats,
 .upload-layout,
 .upload-summary,
-.advisor-response-grid,
-.advisor-recommendation-grid,
-.advisor-lower-grid,
 .health-summary-grid,
 .score-breakdown-grid{
     grid-template-columns: 1fr !important;
@@ -5134,9 +5121,7 @@ textarea:focus {
     font-size: clamp(20px, 7vw, 26px) !important;
   }
 .history-item,
-.merchant-list button,
-.advisor-history-list button,
-.advisor-saved-list article{
+.merchant-list button{
     gap: 10px !important;
   }
 }
@@ -5184,10 +5169,7 @@ textarea:focus {
 .review-panel,
 .upload-panel,
 .preview-panel,
-.merchant-panel,
-.advisor-card,
-.advisor-section,
-.advisor-question-card{
+.merchant-panel{
     padding: 14px !important;
     border-radius: 14px !important;
   }
@@ -5269,9 +5251,6 @@ textarea:focus {
 .merchants-page .merchant-rename-row,
 .merchants-page .merchant-aliases,
 .merchants-page .merchant-transactions,
-.advisor-card,
-.advisor-section,
-.advisor-question-card,
 .health-page .score-card,
 .health-page .score-breakdown-card{
   border: 1px solid var(--premium-card-border) !important;
@@ -5751,9 +5730,6 @@ textarea:focus {
 .dashboard-card > p,
 .health-panel > p,
 .rail-section > p,
-.advisor-hero > p,
-.advisor-card > p,
-.advisor-question-card > p,
 .upload-page .page-heading p,
 .upload-card > p,
 .transactions-header p,
@@ -5837,7 +5813,6 @@ body::before,
 .app-shell .review-page,
 .app-shell .upload-page,
 .app-shell .insights-page,
-.app-shell .advisor-page,
 .app-shell .ai-insights-page,
 .app-shell .health-page,
 .premium-dashboard,
@@ -5867,8 +5842,6 @@ body::before,
 .upload-page .upload-card,
 .review-page .review-panel,
 .categories-page .review-panel,
-.advisor-card,
-.advisor-question-card,
 .health-page .score-card,
 .health-page .score-breakdown-card,
 .transactions-page .transaction-form-card,
@@ -5966,7 +5939,6 @@ body::before,
 .app-shell .review-page,
 .app-shell .categories-page,
 .app-shell .upload-page,
-.app-shell .advisor-page,
 .app-shell .insights-page,
 .app-shell .ai-insights-page,
 .app-shell .health-page,
@@ -6017,15 +5989,8 @@ body::before,
 .upload-history-item,
 .statement-dropzone,
 .import-profile-card,
-.simple-advisor-shell,
-.simple-chat-window,
-.simple-chat-composer,
 .simple-advice-card,
 .simple-advice-list > div,
-.advisor-card,
-.advisor-question-card,
-.advisor-history-card,
-.advisor-recommendation-card,
 .ai-insights-page .premium-insight-card,
 .ai-insights-page .dashboard-card,
 .ai-insights-page .ai-insights-list-section,
@@ -6047,10 +6012,7 @@ body::before,
 .category-color-row,
 .history-item,
 .upload-history-item,
-.simple-chat-message > div:last-child,
 .simple-advice-list > div,
-.advisor-history-card,
-.advisor-recommendation-card,
 .preview-table tbody tr,
 .transaction-table tbody tr,
 .transactions-table tbody tr{
@@ -6071,12 +6033,6 @@ body::before,
 .upload-panel::after,
 .upload-card::before,
 .upload-card::after,
-.simple-advisor-shell::before,
-.simple-advisor-shell::after,
-.simple-chat-window::before,
-.simple-chat-window::after,
-.advisor-card::before,
-.advisor-card::after,
 .health-page .score-card::before,
 .health-page .score-card::after,
 .auth-card::before,
@@ -6093,9 +6049,7 @@ body::before,
 .upload-card:hover,
 .history-item:hover,
 .upload-history-item:hover,
-.simple-advisor-shell:hover,
 .simple-advice-card:hover,
-.advisor-card:hover,
 .health-page .score-card:hover,
 .health-page .score-breakdown-card:hover,
 .auth-card:hover{
@@ -6255,7 +6209,6 @@ body::before,
   color: #ffaaa4 !important;
 }
 .empty-state,
-.advisor-empty,
 .upload-empty,
 .review-empty,
 .no-data-state{
@@ -6280,25 +6233,12 @@ body::before,
   color: #c4fa74 !important;
 }
 
-.simple-chat-message.user > div:last-child {
-  background: rgba(155, 239, 56, 0.13) !important;
-  border-color: rgba(155, 239, 56, 0.32) !important;
-  color: #f6fff0 !important;
-}
-
-.simple-chat-message.assistant > div:last-child {
-  background: var(--finance-card-bg-deep) !important;
-  color: #eef4f0 !important;
-}
-
 @media (prefers-reduced-motion: no-preference) {
 .transaction-form-panel,
 .transaction-list-panel,
 .review-panel,
 .upload-panel,
 .upload-card,
-.simple-advisor-shell,
-.simple-chat-window,
 .health-page .score-card,
 .auth-card{
     animation: finance-card-enter 380ms ease both;
@@ -6403,7 +6343,6 @@ body::before,
 .review-row,
 .upload-panel,
 .upload-card,
-.simple-advisor-shell,
 .simple-advice-card,
 .health-page .score-card,
 .health-page .score-breakdown-card{
@@ -6504,8 +6443,7 @@ textarea,
 .app-shell .premium-panel-header h2,
 .app-shell .dashboard-card h2,
 .app-shell .upload-panel h2,
-.app-shell .review-panel h2,
-.app-shell .simple-advisor-shell h2{
+.app-shell .review-panel h2{
   font-size: var(--type-section-title) !important;
   font-weight: 560 !important;
   line-height: 1.18 !important;
@@ -6677,48 +6615,6 @@ textarea,
   .premium-dashboard .premium-category-row {
     grid-template-columns: 12px minmax(0, 1fr) auto auto !important;
   }
-}
-
-/* AI Advisor should read like a chat, not nested cards. */
-.advisor-page .simple-chat-window {
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-.advisor-page .simple-chat-message {
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-.advisor-page .simple-chat-message > div:last-child {
-  width: fit-content !important;
-  max-width: min(680px, 100%) !important;
-  padding: 14px 18px !important;
-  border-radius: 18px !important;
-  box-shadow: none !important;
-}
-
-.advisor-page .simple-chat-message.assistant > div:last-child {
-  background: rgba(14, 18, 19, 0.88) !important;
-  border: 1px solid rgba(58, 68, 70, 0.78) !important;
-}
-
-.advisor-page .simple-chat-message.user > div:last-child {
-  margin-left: auto !important;
-  background: rgba(155, 239, 56, 0.16) !important;
-  border: 1px solid rgba(155, 239, 56, 0.36) !important;
-}
-
-.advisor-page .simple-chat-message strong {
-  margin-bottom: 6px !important;
-  font-size: 14px !important;
-}
-
-.advisor-page .simple-chat-message p {
-  font-size: 15px !important;
-  line-height: 1.55 !important;
 }
 
 /* Dashboard health score belongs in the main flow, directly after KPI cards. */
@@ -6916,61 +6812,7 @@ textarea,
   box-shadow: none !important;
 }
 
-/* AI Advisor: full-page chat canvas, no outer message wrapper. */
-.advisor-page {
-  max-width: 1120px !important;
-  margin: 0 auto !important;
-}
-
-.advisor-page .simple-advisor-shell {
-  width: 100% !important;
-  min-height: calc(100vh - 72px) !important;
-  margin: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  overflow: visible !important;
-}
-
-.advisor-page .simple-advisor-header {
-  padding: 0 0 18px !important;
-  border-bottom: 1px solid rgba(42, 50, 52, 0.72) !important;
-  background: transparent !important;
-}
-
-.advisor-page .simple-chat-window {
-  padding: 22px 0 !important;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-.advisor-page .simple-chat-composer {
-  position: sticky !important;
-  bottom: 18px !important;
-  margin-top: 8px !important;
-  border: 1px solid rgba(42, 50, 52, 0.86) !important;
-  border-radius: 18px !important;
-  background:
-    linear-gradient(145deg, rgba(15, 20, 21, 0.96), rgba(8, 11, 12, 0.99)) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22) !important;
-}
-
-.advisor-page .simple-chat-message.assistant > div:last-child,
-.advisor-page .simple-chat-message.user > div:last-child {
-  border-radius: 18px !important;
-}
-
 @media (max-width: 760px) {
-  .advisor-page {
-    width: min(100% - 24px, 1120px) !important;
-  }
-
-  .advisor-page .simple-advisor-header {
-    align-items: flex-start !important;
-    flex-direction: column !important;
-  }
 }
 
 /* Categories review: compact toolbar and independent correction rows. */

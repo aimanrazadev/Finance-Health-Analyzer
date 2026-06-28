@@ -33,10 +33,7 @@ const emptySummary = {
   top_category: null,
   top_merchant: null,
   recurring_subscription_count: 0,
-  account_balance: 0,
-  financial_health_score: 0,
-  financial_health_status: 'Needs Improvement',
-  financial_health_reason: '',
+  current_balance: 0,
 };
 
 const emptyCharts = { category_breakdown: [], top_merchants: [] };
@@ -47,8 +44,9 @@ const emptyTrendSummary = {
   savings_change_percentage: null,
 };
 const emptyMerchants = { top_merchants: [], most_frequent_merchants: [], highest_spending_merchants: [] };
-const emptySubscriptions = { subscription_count: 0, total_monthly_cost: 0, subscriptions: [] };
+const emptySubscriptions = { subscription_count: 0, total_monthly_cost: 0, total_annual_cost: 0, subscriptions: [] };
 const emptyInsights = { insights: [] };
+const emptyHealth = { overall_score: 0, status_label: 'Needs Improvement', breakdown: [], improvement_tips: [] };
 
 const monthOptions = [
   { value: 0, label: 'All' },
@@ -126,7 +124,7 @@ const MetricIcon = ({ name }) => {
   return icons[name] || icons.balance;
 };
 
-const DashboardMetric = ({ icon, label, numericValue, helper, tone, loading }) => (
+const DashboardMetric = ({ icon, label, numericValue, helper, tone, loading, format = 'currency' }) => (
   <article className={`dashboard-card metric-card dashboard-card-selected tone-${tone}`}>
     <div className="metric-card-top">
       <span className="metric-icon"><MetricIcon name={icon} /></span>
@@ -135,6 +133,8 @@ const DashboardMetric = ({ icon, label, numericValue, helper, tone, loading }) =
     <strong className="metric-value">
       {loading ? (
         'Loading...'
+      ) : format === 'percent' ? (
+        `${percentFormatter.format(Number(numericValue || 0))}%`
       ) : (
         <AnimateNumber
           value={Number(numericValue || 0)}
@@ -182,14 +182,15 @@ const CategoryBadge = ({ name, color }) => (
   </span>
 );
 
-const makeRecommendations = (summary, subscriptionAnalytics) => {
+const makeRecommendations = (summary, subscriptionAnalytics, health) => {
   const recommendations = [];
   const savingsRate = Number(summary.savings_rate || 0);
   const expenses = Number(summary.total_expenses || 0);
   const income = Number(summary.total_income || 0);
   const subscriptions = subscriptionAnalytics.subscriptions || [];
 
-  if (summary.financial_health_reason) recommendations.push(summary.financial_health_reason);
+  const weakestSignal = [...(health.breakdown || [])].sort((a, b) => a.score - b.score)[0];
+  if (weakestSignal?.description) recommendations.push(weakestSignal.description);
   if (savingsRate < 20) recommendations.push('Lift your savings rate toward 20% by trimming flexible spending first.');
   if (income > 0 && expenses / income > 0.75) recommendations.push('Expenses are taking most of income this period; review the highest category before adding new commitments.');
   if (subscriptions.length > 0) recommendations.push(`Audit ${subscriptions.length} recurring payment${subscriptions.length === 1 ? '' : 's'} and cancel anything you no longer use.`);
@@ -197,14 +198,14 @@ const makeRecommendations = (summary, subscriptionAnalytics) => {
 
   return recommendations.length
     ? recommendations.slice(0, 4)
-    : ['Upload more transactions to unlock sharper financial health recommendations.'];
+    : ['Add more transactions to unlock sharper financial health recommendations.'];
 };
 
-const normalizeInsights = (dashboardInsights, summary, subscriptionAnalytics) => {
+const normalizeInsights = (dashboardInsights, summary, subscriptionAnalytics, health) => {
   const apiInsights = dashboardInsights.insights || [];
   if (apiInsights.length > 0) return apiInsights;
 
-  return makeRecommendations(summary, subscriptionAnalytics).map((message, index) => ({
+  return makeRecommendations(summary, subscriptionAnalytics, health).map((message, index) => ({
     title: index === 0 ? 'Health score' : 'Recommendation',
     message,
     severity: index === 0 ? 'warning' : 'neutral',
@@ -219,6 +220,8 @@ const Dashboard = () => {
   const [merchantAnalytics, setMerchantAnalytics] = useState(emptyMerchants);
   const [subscriptionAnalytics, setSubscriptionAnalytics] = useState(emptySubscriptions);
   const [dashboardInsights, setDashboardInsights] = useState(emptyInsights);
+  const [health, setHealth] = useState(emptyHealth);
+  const [recentTransactions, setRecentTransactions] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(emptySummary.month);
   const [selectedYear, setSelectedYear] = useState(emptySummary.year);
   const [loading, setLoading] = useState(true);
@@ -234,33 +237,19 @@ const Dashboard = () => {
       const isAllTime = selectedYear === ALL_YEARS;
       const numericYear = isAllTime ? now.getFullYear() : Number(selectedYear);
       const params = isAllTime ? { month: -1 } : { month: selectedMonth, year: numericYear };
-      const trendRequest = isAllTime
-        ? Promise.resolve({ data: emptyTrendSummary })
-        : api.get('/dashboard/charts/monthly-trends', { headers, params: { year: numericYear } });
-
       try {
-        const results = await Promise.allSettled([
-          api.get('/dashboard/summary', { headers, params }),
-          api.get('/dashboard/charts', { headers, params }),
-          trendRequest,
-          api.get('/dashboard/merchants', { headers, params }),
-          api.get('/dashboard/subscriptions', { headers, params }),
-          api.get('/dashboard/insights', { headers, params }),
-        ]);
+        const response = await api.get('/dashboard', { headers, params });
 
         if (cancelled) return;
-
-        const [summaryResult, chartsResult, trendsResult, merchantsResult, subscriptionsResult, insightsResult] = results;
-        setSummary(summaryResult.status === 'fulfilled' ? summaryResult.value.data : emptySummary);
-        setCharts(chartsResult.status === 'fulfilled' ? chartsResult.value.data : emptyCharts);
-        setTrendSummary(trendsResult.status === 'fulfilled' ? trendsResult.value.data : emptyTrendSummary);
-        setMerchantAnalytics(merchantsResult.status === 'fulfilled' ? merchantsResult.value.data : emptyMerchants);
-        setSubscriptionAnalytics(subscriptionsResult.status === 'fulfilled' ? subscriptionsResult.value.data : emptySubscriptions);
-        setDashboardInsights(insightsResult.status === 'fulfilled' ? insightsResult.value.data : emptyInsights);
-
-        if (summaryResult.status === 'rejected') {
-          setError('Unable to load dashboard summary.');
-        }
+        const data = response.data || {};
+        setSummary(data.summary || emptySummary);
+        setCharts(data.charts || emptyCharts);
+        setTrendSummary(data.trends || emptyTrendSummary);
+        setMerchantAnalytics(data.merchants || emptyMerchants);
+        setSubscriptionAnalytics(data.subscriptions || emptySubscriptions);
+        setDashboardInsights(data.insights || emptyInsights);
+        setHealth(data.health || emptyHealth);
+        setRecentTransactions(data.recent_transactions || []);
       } catch (err) {
         console.error(err);
         if (!cancelled) {
@@ -268,6 +257,8 @@ const Dashboard = () => {
           setCharts(emptyCharts);
           setTrendSummary(emptyTrendSummary);
           setDashboardInsights(emptyInsights);
+          setHealth(emptyHealth);
+          setRecentTransactions([]);
           setError('Unable to load dashboard data.');
         }
       } finally {
@@ -287,7 +278,7 @@ const Dashboard = () => {
   const totalCategorySpend = categoryBreakdown.reduce((sum, item) => sum + Number(item.value || 0), 0);
   const hasCategoryData = categoryBreakdown.length > 0 && totalCategorySpend > 0;
   const hasTrendData = trendData.some((item) => Number(item.income || 0) || Number(item.expenses || 0));
-  const healthScore = Number(summary.financial_health_score || 0);
+  const healthScore = Number(health.overall_score || 0);
   const boundedHealthScore = Math.min(Math.max(healthScore, 0), 100);
   const healthToneColor = boundedHealthScore < 40 ? '#ff5252' : boundedHealthScore < 70 ? '#ffa43b' : '#a3ff12';
   const healthRotation = boundedHealthScore * 3.6;
@@ -295,7 +286,7 @@ const Dashboard = () => {
   const numericSelectedYear = isAllTime ? now.getFullYear() : Number(selectedYear);
   const monthLabel = getMonthLabel(selectedMonth);
   const periodLabel = isAllTime
-    ? 'all uploaded data'
+    ? 'all transaction data'
     : selectedMonth === 0
       ? `all of ${numericSelectedYear}`
       : `${monthLabel} ${numericSelectedYear}`;
@@ -304,13 +295,13 @@ const Dashboard = () => {
     : selectedMonth === 0
       ? `${numericSelectedYear - 1}`
       : getPreviousMonthLabel(selectedMonth, numericSelectedYear);
-  const categoryBreakdownPath = `/category-breakdown?${new URLSearchParams(
+  const categoryBreakdownPath = `/dashboard/category-analytics?${new URLSearchParams(
     isAllTime ? { month: '-1' } : { month: String(selectedMonth), year: String(numericSelectedYear) },
   ).toString()}`;
 
   const recommendations = useMemo(
-    () => normalizeInsights(dashboardInsights, summary, subscriptionAnalytics),
-    [dashboardInsights, summary, subscriptionAnalytics],
+    () => normalizeInsights(dashboardInsights, summary, subscriptionAnalytics, health),
+    [dashboardInsights, summary, subscriptionAnalytics, health],
   );
 
   const metrics = [
@@ -333,14 +324,22 @@ const Dashboard = () => {
       label: 'Total Savings',
       numericValue: summary.total_savings,
       helper: `${percentFormatter.format(Number(summary.savings_rate || 0))}% savings rate`,
-      tone: Number(summary.total_savings || 0) >= 0 ? 'positive' : 'negative',
+      tone: 'positive',
+    },
+    {
+      icon: 'savings',
+      label: 'Savings Rate',
+      numericValue: summary.savings_rate,
+      helper: 'Intentional savings as a share of income',
+      tone: Number(summary.savings_rate || 0) >= 10 ? 'positive' : 'negative',
+      format: 'percent',
     },
     {
       icon: 'balance',
       label: 'Balance',
-      numericValue: summary.account_balance,
-      helper: 'Latest statement balance',
-      tone: Number(summary.account_balance || 0) >= 0 ? 'positive' : 'negative',
+      numericValue: summary.current_balance,
+      helper: 'Latest statement closing balance',
+      tone: Number(summary.current_balance || 0) >= 0 ? 'positive' : 'negative',
     },
   ];
 
@@ -496,11 +495,16 @@ const Dashboard = () => {
         </section>
 
         <section className="dashboard-grid health-insights-grid">
-          <article className="dashboard-card health-score-card" style={{ '--health-tone': healthToneColor, '--health-deg': `${healthRotation}deg` }}>
+          <Link
+            to="/ai-insights"
+            className="dashboard-card health-score-card"
+            aria-label="Open AI Insights and financial health details"
+            style={{ '--health-tone': healthToneColor, '--health-deg': `${healthRotation}deg` }}
+          >
             <div className="dashboard-card-header">
               <div>
                 <h2>Financial Health Score</h2>
-                <p>AI insights and recommendations wired to this month&apos;s financial health</p>
+                <p>Open AI Insights for the full score breakdown and financial signals</p>
               </div>
               <span className="health-pill">{boundedHealthScore < 70 ? 'Needs action' : 'On track'}</span>
             </div>
@@ -511,8 +515,8 @@ const Dashboard = () => {
                   <span>/100</span>
                 </div>
                 <div className="health-copy">
-                  <strong>{summary.financial_health_status || 'Needs Improvement'}</strong>
-                  <p>{summary.financial_health_reason || 'Your score improves as income, savings, and spending patterns become healthier.'}</p>
+                  <strong>{health.status_label || 'Needs Improvement'}</strong>
+                  <p>{health.breakdown?.[0]?.description || 'Your score improves as income, savings, subscriptions, and balance become healthier.'}</p>
                   <div className="health-scale" style={{ '--health-score': `${boundedHealthScore}%` }}>
                     <span />
                   </div>
@@ -521,7 +525,7 @@ const Dashboard = () => {
 
               <div className="health-insights-panel">
                 <div className="health-insights-heading">
-                  <span>AI Insights / Recommendations</span>
+                  <span>AI Insights</span>
                   <small>{recommendations.length} signals</small>
                 </div>
                 <div className="insight-list">
@@ -537,7 +541,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-          </article>
+          </Link>
         </section>
 
         <section className="dashboard-grid table-grid">
@@ -602,6 +606,42 @@ const Dashboard = () => {
                       </td>
                       <td>{Math.round((subscription.confidence || 0) * 100)}%</td>
                       <td className="money warning">{formatMoney(subscription.monthly_cost)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article className="dashboard-card table-card recent-transactions-card">
+            <div className="dashboard-card-header">
+              <div>
+                <h2>Recent Transactions</h2>
+                <p>Latest activity in {periodLabel}</p>
+              </div>
+              <Link to="/transactions">View all</Link>
+            </div>
+            <div className="dashboard-table-wrap">
+              <table className="dashboard-table recent-transactions-table">
+                <thead>
+                  <tr>
+                    <th>Transaction</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentTransactions.length === 0 ? (
+                    <tr><td colSpan="4">No transactions found for this period.</td></tr>
+                  ) : recentTransactions.map((transaction) => (
+                    <tr key={transaction.id}>
+                      <td>{transaction.merchant || transaction.description}</td>
+                      <td>{transaction.category_name}</td>
+                      <td>{new Date(transaction.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                      <td className={`money ${transaction.transaction_type === 'income' ? 'positive' : 'negative'}`}>
+                        {transaction.transaction_type === 'income' ? '+' : '-'}{formatMoney(transaction.amount)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

@@ -114,19 +114,6 @@ class FinancialSnapshotResponse(BaseModel):
     alerts: List[str] = []
 
 
-class AdvisorActionRequest(BaseModel):
-    message: str = Field(..., min_length=2, max_length=800)
-
-
-class AdvisorActionResponse(BaseModel):
-    action_type: str
-    intent: str
-    filters: dict[str, Any] = {}
-    message: str
-    transactions: List["TransactionResponse"] = []
-    report: dict[str, Any] = {}
-
-
 # ==================== Transaction Schemas ====================
 
 class TransactionCreate(BaseModel):
@@ -134,7 +121,7 @@ class TransactionCreate(BaseModel):
     category_id: Optional[int] = None
     description: str = Field(..., min_length=1, max_length=255)
     merchant: Optional[str] = None
-    transaction_type: str = Field(..., pattern="^(income|expense|savings)$")
+    transaction_type: str = Field(..., pattern="^(income|expense)$")
     date: datetime
 
 
@@ -316,17 +303,11 @@ class CategoryBreakdownItem(BaseModel):
 class DashboardSummary(BaseModel):
     month: int
     year: int
+    current_balance: float
     total_income: float
     total_expenses: float
-    account_balance: float = 0
-    investment_amount: float = 0
-    remaining_money: float = 0
     total_savings: float
-    investment_savings: float = 0
-    remaining_balance_savings: float = 0
-    effective_savings: float = 0
     savings_rate: float
-    effective_savings_rate: float = 0
     monthly_savings_trend: float = 0
     savings_status: str = "Poor"
     transaction_count: int
@@ -334,10 +315,6 @@ class DashboardSummary(BaseModel):
     top_merchant: Optional[str] = None
     recurring_subscription_count: int = 0
     recurring_subscription_total: float = 0
-    financial_health_score: int = 0
-    financial_health_status: str = "Needs Improvement"
-    financial_health_reason: str = ""
-    budget_health_score: int = 0
     category_breakdown: List[CategoryBreakdownItem]
 
 
@@ -375,6 +352,7 @@ class MonthlyTrendPoint(BaseModel):
     expenses: float
     savings: float
     investments: float
+    savings_rate: float = 0
 
 
 class MonthlyTrendResponse(BaseModel):
@@ -469,6 +447,7 @@ class SubscriptionAnalyticsItem(BaseModel):
     amount: float
     billing_period: str = "monthly"
     monthly_cost: float
+    annual_cost: float
     transaction_count: int
     confidence: float
     next_expected_payment: Optional[datetime] = None
@@ -482,7 +461,41 @@ class SubscriptionAnalyticsResponse(BaseModel):
     year: int
     subscription_count: int
     total_monthly_cost: float
+    total_annual_cost: float
     subscriptions: List[SubscriptionAnalyticsItem]
+
+
+class FinancialHealthBreakdownItem(BaseModel):
+    label: str
+    score: int
+    status: str
+    description: str
+
+
+class FinancialHealthScoreResponse(BaseModel):
+    id: int
+    month: int
+    year: int
+    overall_score: int
+    status_label: str
+    savings_score: int
+    subscription_score: int
+    stability_score: int
+    balance_score: int
+    breakdown: List[FinancialHealthBreakdownItem]
+    improvement_tips: List[str]
+    calculated_at: datetime
+
+
+class DashboardRecentTransaction(BaseModel):
+    id: int
+    date: datetime
+    description: str
+    merchant: Optional[str] = None
+    category_name: str
+    transaction_type: str
+    amount: float
+    closing_balance: Optional[float] = None
 
 
 class DashboardDataResponse(BaseModel):
@@ -492,7 +505,10 @@ class DashboardDataResponse(BaseModel):
     merchants: MerchantAnalyticsResponse
     subscriptions: SubscriptionAnalyticsResponse
     charts: DashboardChartsResponse
+    trends: MonthlyTrendResponse
     insights: DashboardInsightsResponse
+    health: FinancialHealthScoreResponse
+    recent_transactions: List[DashboardRecentTransaction]
 
 
 # ==================== Upload Schemas ====================
@@ -537,6 +553,7 @@ class UploadPreviewResponse(BaseModel):
     import_profile_id: Optional[int] = None
     import_profile_name: Optional[str] = None
     import_confidence: float = 0
+    bank_name: Optional[str] = None
     column_mapping: dict[str, str] = {}
     total_rows: int
     successful_rows: int
@@ -583,7 +600,7 @@ class UploadedFileResponse(BaseModel):
         from_attributes = True
 
 
-# ==================== AI Advisor Schemas ====================
+# ==================== AI Insight Schemas ====================
 
 class AiInsightResponse(BaseModel):
     id: int
@@ -602,111 +619,4 @@ class AiInsightsResponse(BaseModel):
     year: int
     insights: List[AiInsightResponse]
 
-
-class AdvisorAskRequest(BaseModel):
-    question: str = Field(..., min_length=2, max_length=800)
-    chat_id: Optional[int] = None
-    month: Optional[int] = Field(default=None, ge=1, le=12)
-    year: Optional[int] = Field(default=None, ge=2000, le=2100)
-
-
-class AdvisorRecommendationItem(BaseModel):
-    title: str
-    reason: str
-    impact: str
-    estimated_savings: float = 0
-    category: Optional[str] = None
-
-
-class AdvisorStructuredResponse(BaseModel):
-    summary: str
-    main_problem: str
-    recommendations: List[AdvisorRecommendationItem] = []
-    savings_impact: Optional[str] = None
-    subscriptions: List[str] = []
-    risk_note: str = "This is budgeting guidance, not investment, tax, or legal advice."
-
-
-class AdvisorMessageResponse(BaseModel):
-    id: int
-    chat_id: int
-    role: str
-    content: str
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class AdvisorChatCreate(BaseModel):
-    title: Optional[str] = None
-
-
-class AdvisorChatResponse(BaseModel):
-    id: int
-    user_id: int
-    title: str
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class AdvisorChatDetailResponse(AdvisorChatResponse):
-    messages: List[AdvisorMessageResponse] = []
-
-
-class AdvisorRecommendationResponse(BaseModel):
-    id: int
-    user_id: int
-    chat_id: int
-    title: str
-    description: Optional[str] = None
-    estimated_savings: float = 0
-    category: Optional[str] = None
-    status: str
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class AdvisorRecommendationStatusUpdate(BaseModel):
-    status: str = Field(..., pattern="^(pending|accepted|dismissed|completed)$")
-
-
-class AdvisorAskResponse(BaseModel):
-    chat: AdvisorChatResponse
-    user_message: AdvisorMessageResponse
-    assistant_message: AdvisorMessageResponse
-    response: AdvisorStructuredResponse
-    recommendations: List[AdvisorRecommendationResponse] = []
-    intent: str
-    context: dict[str, Any]
-
-
-# ==================== Financial Health Score Schemas ====================
-
-class FinancialHealthBreakdownItem(BaseModel):
-    label: str
-    score: int
-    status: str
-    description: str
-
-
-class FinancialHealthScoreResponse(BaseModel):
-    id: int
-    month: int
-    year: int
-    overall_score: int
-    status_label: str
-    savings_score: int
-    budget_score: int
-    stability_score: int
-    subscription_score: int
-    debt_score: int
-    emergency_fund_score: int
-    breakdown: List[FinancialHealthBreakdownItem]
-    improvement_tips: List[str]
-    calculated_at: datetime
+# ==================== End Schemas ====================

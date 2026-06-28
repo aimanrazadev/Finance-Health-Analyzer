@@ -20,9 +20,8 @@ Dashboard
 Wallet
 Transactions
 Categories
-Upload Statement
 Friends
-AI Insights / AI Advisor
+AI Insights
 Settings
 ```
 
@@ -896,27 +895,6 @@ Use soft category colors only.
 
 ---
 
-## Upload Statement Page
-
-Upload page should feel simple and operational.
-
-It should contain:
-
-```txt
-Upload dropzone
-Supported file types
-Import confidence
-Column mapping preview
-Parsed transaction preview
-Confirm import button
-```
-
-Dropzone should be dark and bordered softly.
-
-Do not use huge illustrations.
-
----
-
 ## Friends Page
 
 Friends page should contain:
@@ -935,33 +913,29 @@ Do not make it social-media-like.
 
 ---
 
-## AI Advisor / AI Insights Page
+## AI Insights Page
 
-This page should feel like a financial command center, not a generic chatbot.
+This page should feel like a financial intelligence center.
 
 It should contain:
 
 ```txt
-Advisor input box
-Suggested prompts
-AI response cards
-Recommended actions
-Savings impact
-Subscription suggestions
-Chat history
+Overall financial health score
+Health score breakdown
+Improvement tips
+Monthly financial snapshot
+Generated AI insights
+Health signals
 ```
 
-Chat bubbles should be minimal.
-
-Do not use WhatsApp-style chat design.
-
-AI response should be shown in cards:
+Insight data should be shown in clear, scannable sections:
 
 ```txt
-Summary
-Main Problem
-Recommendation
-Expected Impact
+Income and expenses
+Savings rate
+Projected spending and savings
+Score components
+Insight type and message
 ```
 
 ---

@@ -20,7 +20,7 @@ class User(Base):
 
 
 class Transaction(Base):
-    """Clean transaction ledger used by categorization, analytics, and AI advice."""
+    """Clean transaction ledger used by categorization, analytics, and AI insights."""
     __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -148,7 +148,7 @@ class Merchant(Base):
 
 
 class AiInsight(Base):
-    """Stored AI-generated financial advice for a user."""
+    """Stored AI-generated financial insight for a user."""
     __tablename__ = "ai_insights"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -157,43 +157,6 @@ class AiInsight(Base):
     insight_type = Column(String(50), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
     is_read = Column(Boolean, default=False)
-
-
-class AdvisorChat(Base):
-    """One AI Financial Advisor conversation for a user."""
-    __tablename__ = "advisor_chats"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    title = Column(String(180), nullable=False, default="New advisor chat")
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-
-class AdvisorMessage(Base):
-    """Stored user or assistant message inside an advisor chat."""
-    __tablename__ = "advisor_messages"
-
-    id = Column(Integer, primary_key=True, index=True)
-    chat_id = Column(Integer, nullable=False, index=True)
-    role = Column(String(30), nullable=False)
-    content = Column(Text, nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
-
-
-class AdvisorRecommendation(Base):
-    """Actionable AI suggestion extracted from an advisor response."""
-    __tablename__ = "advisor_recommendations"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    chat_id = Column(Integer, nullable=False, index=True)
-    title = Column(String(180), nullable=False)
-    description = Column(Text, nullable=True)
-    estimated_savings = Column(Float, default=0)
-    category = Column(String(100), nullable=True)
-    status = Column(String(30), default="pending")
-    created_at = Column(DateTime, server_default=func.now())
 
 
 class FinancialScore(Base):

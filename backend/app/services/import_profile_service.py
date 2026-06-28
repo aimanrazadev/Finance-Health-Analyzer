@@ -18,7 +18,7 @@ def infer_bank_name(file_name: str) -> str:
     """Use the filename as a practical bank/profile hint for student-project imports."""
     stem = Path(file_name or "statement").stem
     cleaned = re.sub(r"[_-]+", " ", stem)
-    cleaned = re.sub(r"\b(statement|transactions|account|bank|csv|excel|pdf)\b", " ", cleaned, flags=re.I)
+    cleaned = re.sub(r"\b(statement|transactions|account|bank|pdf)\b", " ", cleaned, flags=re.I)
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
     return cleaned.title() or "Unknown Bank"
 
