@@ -11,15 +11,15 @@
 ## Full-View Comparison
 
 - The page keeps the reference hierarchy: title, two summary cards, and a two-column directory/detail workspace.
-- The directory and detail panels use the reference's thin borders, restrained surfaces, compact spacing, and independent scrolling.
+- The directory and detail panels use the reference's thin borders, restrained surfaces, and compact spacing while expanding naturally with their content.
 - The system's black, gray, and lime palette replaces the reference palette as requested.
 - The live navigation shell remains unchanged.
 
 ## Focused Regions
 
-- Directory: count and outlined add action share one header row; add/search inputs align; the active friend has a lime border; rows include amount, metadata, and chevron.
+- Directory: count and outlined add action share one header row; add/search inputs align; the active friend has a lime border; rows include amount, metadata, and chevron. Filtering keeps each result at its fixed row height.
 - Friend detail: UPI ID, copy action, member date, total balance, and hide action follow the reference grouping.
-- Transactions: section heading, linked count, fixed header, signed amounts, and a contained scroll region match the reference structure.
+- Transactions: section heading, linked count, fixed header, and signed amounts match the reference structure. The wrapper expands to show every transaction.
 
 ## Fidelity Surfaces
 
@@ -39,12 +39,33 @@
 
 ## Verification
 
-- Desktop: no page-level horizontal overflow; directory and transaction regions scroll independently.
+- Desktop: no page-level horizontal overflow; directory and transaction wrappers expand fully and use normal page scrolling.
 - Narrow layout: single-column stacking with no page-level horizontal overflow.
 - Interactions: search filtering, friend selection, add friend, copy UPI ID, and hide friend remain connected.
 - Console errors: none during browser verification.
 - `npm run build`: passed.
 - `npm run lint`: passed.
+
+Final result: passed.
+
+---
+
+# Friends Expanded Lists QA
+
+## Evidence
+
+- Source visual truth: conversation attachment, Friends annotation Comment 1
+- Implementation evidence: in-app browser at `http://localhost:5173/friends`
+- State: 13 friends displayed, selected friend with 7 linked transactions, and a single-result search test
+
+## Verification
+
+- Friend list: 13 rows, 84px per row, 1,212px rendered height, no internal vertical scrolling.
+- Transaction list: all 7 rows displayed; wrapper height matches its content with no internal vertical scrolling.
+- Search: filtering to `MANAV` displays one 84px row and an 84px list; the card does not stretch.
+- Page scrolling: functional with the scrollbar visually hidden.
+- Global scrollbar width: `none`.
+- P0/P1/P2/P3: none.
 
 Final result: passed.
 

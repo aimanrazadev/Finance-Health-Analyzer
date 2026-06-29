@@ -24,3 +24,10 @@
   background: var(--category-color);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--category-color) 18%, transparent);
 }
+
+.category-badge-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

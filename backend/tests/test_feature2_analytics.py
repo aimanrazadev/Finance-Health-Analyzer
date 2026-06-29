@@ -56,7 +56,19 @@ class Feature2AnalyticsTests(unittest.TestCase):
     def tearDown(self):
         self.db.close()
 
-    def _transaction(self, description, amount, transaction_type, category_name, balance, merchant, day, user_id=None):
+    def _transaction(
+        self,
+        description,
+        amount,
+        transaction_type,
+        category_name,
+        balance,
+        merchant,
+        day,
+        user_id=None,
+        month=6,
+        year=2026,
+    ):
         self.db.add(Transaction(
             user_id=user_id or self.user.id,
             amount=amount,
@@ -64,7 +76,7 @@ class Feature2AnalyticsTests(unittest.TestCase):
             description=description,
             merchant=merchant,
             transaction_type=transaction_type,
-            date=datetime(2026, 6, day),
+            date=datetime(year, month, day),
             balance=balance,
         ))
 
@@ -109,6 +121,33 @@ class Feature2AnalyticsTests(unittest.TestCase):
         self.assertEqual(len(dashboard.recent_transactions), 6)
         self.assertEqual(dashboard.subscriptions.total_annual_cost, 12000)
         self.assertEqual(len(dashboard.health.breakdown), 4)
+
+    def test_month_view_compares_with_previous_calendar_month(self):
+        self._transaction("May spending", 12000, "expense", "Food", 40000, "May Merchant", 10, month=5)
+        self.db.commit()
+
+        dashboard = build_complete_dashboard_data(self.db, self.user.id, 6, 2026)
+
+        self.assertEqual(dashboard.trends.expense_change_percentage, 100.0)
+
+    def test_january_view_rolls_comparison_back_to_previous_december(self):
+        self._transaction("January spending", 15000, "expense", "Food", 30000, "January Merchant", 10, month=1, year=2026)
+        self._transaction("December spending", 10000, "expense", "Food", 45000, "December Merchant", 10, month=12, year=2025)
+        self.db.commit()
+
+        dashboard = build_complete_dashboard_data(self.db, self.user.id, 1, 2026)
+
+        self.assertEqual(dashboard.trends.expense_change_percentage, 50.0)
+
+    def test_year_view_compares_with_previous_full_year(self):
+        self._transaction("Prior year income", 30000, "income", None, 30000, "Prior Employer", 10, year=2025)
+        self._transaction("Prior year spending", 12000, "expense", "Food", 18000, "Prior Merchant", 11, year=2025)
+        self.db.commit()
+
+        dashboard = build_complete_dashboard_data(self.db, self.user.id, 0, 2026)
+
+        self.assertEqual(dashboard.trends.income_change_percentage, 100.0)
+        self.assertEqual(dashboard.trends.expense_change_percentage, 100.0)
 
 
 if __name__ == "__main__":

@@ -306,6 +306,36 @@ def build_monthly_trends(db: Session, user_id: int, year: int) -> MonthlyTrendRe
     )
 
 
+def build_period_trend_summary(
+    db: Session,
+    user_id: int,
+    month: int,
+    year: int,
+    day: int | None = None,
+) -> MonthlyTrendResponse:
+    """Compare the selected dashboard period with its matching prior period."""
+    trends = period_trends(db, user_id, month, year, day)
+    if month == -1:
+        return MonthlyTrendResponse(year=year, trends=trends)
+
+    previous_month, previous_year = previous_period(month, year)
+    current_day = day if day is not None and month > 0 else None
+    previous_day = None
+    if current_day is not None and previous_month > 0:
+        previous_day = min(current_day, monthrange(previous_year, previous_month)[1])
+
+    current = _trend_point(db, user_id, month, year, "Current", current_day)
+    previous = _trend_point(db, user_id, previous_month, previous_year, "Previous", previous_day)
+    return MonthlyTrendResponse(
+        year=year,
+        trends=trends,
+        income_change_percentage=change_percentage(current.income, previous.income),
+        expense_change_percentage=change_percentage(current.expenses, previous.expenses),
+        savings_change_percentage=change_percentage(current.savings, previous.savings),
+        investment_change_percentage=change_percentage(current.investments, previous.investments),
+    )
+
+
 def build_dashboard_charts(
     db: Session,
     user_id: int,

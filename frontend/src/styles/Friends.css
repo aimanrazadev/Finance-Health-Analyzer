@@ -70,10 +70,10 @@
   display: grid !important;
   grid-template-columns: minmax(420px, 0.88fr) minmax(560px, 1.12fr) !important;
   gap: 16px !important;
-  min-height: 600px;
-  height: calc(100vh - 268px);
-  max-height: 760px;
-  align-items: stretch !important;
+  min-height: 0;
+  height: auto !important;
+  max-height: none !important;
+  align-items: start !important;
 }
 
 .friends-page .friends-directory,
@@ -84,17 +84,18 @@
   border-radius: 14px !important;
   background: var(--friends-surface) !important;
   box-shadow: none !important;
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 .friends-page .friend-detail {
   min-height: 0 !important;
-  grid-template-rows: auto auto minmax(0, 1fr) !important;
+  grid-template-rows: auto auto auto !important;
 }
 
 .friends-directory {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  align-content: start;
   gap: 10px;
 }
 
@@ -203,14 +204,17 @@
   box-shadow: 0 0 0 3px rgba(141, 234, 54, 0.09) !important;
 }
 
-.friends-list {
+.friends-page .friends-list {
   display: grid;
+  grid-auto-rows: minmax(84px, auto);
+  align-content: start;
   gap: 10px;
+  height: auto !important;
+  max-height: none !important;
   min-height: 0;
   margin-top: 4px;
-  padding-right: 6px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  padding-right: 0;
+  overflow: visible !important;
 }
 
 .friends-page .friend-row,
@@ -301,7 +305,8 @@
 
 .friend-detail {
   display: grid !important;
-  grid-template-rows: auto auto minmax(0, 1fr) !important;
+  grid-template-rows: auto auto auto !important;
+  align-content: start;
   min-height: 0 !important;
 }
 
@@ -421,15 +426,16 @@
   font-size: 12px;
 }
 
-.friend-transaction-table-wrapper {
+.friends-page .friend-transaction-table-wrapper {
+  height: auto !important;
   min-height: 0;
   max-height: none !important;
   border: 1px solid var(--friends-border) !important;
   border-radius: 12px !important;
   background: rgba(5, 8, 9, 0.34) !important;
   box-shadow: none !important;
-  overflow: auto !important;
-  scrollbar-gutter: stable;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
 }
 
 .friend-transaction-table {
@@ -527,24 +533,6 @@
   color: #ff6f67 !important;
 }
 
-.friends-list,
-.friend-transaction-table-wrapper {
-  scrollbar-color: rgba(141, 234, 54, 0.38) transparent;
-  scrollbar-width: thin;
-}
-
-.friends-list::-webkit-scrollbar,
-.friend-transaction-table-wrapper::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
-}
-
-.friends-list::-webkit-scrollbar-thumb,
-.friend-transaction-table-wrapper::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgba(141, 234, 54, 0.34);
-}
-
 @media (max-width: 1120px) {
   .friends-page {
     width: min(100% - 24px, 1180px) !important;
@@ -559,12 +547,7 @@
 
   .friends-directory,
   .friend-detail {
-    min-height: 620px !important;
-  }
-
-  .friends-list,
-  .friend-transaction-table-wrapper {
-    max-height: 470px !important;
+    min-height: 0 !important;
   }
 }
 

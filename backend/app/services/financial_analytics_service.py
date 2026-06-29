@@ -25,6 +25,7 @@ from app.services.analytics_service import (
     build_dashboard_charts,
     build_dashboard_summary,
     build_monthly_trends,
+    build_period_trend_summary,
     period_bounds as month_bounds,
     previous_period,
 )
@@ -353,7 +354,7 @@ def build_complete_dashboard_data(db: Session, user_id: int, month: int, year: i
         merchants=build_merchant_analytics_detail(db, user_id, month, year, day),
         subscriptions=build_subscription_analytics(db, user_id, month, year, day),
         charts=build_dashboard_charts(db, user_id, month, year, day),
-        trends=build_monthly_trends(db, user_id, year),
+        trends=build_period_trend_summary(db, user_id, month, year, day),
         insights=build_dashboard_insights(db, user_id, month, year, day),
         health=calculate_financial_health_score(db, user_id, month, year),
         recent_transactions=recent_transactions,

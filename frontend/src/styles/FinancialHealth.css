@@ -22,9 +22,12 @@
   font-weight: var(--font-thin);
 }
 
-.health-actions select {
-  height: 36px;
+.health-actions .app-select {
   min-width: 126px;
+}
+
+.health-actions .app-select-trigger {
+  height: 36px;
   padding: 0 10px;
   border: 1px solid var(--border-strong);
   border-radius: 6px;

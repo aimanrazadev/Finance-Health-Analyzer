@@ -13,6 +13,7 @@ import {
   YAxis,
 } from 'recharts';
 import Navigation from '../components/Navigation';
+import AppSelect from '../components/AppSelect';
 import { AnimateNumber } from '../components/ui/AnimatedBlurNumber';
 import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
@@ -100,7 +101,10 @@ const getMonthLabel = (month) => (
 
 const getPreviousMonthLabel = (month, year) => {
   if (Number(month) === 0) return String(Number(year) - 1);
-  return new Date(year, Number(month) - 2, 1).toLocaleString('en-US', { month: 'short' });
+  return new Date(year, Number(month) - 2, 1).toLocaleString('en-US', {
+    month: 'short',
+    year: 'numeric',
+  });
 };
 
 const MetricIcon = ({ name }) => {
@@ -350,29 +354,25 @@ const Dashboard = () => {
           <div className="dashboard-filters" aria-label="Dashboard filters">
             <label>
               <span>Year</span>
-              <select
-                aria-label="Select dashboard year"
+              <AppSelect
+                ariaLabel="Select dashboard year"
                 value={selectedYear}
-                onChange={(event) => setSelectedYear(event.target.value === ALL_YEARS ? ALL_YEARS : Number(event.target.value))}
-              >
-                <option value={ALL_YEARS}>All</option>
-                {yearOptions.map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
+                onChange={(nextValue) => setSelectedYear(nextValue === ALL_YEARS ? ALL_YEARS : Number(nextValue))}
+                options={[
+                  { value: ALL_YEARS, label: 'All' },
+                  ...yearOptions.map((year) => ({ value: year, label: String(year) })),
+                ]}
+              />
             </label>
             <label>
               <span>Month</span>
-              <select
-                aria-label="Select dashboard month"
+              <AppSelect
+                ariaLabel="Select dashboard month"
                 value={isAllTime ? 0 : selectedMonth}
                 disabled={isAllTime}
-                onChange={(event) => setSelectedMonth(Number(event.target.value))}
-              >
-                {monthOptions.map((month) => (
-                  <option key={month.value} value={month.value}>{month.label}</option>
-                ))}
-              </select>
+                onChange={(nextValue) => setSelectedMonth(Number(nextValue))}
+                options={monthOptions}
+              />
             </label>
           </div>
         </header>

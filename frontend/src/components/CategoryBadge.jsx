@@ -7,7 +7,7 @@ const CategoryBadge = ({ category, name }) => {
   return (
     <span className="category-badge" style={getCategoryBadgeStyle(category || label)}>
       <span className="category-badge-dot" aria-hidden="true" />
-      {label}
+      <span className="category-badge-label">{label}</span>
     </span>
   );
 };

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import AppSelect from '../components/AppSelect';
 import Navigation from '../components/Navigation';
 import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
@@ -100,19 +101,21 @@ const AIInsights = () => {
           <div className="health-actions">
             <label>
               Month
-              <select value={selectedMonth} onChange={(event) => setSelectedMonth(Number(event.target.value))}>
-                {monthOptions.map((month) => (
-                  <option key={month.value} value={month.value}>{month.label}</option>
-                ))}
-              </select>
+              <AppSelect
+                value={selectedMonth}
+                onChange={(nextValue) => setSelectedMonth(Number(nextValue))}
+                ariaLabel="AI Insights month"
+                options={monthOptions}
+              />
             </label>
             <label>
               Year
-              <select value={selectedYear} onChange={(event) => setSelectedYear(Number(event.target.value))}>
-                {yearOptions.map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
+              <AppSelect
+                value={selectedYear}
+                onChange={(nextValue) => setSelectedYear(Number(nextValue))}
+                ariaLabel="AI Insights year"
+                options={yearOptions.map((year) => ({ value: year, label: String(year) }))}
+              />
             </label>
           </div>
         </div>

@@ -47,6 +47,86 @@
   }
 }
 
+/* Semantic typography roles shared by every authenticated page. */
+:root {
+  --finance-font: var(--font-interface);
+}
+
+html body .app-shell,
+html body .app-shell main,
+html body .app-shell p,
+html body .app-shell label,
+html body .app-shell small,
+html body .app-shell input,
+html body .app-shell textarea,
+html body .app-shell button,
+html body .app-shell .app-select-trigger,
+html body .app-shell .app-select-option,
+html body .app-shell .empty-state,
+html body .app-shell .surface-message,
+html body .app-sidebar {
+  font-family: var(--font-interface) !important;
+}
+
+html body .app-shell main h1,
+html body .app-shell main h2,
+html body .app-shell main h3,
+html body .app-shell .page-heading h1,
+html body .app-shell .transactions-header h1,
+html body .app-shell .dashboard-header h1 {
+  font-family: var(--font-display) !important;
+  font-weight: 600 !important;
+}
+
+html body .app-shell main h3 {
+  font-weight: 500 !important;
+}
+
+html body .app-shell .metric-value,
+html body .app-shell .dashboard-health-ring-label strong,
+html body .app-shell .health-score-card > strong,
+html body .app-shell .friends-stats strong,
+html body .app-shell .categories-review-summary > article strong,
+html body .app-shell .upload-summary strong,
+html body .app-shell .category-breakdown-summary strong {
+  font-family: var(--font-display) !important;
+  font-weight: 600 !important;
+}
+
+html body .app-sidebar .nav-link,
+html body .app-sidebar .nav-bottom-button,
+html body .app-sidebar .brand-copy,
+html body .app-sidebar .brand-copy strong,
+html body .app-sidebar .brand-copy span {
+  font-family: var(--font-interface) !important;
+}
+
+html body .app-shell table,
+html body .app-shell table tbody,
+html body .app-shell table tr,
+html body .app-shell table td,
+html body .app-shell table td * {
+  font-family: var(--font-data) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+}
+
+html body .app-shell table th,
+html body .app-shell table th * {
+  font-family: var(--font-data) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase;
+}
+
+html body .app-shell .eyebrow,
+html body .app-shell .metric-label,
+html body .app-shell .helper-text,
+html body .app-shell .meta,
+html body .app-shell .muted {
+  font-family: var(--font-interface) !important;
+  font-weight: 500 !important;
+}
 
 .dashboard-container {
   width: min(1180px, calc(100% - 32px));
@@ -3944,6 +4024,13 @@ body {
   animation: finance-page-enter 420ms ease both;
 }
 
+.app-shell .dashboard-page,
+.app-shell .categories-review-page,
+.app-shell .category-breakdown-page,
+.app-shell .friends-page {
+  animation: finance-page-enter 420ms ease both;
+}
+
 @keyframes finance-page-enter {
   from {
     opacity: 0;
@@ -6087,27 +6174,6 @@ body::before,
   border-radius: 12px;
 }
 
-.app-shell button:not(.nav-link):not(.nav-bottom-button):not(.logout-button):not(.premium-link):not(.plain-button),
-.app-shell .primary-button,
-.app-shell .submit-button,
-.app-shell .save-button,
-.app-shell .ask-button {
-  border: 1px solid rgba(155, 239, 56, 0.44) !important;
-  background: linear-gradient(135deg, #9bef38 0%, #79d833 100%) !important;
-  color: #071007 !important;
-  box-shadow: 0 10px 24px rgba(155, 239, 56, 0.13) !important;
-  font-weight: 520 !important;
-}
-
-.app-shell button:not(.nav-link):not(.nav-bottom-button):not(.logout-button):not(.premium-link):not(.plain-button):hover,
-.app-shell .primary-button:hover,
-.app-shell .submit-button:hover,
-.app-shell .save-button:hover,
-.app-shell .ask-button:hover {
-  filter: brightness(1.05);
-  transform: translateY(-1px);
-}
-
 .app-shell .secondary-button,
 .app-shell .ghost-button,
 .app-shell .outline-button,
@@ -6407,7 +6473,7 @@ body::before,
 
 /* Final typography system: one font stack, clear hierarchy, readable labels. */
 :root {
-  --finance-font: Inter, Geist, "Geist Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --finance-font: var(--font-interface);
   --type-page-title: clamp(28px, 2.35vw, 38px);
   --type-section-title: clamp(17px, 1.15vw, 21px);
   --type-card-title: 15px;

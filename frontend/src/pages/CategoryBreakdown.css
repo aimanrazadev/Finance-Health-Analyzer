@@ -10,7 +10,7 @@
   margin: 0 auto;
   padding: 36px 0 72px;
   color: var(--dash-text);
-  font-family: Montserrat, Inter, "Segoe UI", system-ui, sans-serif;
+  font-family: var(--font-interface);
 }
 
 .app-shell:has(.category-breakdown-page) {

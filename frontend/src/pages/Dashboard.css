@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
-
 .dashboard-page {
   --dash-bg: oklch(.1 0 0);
   --dash-card: linear-gradient(145deg, rgba(15, 20, 21, 0.92), rgba(8, 11, 12, 0.98));
@@ -19,7 +17,7 @@
   background: transparent !important;
   box-shadow: none !important;
   color: var(--dash-text);
-  font-family: Montserrat, Inter, "Segoe UI", system-ui, sans-serif;
+  font-family: var(--font-interface);
 }
 
 .app-shell:has(.dashboard-page) {
@@ -87,7 +85,7 @@
   text-transform: uppercase;
 }
 
-.dashboard-filters select {
+.dashboard-filters .app-select-trigger {
   width: 100%;
   min-height: 42px;
   padding: 0 34px 0 13px;
@@ -100,12 +98,13 @@
   outline: none;
 }
 
-.dashboard-filters select:focus {
+.dashboard-filters .app-select-trigger:focus-visible,
+.dashboard-filters .app-select.is-open .app-select-trigger {
   border-color: rgba(163, 255, 18, 0.48) !important;
   box-shadow: 0 0 0 3px var(--dash-accent-soft);
 }
 
-.dashboard-filters select:disabled {
+.dashboard-filters .app-select.is-disabled .app-select-trigger {
   color: rgba(255, 255, 255, 0.38) !important;
 }
 
@@ -322,7 +321,7 @@
 
 .recharts-text,
 .recharts-cartesian-axis-tick-value {
-  font-family: Montserrat, Inter, system-ui, sans-serif;
+  font-family: var(--font-data);
 }
 
 .dashboard-tooltip {

@@ -1,13 +1,18 @@
 .upload-page {
+  --upload-card: #171717;
+  --upload-row: #111111;
+  --upload-border: #2b2c2c;
+  --upload-border-hover: rgba(183, 245, 54, 0.34);
+  --upload-accent: #a3ff12;
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
   padding: 28px 0 56px;
 }
 
 .surface-message.success {
-  border-color: #abefc6;
-  background: #ecfdf3;
-  color: #067647;
+  border-color: rgba(163, 255, 18, 0.3);
+  background: rgba(163, 255, 18, 0.08);
+  color: #c7ff70;
 }
 
 .upload-layout {
@@ -25,10 +30,10 @@
 .upload-panel,
 .preview-panel {
   padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  border: 1px solid var(--upload-border) !important;
+  border-radius: 12px !important;
+  background: var(--upload-card) !important;
+  box-shadow: none !important;
 }
 
 .upload-panel h2,
@@ -82,21 +87,20 @@
   width: 100%;
   min-height: 188px;
   padding: 28px 22px;
-  border: 1px dashed rgba(149, 239, 56, 0.42);
-  border-radius: 12px;
-  background:
-    radial-gradient(80% 70% at 50% 0%, rgba(149, 239, 56, 0.07), transparent 52%),
-    linear-gradient(145deg, rgba(18, 23, 24, 0.94), rgba(8, 11, 12, 0.99));
+  border: 1px dashed #454747 !important;
+  border-radius: 10px !important;
+  background: var(--upload-row) !important;
   color: var(--text);
   cursor: pointer;
-  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  transition: border-color 180ms ease, background-color 180ms ease;
 }
 
 .statement-dropzone:hover,
 .statement-dropzone:focus-within {
-  transform: translateY(-1px);
-  border-color: rgba(149, 239, 56, 0.76);
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.26), 0 0 24px rgba(149, 239, 56, 0.08);
+  transform: none;
+  border-color: rgba(163, 255, 18, 0.48) !important;
+  background: #141514 !important;
+  box-shadow: none !important;
 }
 
 .statement-dropzone input[type="file"] {
@@ -113,11 +117,11 @@
   width: 42px;
   height: 42px;
   place-items: center;
-  border: 1px solid rgba(149, 239, 56, 0.35);
-  border-radius: 12px;
-  background: rgba(149, 239, 56, 0.08);
-  color: #9bef38;
-  box-shadow: 0 0 18px rgba(149, 239, 56, 0.12);
+  border: 1px solid var(--upload-border);
+  border-radius: 8px;
+  background: #171717;
+  color: var(--upload-accent);
+  box-shadow: none;
 }
 
 .dropzone-icon svg,
@@ -183,9 +187,10 @@
   justify-content: space-between;
   gap: 12px;
   padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: rgb(23, 23, 23);
+  border: 1px solid var(--upload-border) !important;
+  border-radius: 8px !important;
+  background: var(--upload-row) !important;
+  box-shadow: none !important;
 }
 
 .history-item div {
@@ -327,6 +332,9 @@
 
 .preview-category-select {
   width: 150px;
+}
+
+.preview-category-select .app-select-trigger {
   height: 34px;
   padding: 0 10px;
   border: 1px solid var(--border-strong);
@@ -413,6 +421,127 @@
 .failed-row code {
   overflow-x: auto;
   white-space: nowrap;
+}
+
+/* Final dashboard-aligned surface layer. */
+.app-shell .upload-page,
+.app-shell .upload-page .upload-layout {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.app-shell .upload-page .upload-panel,
+.app-shell .upload-page .preview-panel {
+  border: 1px solid var(--upload-border) !important;
+  border-radius: 12px !important;
+  background: var(--upload-card) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.app-shell .upload-page .upload-panel::before,
+.app-shell .upload-page .upload-panel::after,
+.app-shell .upload-page .preview-panel::before,
+.app-shell .upload-page .preview-panel::after,
+.app-shell .upload-page .history-item::before,
+.app-shell .upload-page .history-item::after {
+  display: none !important;
+  content: none !important;
+}
+
+.app-shell .upload-page .upload-panel:hover,
+.app-shell .upload-page .preview-panel:hover {
+  transform: none !important;
+  border-color: var(--upload-border-hover) !important;
+  box-shadow: none !important;
+}
+
+.app-shell .upload-page .statement-dropzone {
+  border: 1px dashed #454747 !important;
+  border-radius: 10px !important;
+  background: var(--upload-row) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.app-shell .upload-page .statement-dropzone:hover,
+.app-shell .upload-page .statement-dropzone:focus-within {
+  transform: none !important;
+  border-color: rgba(163, 255, 18, 0.48) !important;
+  background: #141514 !important;
+  box-shadow: none !important;
+}
+
+.app-shell .upload-page .dropzone-icon,
+.app-shell .upload-page .dropzone-button,
+.app-shell .upload-page .pdf-format-badge {
+  background: #171717 !important;
+  border-color: rgba(163, 255, 18, 0.28) !important;
+  color: var(--upload-accent) !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+.app-shell .upload-page .preview-transactions-button {
+  border: 1px solid rgba(163, 255, 18, 0.62) !important;
+  background: #111313 !important;
+  color: var(--upload-accent) !important;
+  box-shadow: none !important;
+}
+
+.app-shell .upload-page .preview-transactions-button:hover:not(:disabled) {
+  border-color: var(--upload-accent) !important;
+  background: rgba(163, 255, 18, 0.08) !important;
+  color: #b7ff42 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.app-shell .upload-page .preview-transactions-button:disabled {
+  opacity: 0.45;
+}
+
+.app-shell .upload-page .history-item,
+.app-shell .upload-page .upload-summary > div,
+.app-shell .upload-page .empty-state {
+  border: 1px solid var(--upload-border) !important;
+  border-radius: 8px !important;
+  background: var(--upload-row) !important;
+  box-shadow: none !important;
+}
+
+.app-shell .upload-page .history-item:hover {
+  transform: none !important;
+  border-color: var(--upload-border-hover) !important;
+  box-shadow: none !important;
+}
+
+.app-shell .upload-page .history-delete-button {
+  border: 1px solid rgba(255, 82, 82, 0.62) !important;
+  background: #111313 !important;
+  color: #ff5252 !important;
+  box-shadow: none !important;
+}
+
+.app-shell .upload-page .history-delete-button:hover:not(:disabled) {
+  border-color: #ff5252 !important;
+  background: rgba(255, 82, 82, 0.08) !important;
+  color: #ff706b !important;
+  transform: none !important;
+}
+
+.app-shell .upload-page .preview-table {
+  background: var(--upload-card) !important;
+}
+
+.app-shell .upload-page .preview-table th {
+  background: #131313 !important;
+}
+
+.app-shell .upload-page .preview-table tbody tr,
+.app-shell .upload-page .preview-table td {
+  background: #171717 !important;
 }
 
 @media (max-width: 920px) {

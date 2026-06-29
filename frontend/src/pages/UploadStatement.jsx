@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import AppSelect from '../components/AppSelect';
 import Navigation from '../components/Navigation';
 import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
@@ -267,7 +268,7 @@ const UploadStatement = () => {
                   {selectedFile ? `${selectedFile.name} / ${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : 'No file selected'}
                 </span>
               </label>
-              <button type="submit" className="primary-button" disabled={loadingPreview || !selectedFile}>
+              <button type="submit" className="primary-button preview-transactions-button" disabled={loadingPreview || !selectedFile}>
                 {loadingPreview ? 'Reading PDF...' : 'Preview transactions'}
               </button>
             </form>
@@ -394,19 +395,17 @@ const UploadStatement = () => {
                         <td>{row.transaction_type}</td>
                         <td>{formatMoney(row.amount)}</td>
                         <td>
-                          <select
+                          <AppSelect
                             className="preview-category-select"
                             value={row.category_id || ''}
-                            onChange={(event) => handlePreviewCategoryChange(row.row_number, event.target.value)}
-                          >
-                            <option value="">Needs Review</option>
-                            {getCategoriesForType(row.transaction_type)
-                              .map((category) => (
-                                <option key={category.id} value={category.id}>
-                                  {category.name}
-                                </option>
-                              ))}
-                          </select>
+                            onChange={(nextValue) => handlePreviewCategoryChange(row.row_number, nextValue)}
+                            ariaLabel={`Category for ${row.description}`}
+                            options={[
+                              { value: '', label: 'Needs Review' },
+                              ...getCategoriesForType(row.transaction_type)
+                                .map((category) => ({ value: category.id, label: category.name })),
+                            ]}
+                          />
                         </td>
                         <td>
                           {confidencePercent(row.category_confidence)}
