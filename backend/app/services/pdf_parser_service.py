@@ -9,9 +9,28 @@ from app.services.transaction_cleaner_service import map_column_name, standardiz
 
 
 TRANSACTION_START_RE = re.compile(r"^\s*(?P<number>\d+)\s+(?P<date>\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+(?P<body>.+)$")
+TRANSACTION_DATE_RE = re.compile(r"^\d{1,2}\s+[A-Za-z]{3}\s+\d{4}$")
 AMOUNT_RE = re.compile(r"(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{2})?")
 REFERENCE_RE = re.compile(r"\b(?:UPI|MB|FOS|IMPS|NEFT|RTGS|ACH|NACH)[-/A-Z0-9]*\b", re.IGNORECASE)
 INCOME_HINT_RE = re.compile(r"\b(received|salary|deposit|credit|refund|cr|monthly expenses)\b", re.IGNORECASE)
+OPENING_BALANCE_RE = re.compile(
+    r"opening\s+balance\s*(?:[:=-]\s*)?(?:inr|rs\.?|₹)?\s*([0-9][0-9,]*(?:\.\d{1,2})?)",
+    re.IGNORECASE,
+)
+CLOSING_BALANCE_RE = re.compile(
+    r"closing\s+balance\s*(?:[:=-]\s*)?(?:inr|rs\.?|â‚¹)?\s*([0-9][0-9,]*(?:\.\d{1,2})?)",
+    re.IGNORECASE,
+)
+# Currency symbols extracted from PDFs are not consistently Unicode-decoded,
+# so accept any non-numeric prefix between the label and amount.
+OPENING_BALANCE_RE = re.compile(
+    r"opening\s+balance\s*(?:[:=-]\s*)?[^0-9\r\n]*([0-9][0-9,]*(?:\.\d{1,2})?)",
+    re.IGNORECASE,
+)
+CLOSING_BALANCE_RE = re.compile(
+    r"closing\s+balance\s*(?:[:=-]\s*)?[^0-9\r\n]*([0-9][0-9,]*(?:\.\d{1,2})?)",
+    re.IGNORECASE,
+)
 
 
 def _cell(value: Any) -> str:
@@ -61,27 +80,39 @@ def _extract_rows_from_tables(content: bytes) -> tuple[list[dict[str, Any]], lis
 
     raw_rows: list[dict[str, Any]] = []
     detected_columns: list[str] = []
+    transaction_header: list[str | None] | None = None
     with pdfplumber.open(BytesIO(content)) as pdf:
         for page in pdf.pages:
             for table in page.extract_tables() or []:
-                header: list[str] | None = None
                 for row in table:
                     if not row:
                         continue
-                    if header is None:
-                        if _looks_like_header(row):
-                            source_header = [_cell(cell) for cell in row]
-                            header = [map_column_name(cell) for cell in source_header]
-                            if not detected_columns:
-                                detected_columns = source_header
+                    if _looks_like_header(row):
+                        source_header = [_cell(cell) for cell in row]
+                        transaction_header = [map_column_name(cell) for cell in source_header]
+                        if not detected_columns:
+                            detected_columns = source_header
+                        continue
+
+                    # PDF extractors frequently split one visual ledger into
+                    # multiple tables or pages. Continuation chunks do not
+                    # repeat their header, so retain the last transaction
+                    # header instead of silently discarding those rows.
+                    if transaction_header is None:
                         continue
 
                     record = {
-                        header[index]: _cell(value)
+                        transaction_header[index]: _cell(value)
                         for index, value in enumerate(row)
-                        if index < len(header) and header[index]
+                        if index < len(transaction_header) and transaction_header[index]
                     }
-                    if record and not _is_noise(" ".join(str(value) for value in record.values())):
+                    has_transaction_date = bool(
+                        TRANSACTION_DATE_RE.fullmatch(str(record.get("transaction_date") or "").strip())
+                    )
+                    is_transaction_or_continuation = has_transaction_date or any(
+                        record.get(key) for key in ("description", "reference_no")
+                    )
+                    if record and is_transaction_or_continuation and not _is_noise(" ".join(str(value) for value in record.values())):
                         raw_rows.append(record)
 
     return _merge_continuation_rows(raw_rows), detected_columns
@@ -96,6 +127,37 @@ def _extract_text_lines(content: bytes) -> list[str]:
             text = page.extract_text() or ""
             lines.extend(line.strip() for line in text.splitlines() if line.strip())
     return lines
+
+
+def _extract_opening_balance(content: bytes) -> float | None:
+    """Read the statement-level opening balance from Account Summary text."""
+    for line in _extract_text_lines(content):
+        match = OPENING_BALANCE_RE.search(line)
+        if match:
+            return round(float(match.group(1).replace(",", "")), 2)
+    return None
+
+
+def _extract_closing_balance(content: bytes) -> float | None:
+    """Read the authoritative statement closing balance from Account Summary text."""
+    lines = _extract_text_lines(content)
+    for line in lines:
+        match = CLOSING_BALANCE_RE.search(line)
+        if match:
+            return round(float(match.group(1).replace(",", "")), 2)
+
+    # Some banks render the two labels as a header and put both values on the
+    # following account row: "Opening Balance Closing Balance" then
+    # "Savings Account: 399.08 5,359.96".
+    for index, line in enumerate(lines):
+        lowered = line.lower()
+        if "opening balance" not in lowered or "closing balance" not in lowered:
+            continue
+        for value_line in lines[index + 1:index + 4]:
+            amounts = AMOUNT_RE.findall(value_line)
+            if len(amounts) >= 2:
+                return round(float(amounts[-1].replace(",", "")), 2)
+    return None
 
 
 def _record_from_text_match(match: re.Match[str]) -> dict[str, Any] | None:
@@ -155,6 +217,8 @@ def parse_pdf_statement(
     user_id: int | None = None,
     file_name: str = "statement.pdf",
 ) -> dict[str, Any]:
+    opening_balance = _extract_opening_balance(content)
+    closing_balance = _extract_closing_balance(content)
     raw_rows, columns = _extract_rows_from_tables(content)
     if not raw_rows:
         raw_rows = _extract_rows_from_text(content)
@@ -180,6 +244,8 @@ def parse_pdf_statement(
 
     return {
         "total_rows": len(raw_rows),
+        "opening_balance": opening_balance,
+        "closing_balance": closing_balance,
         "transactions": transactions,
         "failed_items": failed_items,
         "import_profile": {

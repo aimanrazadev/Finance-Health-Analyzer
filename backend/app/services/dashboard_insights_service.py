@@ -58,11 +58,14 @@ def build_dashboard_insights(db: Session, user_id: int, month: int, year: int, d
             severity="neutral",
         ))
 
-    if current.savings_rate >= 30:
-        savings_message = f"You saved {current.savings_rate:.1f}% of your income, which is strong."
+    if current.savings_rate is None:
+        savings_message = "Savings rate is unavailable because no opening balance or income was recorded this period."
+        savings_severity = "neutral"
+    elif current.savings_rate >= 30:
+        savings_message = f"You allocated {current.savings_rate:.1f}% of available funds to savings and investments, which is strong."
         savings_severity = "positive"
     elif current.savings_rate >= 10:
-        savings_message = f"You saved {current.savings_rate:.1f}% of your income. There is room to improve."
+        savings_message = f"You allocated {current.savings_rate:.1f}% of available funds to savings and investments."
         savings_severity = "neutral"
     else:
         savings_message = f"Your savings rate is {current.savings_rate:.1f}%, so savings need attention."

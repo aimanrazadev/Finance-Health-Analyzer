@@ -18,11 +18,14 @@ const statusClass = (label = '') => label.toLowerCase().replaceAll(' ', '-');
 const moneyFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
   currency: 'INR',
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
 const formatMoney = (value) => moneyFormatter.format(Number(value || 0));
-const formatPercent = (value) => `${Number(value || 0).toFixed(1)}%`;
+const formatPercent = (value) => (
+  value === null || value === undefined ? 'N/A' : `${Number(value).toFixed(1)}%`
+);
 
 const AIInsights = () => {
   const { token } = useAuth();
@@ -178,6 +181,14 @@ const AIInsights = () => {
                 <article>
                   <span>Income</span>
                   <strong>{formatMoney(summary?.total_income)}</strong>
+                </article>
+                <article>
+                  <span>Opening Balance</span>
+                  <strong>{formatMoney(summary?.opening_balance)}</strong>
+                </article>
+                <article>
+                  <span>Available Funds</span>
+                  <strong>{formatMoney(summary?.available_funds)}</strong>
                 </article>
                 <article>
                   <span>Expenses</span>

@@ -10,6 +10,7 @@ const MAX_PDF_SIZE = 10 * 1024 * 1024;
 const moneyFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
   currency: 'INR',
+  minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
 
@@ -150,6 +151,8 @@ const UploadStatement = () => {
         file_size: preview.file_size,
         file_type: 'pdf',
         bank_name: preview.bank_name,
+        opening_balance: preview.opening_balance,
+        closing_balance: preview.closing_balance,
         column_mapping: preview.column_mapping || {},
         total_rows: preview.total_rows,
         failed_rows: preview.failed_rows,
@@ -358,6 +361,14 @@ const UploadStatement = () => {
               <div>
                 <span>Import confidence</span>
                 <strong>{Math.round((preview.import_confidence || 0) * 100)}%</strong>
+              </div>
+              <div>
+                <span>Opening balance</span>
+                <strong>{preview.opening_balance === null || preview.opening_balance === undefined ? 'Not detected' : formatMoney(preview.opening_balance)}</strong>
+              </div>
+              <div>
+                <span>Closing balance</span>
+                <strong>{preview.closing_balance === null || preview.closing_balance === undefined ? 'Not detected' : formatMoney(preview.closing_balance)}</strong>
               </div>
             </div>
 

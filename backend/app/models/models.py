@@ -1,6 +1,6 @@
 """SQLAlchemy ORM models for the focused Finance Health Analyzer."""
 
-from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Column, DateTime, Float, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.sql import func
 
 from app.db.database import Base
@@ -25,7 +25,7 @@ class Transaction(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
-    amount = Column(Float, nullable=False)
+    amount = Column(Numeric(14, 2), nullable=False)
     category_id = Column(Integer, nullable=True, index=True)
     friend_id = Column(Integer, nullable=True, index=True)
     merchant_id = Column(Integer, nullable=True, index=True)
@@ -35,9 +35,9 @@ class Transaction(Base):
     extracted_merchant = Column(String(150), nullable=True)
     normalized_friend_name = Column(String(150), nullable=True, index=True)
     reference_no = Column(String(150), nullable=True)
-    withdrawal_amount = Column(Float, nullable=True)
-    deposit_amount = Column(Float, nullable=True)
-    balance = Column(Float, nullable=True)
+    withdrawal_amount = Column(Numeric(14, 2), nullable=True)
+    deposit_amount = Column(Numeric(14, 2), nullable=True)
+    balance = Column(Numeric(14, 2), nullable=True)
     transaction_type = Column(String(50), nullable=False)
     date = Column(DateTime, nullable=False)
     payment_method = Column(String(100), nullable=True)
@@ -72,7 +72,7 @@ class Friend(Base):
     name = Column(String(150), nullable=False)
     normalized_name = Column(String(150), nullable=False, index=True)
     transaction_count = Column(Integer, default=0)
-    total_amount = Column(Float, default=0.0)
+    total_amount = Column(Numeric(14, 2), default=0.0)
     last_transaction_at = Column(DateTime, nullable=True)
     is_hidden = Column(Boolean, default=False)
     created_at = Column(DateTime, server_default=func.now())
@@ -141,7 +141,7 @@ class Merchant(Base):
     normalized_name = Column(String(150), nullable=False, index=True)
     aliases = Column(Text, nullable=True)
     transaction_count = Column(Integer, default=0)
-    total_spent = Column(Float, default=0.0)
+    total_spent = Column(Numeric(14, 2), default=0.0)
     last_seen_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -183,7 +183,7 @@ class Subscription(Base):
     user_id = Column(Integer, nullable=False, index=True)
     merchant_name = Column(String(150), nullable=False)
     category_id = Column(Integer, nullable=True, index=True)
-    amount = Column(Float, nullable=False, default=0)
+    amount = Column(Numeric(14, 2), nullable=False, default=0)
     billing_period = Column(String(50), default="monthly")
     next_expected_payment = Column(DateTime, nullable=True)
     confidence = Column(Float, default=0.75)
@@ -202,6 +202,8 @@ class UploadedFile(Base):
     file_path = Column(String(500), nullable=False)
     file_type = Column(String(50), nullable=True)
     file_size = Column(Integer, nullable=False)
+    opening_balance = Column(Numeric(14, 2), nullable=True)
+    closing_balance = Column(Numeric(14, 2), nullable=True)
     transaction_count = Column(Integer, default=0)
     upload_status = Column(String(50), default="processed")
     total_rows = Column(Integer, default=0)

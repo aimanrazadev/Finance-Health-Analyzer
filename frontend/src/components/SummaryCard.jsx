@@ -4,7 +4,8 @@ import { AnimateNumber } from './ui/AnimatedBlurNumber';
 const currencyFormat = {
   style: 'currency',
   currency: 'INR',
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 };
 
 const percentFormat = {

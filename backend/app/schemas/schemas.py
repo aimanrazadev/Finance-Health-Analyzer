@@ -107,7 +107,7 @@ class FinancialSnapshotResponse(BaseModel):
     current_month_spending: float
     projected_month_end_spending: float
     projected_month_end_savings: float
-    projected_savings_rate: float
+    projected_savings_rate: Optional[float]
     budget_health: str
     top_merchant: Optional[str]
     top_category: Optional[str]
@@ -304,10 +304,19 @@ class DashboardSummary(BaseModel):
     month: int
     year: int
     current_balance: float
+    closing_balance: float = 0
+    opening_balance: float = 0
+    available_funds: float = 0
     total_income: float
     total_expenses: float
+    lifestyle_expenses: float = 0
     total_savings: float
-    savings_rate: float
+    savings_rate: Optional[float]
+    expected_closing_balance: float = 0
+    pdf_closing_balance: Optional[float] = None
+    balance_mismatch: bool = False
+    calculated_closing_balance: float = 0
+    balance_difference: float = 0
     monthly_savings_trend: float = 0
     savings_status: str = "Poor"
     transaction_count: int
@@ -352,7 +361,7 @@ class MonthlyTrendPoint(BaseModel):
     expenses: float
     savings: float
     investments: float
-    savings_rate: float = 0
+    savings_rate: Optional[float] = None
 
 
 class MonthlyTrendResponse(BaseModel):
@@ -378,7 +387,7 @@ class SavingsAnalyticsResponse(BaseModel):
     month: int
     year: int
     savings: float
-    savings_rate: float
+    savings_rate: Optional[float]
     monthly_savings_trend: float
     previous_month_savings: float
     savings_status: str
@@ -554,6 +563,8 @@ class UploadPreviewResponse(BaseModel):
     import_profile_name: Optional[str] = None
     import_confidence: float = 0
     bank_name: Optional[str] = None
+    opening_balance: Optional[float] = None
+    closing_balance: Optional[float] = None
     column_mapping: dict[str, str] = {}
     total_rows: int
     successful_rows: int
@@ -569,6 +580,8 @@ class UploadConfirmRequest(BaseModel):
     file_size: int
     file_type: Optional[str] = None
     bank_name: Optional[str] = None
+    opening_balance: Optional[float] = None
+    closing_balance: Optional[float] = None
     column_mapping: dict[str, str] = {}
     total_rows: Optional[int] = None
     failed_rows: Optional[int] = None
@@ -589,6 +602,8 @@ class UploadedFileResponse(BaseModel):
     file_path: str
     file_size: int
     file_type: Optional[str] = None
+    opening_balance: Optional[float] = None
+    closing_balance: Optional[float] = None
     upload_status: Optional[str] = None
     total_rows: int = 0
     successful_rows: int = 0

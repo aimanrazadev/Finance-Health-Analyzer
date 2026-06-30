@@ -18,9 +18,11 @@ def build_financial_snapshot(db: Session, user_id: int, month: int, year: int) -
     lifestyle_spending = sum(item.total for item in summary.category_breakdown)
     projected_spending = round(lifestyle_spending * pace_factor, 2)
     projected_savings = round(summary.total_savings * pace_factor, 2)
-    projected_savings_rate = round((projected_savings / summary.total_income * 100), 2) if summary.total_income else 0
+    projected_savings_rate = round((projected_savings / summary.available_funds * 100), 2) if summary.available_funds else None
 
-    if projected_savings_rate >= 25:
+    if projected_savings_rate is None:
+        budget_health = "N/A"
+    elif projected_savings_rate >= 25:
         budget_health = "Good"
     elif projected_savings_rate >= 10:
         budget_health = "Average"

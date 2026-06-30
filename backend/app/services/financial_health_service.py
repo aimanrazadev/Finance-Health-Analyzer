@@ -24,10 +24,10 @@ def _status(score: int) -> str:
     return "Needs Improvement"
 
 
-def _savings_rate_score(income: float, savings: float) -> tuple[int, str]:
-    if income <= 0:
-        return 0, "Add income transactions to measure the intentional savings rate."
-    rate = savings / income * 100
+def _savings_rate_score(available_funds: float, savings: float) -> tuple[int, str]:
+    if available_funds <= 0:
+        return 0, "Opening balance or income is needed to measure the intentional savings rate."
+    rate = savings / available_funds * 100
     if rate >= 20:
         score = 100
     elif rate >= 15:
@@ -40,7 +40,7 @@ def _savings_rate_score(income: float, savings: float) -> tuple[int, str]:
         score = 35
     else:
         score = 20
-    return score, f"Savings and Investments equal {rate:.1f}% of income."
+    return score, f"Savings and Investments equal {rate:.1f}% of available funds."
 
 
 def _subscription_score(income: float, monthly_cost: float) -> tuple[int, str]:
@@ -92,12 +92,12 @@ def _stability_score(db: Session, user_id: int, month: int, year: int, current: 
     return score, f"Lifestyle spending is compared with a recent average of INR {baseline:,.2f}."
 
 
-def _balance_score(current_balance: float, income: float) -> tuple[int, str]:
-    if current_balance <= 0:
+def _balance_score(closing_balance: float, available_funds: float) -> tuple[int, str]:
+    if closing_balance <= 0:
         return 20, "The latest bank closing balance for this period is zero or negative."
-    if income <= 0:
-        return 50, f"Latest bank closing balance is INR {current_balance:,.2f}; add income to measure its strength."
-    ratio = current_balance / income
+    if available_funds <= 0:
+        return 50, f"Period closing balance is INR {closing_balance:,.2f}; available funds are needed to measure its strength."
+    ratio = closing_balance / available_funds
     if ratio >= 1:
         score = 100
     elif ratio >= 0.50:
@@ -108,7 +108,7 @@ def _balance_score(current_balance: float, income: float) -> tuple[int, str]:
         score = 55
     else:
         score = 40
-    return score, f"Latest bank closing balance equals {ratio * 100:.1f}% of period income."
+    return score, f"Period closing balance equals {ratio * 100:.1f}% of available funds."
 
 
 def _breakdown(label: str, score: int, description: str) -> dict:
@@ -131,7 +131,7 @@ def _tips(scores: dict[str, int]) -> list[str]:
 def calculate_financial_health_score(db: Session, user_id: int, month: int, year: int) -> dict:
     summary = build_dashboard_summary(db, user_id, month, year)
     recurring = subscription_summary(db, user_id, month, year)
-    savings_score, savings_description = _savings_rate_score(summary.total_income, summary.total_savings)
+    savings_score, savings_description = _savings_rate_score(summary.available_funds, summary.total_savings)
     subscription_score, subscription_description = _subscription_score(
         summary.total_income,
         float(recurring["monthly_total"]),
@@ -143,7 +143,7 @@ def calculate_financial_health_score(db: Session, user_id: int, month: int, year
         year,
         _lifestyle_expenses(summary),
     )
-    balance_score, balance_description = _balance_score(summary.current_balance, summary.total_income)
+    balance_score, balance_description = _balance_score(summary.closing_balance, summary.available_funds)
     overall_score = _clamp((savings_score + subscription_score + stability_score + balance_score) / 4)
 
     record = FinancialScore(

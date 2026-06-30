@@ -27,14 +27,23 @@ const emptySummary = {
   year: now.getFullYear(),
   total_income: 0,
   total_expenses: 0,
+  lifestyle_expenses: 0,
   total_savings: 0,
-  savings_rate: 0,
+  savings_rate: null,
   savings_status: 'Poor',
   transaction_count: 0,
   top_category: null,
   top_merchant: null,
   recurring_subscription_count: 0,
   current_balance: 0,
+  closing_balance: 0,
+  opening_balance: 0,
+  available_funds: 0,
+  expected_closing_balance: 0,
+  pdf_closing_balance: null,
+  balance_mismatch: false,
+  calculated_closing_balance: 0,
+  balance_difference: 0,
 };
 
 const emptyCharts = { category_breakdown: [], top_merchants: [] };
@@ -72,7 +81,8 @@ const ALL_YEARS = 'all';
 const moneyFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
   currency: 'INR',
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
 const compactMoneyFormatter = new Intl.NumberFormat('en-IN', {
@@ -123,13 +133,14 @@ const MetricIcon = ({ name }) => {
     expenses: <svg {...common}><path d="M4 7 10 13l4-4 6 8" /><path d="M14 17h6v-6" /></svg>,
     savings: <svg {...common}><path d="M12 21s7-4.4 7-11V5l-7-3-7 3v5c0 6.6 7 11 7 11Z" /><path d="M9 12h6" /></svg>,
     balance: <svg {...common}><path d="M19 7V6a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V7" /><path d="M16 14h.01" /></svg>,
+    category: <svg {...common}><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" /></svg>,
   };
 
   return icons[name] || icons.balance;
 };
 
 const DashboardMetric = ({ icon, label, numericValue, helper, tone, loading, format = 'currency' }) => (
-  <article className={`dashboard-card metric-card dashboard-card-selected tone-${tone}`}>
+  <article className={`dashboard-card metric-card metric-format-${format} dashboard-card-selected tone-${tone}`}>
     <div className="metric-card-top">
       <span className="metric-icon"><MetricIcon name={icon} /></span>
       <span className="metric-label">{label}</span>
@@ -137,13 +148,17 @@ const DashboardMetric = ({ icon, label, numericValue, helper, tone, loading, for
     <strong className="metric-value">
       {loading ? (
         'Loading...'
+      ) : numericValue === null || numericValue === undefined ? (
+        format === 'percent' ? 'N/A' : '-'
+      ) : format === 'text' ? (
+        numericValue
       ) : format === 'percent' ? (
-        `${percentFormatter.format(Number(numericValue || 0))}%`
+        `${percentFormatter.format(Number(numericValue))}%`
       ) : (
         <AnimateNumber
           value={Number(numericValue || 0)}
           locale="en-IN"
-          format={{ style: 'currency', currency: 'INR', maximumFractionDigits: 0 }}
+          format={{ style: 'currency', currency: 'INR', minimumFractionDigits: 2, maximumFractionDigits: 2 }}
         />
       )}
     </strong>
@@ -182,14 +197,16 @@ const DonutTooltip = ({ active, payload }) => {
 
 const makeRecommendations = (summary, subscriptionAnalytics, health) => {
   const recommendations = [];
-  const savingsRate = Number(summary.savings_rate || 0);
+  const savingsRate = summary.savings_rate === null || summary.savings_rate === undefined
+    ? null
+    : Number(summary.savings_rate);
   const expenses = Number(summary.total_expenses || 0);
   const income = Number(summary.total_income || 0);
   const subscriptions = subscriptionAnalytics.subscriptions || [];
 
   const weakestSignal = [...(health.breakdown || [])].sort((a, b) => a.score - b.score)[0];
   if (weakestSignal?.description) recommendations.push(weakestSignal.description);
-  if (savingsRate < 20) recommendations.push('Lift your savings rate toward 20% by trimming flexible spending first.');
+  if (savingsRate !== null && savingsRate < 20) recommendations.push('Lift your savings rate toward 20% by trimming flexible spending first.');
   if (income > 0 && expenses / income > 0.75) recommendations.push('Expenses are taking most of income this period; review the highest category before adding new commitments.');
   if (subscriptions.length > 0) recommendations.push(`Audit ${subscriptions.length} recurring payment${subscriptions.length === 1 ? '' : 's'} and cancel anything you no longer use.`);
   if (summary.top_category) recommendations.push(`${summary.top_category} is the biggest spending area, so small limits there will move the score fastest.`);
@@ -296,13 +313,22 @@ const Dashboard = () => {
   const categoryBreakdownPath = `/dashboard/category-analytics?${new URLSearchParams(
     isAllTime ? { month: '-1' } : { month: String(selectedMonth), year: String(numericSelectedYear) },
   ).toString()}`;
-
+  const isCurrentMonthSelected = !isAllTime
+    && numericSelectedYear === now.getFullYear()
+    && selectedMonth === now.getMonth() + 1;
   const recommendations = useMemo(
     () => normalizeInsights(dashboardInsights, summary, subscriptionAnalytics, health),
     [dashboardInsights, summary, subscriptionAnalytics, health],
   );
 
   const metrics = [
+    {
+      icon: 'balance',
+      label: 'Opening Balance',
+      numericValue: summary.opening_balance,
+      helper: 'Balance at the start of the selected period',
+      tone: Number(summary.opening_balance || 0) >= 0 ? 'positive' : 'negative',
+    },
     {
       icon: 'income',
       label: 'Total Income',
@@ -318,26 +344,53 @@ const Dashboard = () => {
       tone: 'negative',
     },
     {
+      icon: 'balance',
+      label: 'Closing Balance',
+      numericValue: summary.closing_balance,
+      helper: summary.pdf_closing_balance !== null && summary.pdf_closing_balance !== undefined
+        ? summary.balance_mismatch
+          ? `PDF balance kept · expected ${formatMoney(summary.expected_closing_balance)}`
+          : 'Final balance from the selected PDF statement'
+        : 'Latest transaction balance for the selected period',
+      tone: Number(summary.closing_balance || 0) >= 0 ? 'positive' : 'negative',
+    },
+    {
       icon: 'savings',
       label: 'Total Savings',
       numericValue: summary.total_savings,
-      helper: `${percentFormatter.format(Number(summary.savings_rate || 0))}% savings rate`,
+      helper: summary.savings_rate === null || summary.savings_rate === undefined
+        ? 'Savings rate unavailable without available funds'
+        : `${percentFormatter.format(Number(summary.savings_rate))}% savings rate`,
       tone: 'positive',
     },
     {
       icon: 'savings',
       label: 'Savings Rate',
       numericValue: summary.savings_rate,
-      helper: 'Intentional savings as a share of income',
-      tone: Number(summary.savings_rate || 0) >= 10 ? 'positive' : 'negative',
+      helper: 'Intentional savings as a share of available funds',
+      tone: summary.savings_rate === null || summary.savings_rate === undefined
+        ? 'neutral'
+        : Number(summary.savings_rate) >= 10 ? 'positive' : 'negative',
       format: 'percent',
     },
     {
       icon: 'balance',
-      label: 'Balance',
-      numericValue: summary.current_balance,
-      helper: 'Latest statement closing balance',
-      tone: Number(summary.current_balance || 0) >= 0 ? 'positive' : 'negative',
+      label: 'Current Balance',
+      numericValue: isCurrentMonthSelected ? summary.current_balance : null,
+      helper: isCurrentMonthSelected ? 'Latest real account balance available' : 'Available only for the current month',
+      tone: isCurrentMonthSelected
+        ? Number(summary.current_balance || 0) >= 0 ? 'positive' : 'negative'
+        : 'neutral',
+    },
+    {
+      icon: 'category',
+      label: 'Highest Spending Category',
+      numericValue: summary.top_category || 'No spending yet',
+      helper: summary.category_breakdown?.[0]
+        ? `${formatMoney(summary.category_breakdown[0].total)} spent in this category`
+        : 'No expense category available for this period',
+      tone: 'neutral',
+      format: 'text',
     },
   ];
 

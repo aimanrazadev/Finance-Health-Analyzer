@@ -60,6 +60,8 @@ def parse_statement_file(
 
     return {
         "file_type": file_type,
+        "opening_balance": parsed.get("opening_balance"),
+        "closing_balance": parsed.get("closing_balance"),
         "total_rows": total_rows,
         "successful_rows": len(transactions),
         "failed_rows": len(failed_items),

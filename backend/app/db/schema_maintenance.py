@@ -16,6 +16,22 @@ UNIQUE_INDEXES = {
     ],
 }
 
+MONEY_COLUMNS = {
+    "transactions": {
+        "amount": "DECIMAL(14,2) NOT NULL",
+        "withdrawal_amount": "DECIMAL(14,2) NULL",
+        "deposit_amount": "DECIMAL(14,2) NULL",
+        "balance": "DECIMAL(14,2) NULL",
+    },
+    "uploaded_files": {
+        "opening_balance": "DECIMAL(14,2) NULL",
+        "closing_balance": "DECIMAL(14,2) NULL",
+    },
+    "friends": {"total_amount": "DECIMAL(14,2) NULL DEFAULT 0.00"},
+    "merchants": {"total_spent": "DECIMAL(14,2) NULL DEFAULT 0.00"},
+    "subscriptions": {"amount": "DECIMAL(14,2) NOT NULL DEFAULT 0.00"},
+}
+
 
 def _ensure_unique_indexes(connection, inspector, existing_tables: set[str]) -> None:
     """Best-effort constraints for local MySQL schemas.
@@ -79,5 +95,18 @@ def ensure_database_schema():
             connection.execute(text("UPDATE transactions SET is_friend_transaction = 0 WHERE is_friend_transaction IS NULL"))
             connection.execute(text("UPDATE transactions SET is_needs_review = 0 WHERE is_needs_review IS NULL"))
             connection.execute(text("UPDATE transactions SET review_status = 'approved' WHERE review_status IS NULL"))
+
+        # Monetary values must retain paise exactly. FLOAT is approximate and
+        # also allowed older schemas to obscure the intended two-decimal
+        # contract, so normalize every persisted money column to DECIMAL.
+        for table_name, column_definitions in MONEY_COLUMNS.items():
+            if table_name not in existing_tables:
+                continue
+            existing_column_names = {column["name"] for column in inspector.get_columns(table_name)}
+            for column_name, column_definition in column_definitions.items():
+                if column_name in existing_column_names:
+                    connection.execute(text(
+                        f"ALTER TABLE {table_name} MODIFY COLUMN {column_name} {column_definition}"
+                    ))
 
         _ensure_unique_indexes(connection, inspector, existing_tables)

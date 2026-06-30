@@ -41,14 +41,14 @@
   margin-bottom: 9px;
   color: var(--dash-accent);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   text-transform: uppercase;
 }
 
 .dashboard-header h1 {
   color: var(--dash-text);
   font-size: clamp(30px, 3.3vw, 48px);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.04;
 }
 
@@ -56,7 +56,7 @@
   margin-top: 9px;
   color: var(--dash-muted);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .dashboard-filters {
@@ -81,7 +81,7 @@
 .dashboard-filters span {
   color: var(--dash-muted);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   text-transform: uppercase;
 }
 
@@ -94,7 +94,7 @@
   background: oklch(.13 0 0) !important;
   color: var(--dash-text) !important;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   outline: none;
 }
 
@@ -135,12 +135,12 @@
 
 .dashboard-card:hover {
   z-index: 2;
-  border-color: rgba(183, 245, 54, 0.34) !important;
+  border-color: rgba(255, 255, 255, 0.82) !important;
   box-shadow: none !important;
 }
 
 .metric-grid {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .metric-card {
@@ -185,7 +185,7 @@
   min-width: 0;
   color: var(--dash-muted);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.25;
 }
 
@@ -193,8 +193,8 @@
   align-self: end;
   margin-top: 24px;
   color: var(--dash-text);
-  font-size: clamp(24px, 2.2vw, 34px);
-  font-weight: 800;
+  font-size: clamp(22px, 1.65vw, 30px);
+  font-weight: 200;
   line-height: 1.02;
   overflow-wrap: anywhere;
 }
@@ -204,11 +204,16 @@
   white-space: normal;
 }
 
+.metric-card.metric-format-text .metric-value {
+  font-size: clamp(21px, 1.55vw, 28px);
+  font-weight: 400;
+}
+
 .metric-card small {
   margin-top: 10px;
   color: var(--dash-muted);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.35;
 }
 
@@ -267,7 +272,7 @@
 .dashboard-card-header h2 {
   color: var(--dash-text);
   font-size: clamp(17px, 1.35vw, 22px);
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.18;
 }
 
@@ -276,7 +281,7 @@
 .dashboard-card-header a {
   color: var(--dash-muted);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.4;
 }
 
@@ -770,15 +775,7 @@
 
 @media (max-width: 1260px) {
   .metric-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
-
-  .metric-card {
-    grid-column: span 2;
-  }
-
-  .metric-card:nth-child(-n + 2) {
-    grid-column: span 3;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .chart-grid,
@@ -811,12 +808,7 @@
   }
 
   .metric-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .metric-card,
-  .metric-card:nth-child(-n + 2) {
-    grid-column: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .dashboard-health-score-cluster,
@@ -839,6 +831,10 @@
   .chart-legend {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .metric-grid {
+    grid-template-columns: 1fr;
   }
 
   .chart-card,
