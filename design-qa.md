@@ -1,104 +1,33 @@
-# Friends Redesign Design QA
+# AI Insights new-system UI — design QA
 
-## Evidence
+- Source visual truth: old AI Insights visual language established in `ai-insights-v2-final.png` and the user-approved dark neon interface.
+- Implementation target: `http://127.0.0.1:5173/ai-insights`
+- Viewport/state: desktop, authenticated, current-period and May 2026 filter states.
+- Full-view comparison evidence: blocked; the in-app browser returned the redesigned DOM successfully but timed out repeatedly while capturing the final screenshot.
+- Focused-region comparison evidence: blocked for the same capture issue.
 
-- Source visual truth: conversation attachment, Comment 1 additional reference image
-- Implementation capture: `design-qa-friends-desktop.png`
-- Narrow-layout capture: `design-qa-friends-mobile.png`
-- Desktop viewport: 1432 x 872; reference proportions were normalized to the app's main content region because the live app retains its navigation shell
-- State: populated friend directory with a selected friend and linked transactions
+## Verified without screenshot comparison
 
-## Full-View Comparison
-
-- The page keeps the reference hierarchy: title, two summary cards, and a two-column directory/detail workspace.
-- The directory and detail panels use the reference's thin borders, restrained surfaces, and compact spacing while expanding naturally with their content.
-- The system's black, gray, and lime palette replaces the reference palette as requested.
-- The live navigation shell remains unchanged.
-
-## Focused Regions
-
-- Directory: count and outlined add action share one header row; add/search inputs align; the active friend has a lime border; rows include amount, metadata, and chevron. Filtering keeps each result at its fixed row height.
-- Friend detail: UPI ID, copy action, member date, total balance, and hide action follow the reference grouping.
-- Transactions: section heading, linked count, fixed header, and signed amounts match the reference structure. The wrapper expands to show every transaction.
-
-## Fidelity Surfaces
-
-- Typography: existing application font stack retained; heading and metadata scale match the reference hierarchy.
-- Spacing: panel padding, row heights, column proportions, and dividers were tuned against the supplied image.
-- Colors: existing system tokens and lime accent used throughout; no screenshot colors were copied.
-- Image assets: not applicable; the reference uses interface icons only. Lucide icons provide the matching search, copy, calendar, visibility, and chevron symbols.
-- Copy/content: reference labels are preserved where they map to existing product behavior; values remain live application data.
+- The new response contract is fully represented: five insight groups, ranked recommendations, score components, period metrics, trend, provider, and generated timestamp.
+- Old hard-coded period advice and fake fallback values were removed.
+- Month/year controls and refresh remain wired to `/ai/insights`.
+- Empty, loading, and error states are present.
+- Frontend lint and production build pass.
+- All four Feature 3 backend tests pass.
 
 ## Findings
 
-- P0: none.
-- P1: none.
-- P2: none.
-- P3: the live friend names, counts, balances, and transaction rows differ from the static reference by design.
-- P3: the narrow layout stacks both panels and uses horizontal table scrolling to preserve all transaction columns.
+- [P2] Final visual comparison unavailable
+  - Location: in-app browser capture.
+  - Evidence: DOM inspection completed, but both viewport screenshot attempts timed out after the backend refresh.
+  - Impact: exact visual spacing and fold behavior could not be signed off from captured pixels.
+  - Fix: reopen/reconnect the in-app browser and repeat the screenshot comparison.
 
-## Verification
+## Patches made
 
-- Desktop: no page-level horizontal overflow; directory and transaction wrappers expand fully and use normal page scrolling.
-- Narrow layout: single-column stacking with no page-level horizontal overflow.
-- Interactions: search filtering, friend selection, add friend, copy UPI ID, and hide friend remain connected.
-- Console errors: none during browser verification.
-- `npm run build`: passed.
-- `npm run lint`: passed.
+- Rebuilt the AI Insights page around the current Feature 3 API contract.
+- Restored the old black/lime card language with a redesigned hierarchy.
+- Added responsive desktop/tablet/mobile layouts.
+- Added real score breakdown and period snapshot sections.
 
-Final result: passed.
-
----
-
-# Friends Expanded Lists QA
-
-## Evidence
-
-- Source visual truth: conversation attachment, Friends annotation Comment 1
-- Implementation evidence: in-app browser at `http://localhost:5173/friends`
-- State: 13 friends displayed, selected friend with 7 linked transactions, and a single-result search test
-
-## Verification
-
-- Friend list: 13 rows, 84px per row, 1,212px rendered height, no internal vertical scrolling.
-- Transaction list: all 7 rows displayed; wrapper height matches its content with no internal vertical scrolling.
-- Search: filtering to `MANAV` displays one 84px row and an 84px list; the card does not stretch.
-- Page scrolling: functional with the scrollbar visually hidden.
-- Global scrollbar width: `none`.
-- P0/P1/P2/P3: none.
-
-Final result: passed.
-
----
-
-# Dashboard Health Ring QA
-
-## Evidence
-
-- Source visual truth: conversation attachment, dashboard annotation Comment 1
-- Implementation evidence: in-app browser capture at `http://localhost:5173/dashboard`
-- State: June 2026 dashboard with a financial health score of 25
-
-## Focused Comparison
-
-- The score and denominator now form one centered label group inside the ring.
-- Both labels share the ring's horizontal center and remain fully inside the inner circle.
-- The existing progress arc, health color, card layout, navigation, and animations are unchanged.
-
-## Findings
-
-- P0: none.
-- P1: none.
-- P2: none.
-- P3: none.
-
-## Verification
-
-- Ring: 148 x 148 px.
-- Inner label region: 120 x 120 px and centered on the ring.
-- Score and denominator horizontal centers match the ring center.
-- Page-level horizontal overflow: none.
-- `npm run build`: passed.
-- `npm run lint`: passed.
-
-Final result: passed.
+final result: blocked

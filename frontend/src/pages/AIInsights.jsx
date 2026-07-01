@@ -1,264 +1,115 @@
-import { useEffect, useState } from 'react';
-import AppSelect from '../components/AppSelect';
-import Navigation from '../components/Navigation';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { PolarAngleAxis, RadialBar, RadialBarChart, ResponsiveContainer } from 'recharts';
+import {
+  Activity, ArrowRight, CalendarDays, CreditCard, Lightbulb,
+  PiggyBank, ReceiptText, RefreshCw, ShieldCheck, ShoppingBag, Sparkles,
+  Store, Target, TrendingUp,
+} from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import Navigation from '../components/Navigation';
+import AppSelect from '../components/AppSelect';
 import api, { getAuthHeaders } from '../utils/api';
-import '../styles/FinancialHealth.css';
+import './AIInsights.css';
 
-const monthOptions = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-].map((label, index) => ({ label, value: index + 1 }));
-
+const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const monthOptions = monthNames.map((label, index) => ({ value: index + 1, label }));
 const currentDate = new Date();
-const currentYear = currentDate.getFullYear();
-const yearOptions = Array.from({ length: 7 }, (_, index) => currentYear - 5 + index);
+const money = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const formatMoney = (value) => money.format(Number(value || 0));
 
-const statusClass = (label = '') => label.toLowerCase().replaceAll(' ', '-');
-const moneyFormatter = new Intl.NumberFormat('en-IN', {
-  style: 'currency',
-  currency: 'INR',
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
+const insightGroups = [
+  { key: 'spending_insights', label: 'Spending', eyebrow: 'Where your money went', Icon: ShoppingBag, tone: 'blue' },
+  { key: 'savings_insights', label: 'Savings', eyebrow: 'What you kept aside', Icon: PiggyBank, tone: 'green' },
+  { key: 'merchant_insights', label: 'Merchants', eyebrow: 'Who you paid most', Icon: Store, tone: 'amber' },
+  { key: 'subscription_insights', label: 'Subscriptions', eyebrow: 'Your recurring costs', Icon: CreditCard, tone: 'purple' },
+  { key: 'health_insights', label: 'Financial health', eyebrow: 'What shaped your score', Icon: ShieldCheck, tone: 'teal' },
+];
+const actionIcons = [PiggyBank, CreditCard, ReceiptText, TrendingUp];
 
-const formatMoney = (value) => moneyFormatter.format(Number(value || 0));
-const formatPercent = (value) => (
-  value === null || value === undefined ? 'N/A' : `${Number(value).toFixed(1)}%`
-);
+function InsightCard({ group, items }) {
+  const { Icon } = group;
+  return <article className={`insight-feed-card tone-${group.tone}`}>
+    <header><span className="insight-icon"><Icon /></span><div><small>{group.eyebrow}</small><h3>{group.label}</h3></div></header>
+    {items.length ? <ul>{items.slice(0, 4).map((item, index) => <li key={`${group.key}-${index}`}>{item}</li>)}</ul> : <p className="insight-empty">No {group.label.toLowerCase()} insight was found for this period.</p>}
+  </article>;
+}
 
-const AIInsights = () => {
+export default function AIInsights() {
   const { token } = useAuth();
-  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(currentYear);
-  const [score, setScore] = useState(null);
-  const [summary, setSummary] = useState(null);
-  const [snapshot, setSnapshot] = useState(null);
-  const [generatedInsights, setGeneratedInsights] = useState([]);
-  const [healthSignals, setHealthSignals] = useState([]);
+  const [month, setMonth] = useState(currentDate.getMonth() + 1);
+  const [year, setYear] = useState(currentDate.getFullYear());
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const yearOptions = useMemo(() => Array.from({ length: 8 }, (_, index) => currentDate.getFullYear() - 5 + index).map(value => ({ value, label: String(value) })), []);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadAIInsights = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const headers = getAuthHeaders(token);
-        const params = {
-          month: selectedMonth,
-          year: selectedYear,
-        };
-        const [scoreResponse, summaryResponse, snapshotResponse, signalsResponse, insightsResponse] = await Promise.all([
-          api.get('/financial-health/score', { headers, params }),
-          api.get('/dashboard/summary', { headers, params }),
-          api.get('/dashboard/snapshot', { headers, params }),
-          api.get('/dashboard/insights', { headers, params }),
-          api.get('/ai/insights', { headers, params }),
-        ]);
-        if (!cancelled) {
-          setScore(scoreResponse.data);
-          setSummary(summaryResponse.data);
-          setSnapshot(snapshotResponse.data);
-          setHealthSignals(signalsResponse.data?.insights || []);
-          setGeneratedInsights(insightsResponse.data?.insights || []);
-        }
-      } catch (err) {
-        console.error(err);
-        if (!cancelled) {
-          setError('Unable to load AI insights and financial health data.');
-          setScore(null);
-          setSummary(null);
-          setSnapshot(null);
-          setGeneratedInsights([]);
-          setHealthSignals([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    if (token) {
-      loadAIInsights();
+  const load = useCallback(async () => {
+    if (!token) return;
+    setLoading(true);
+    setError('');
+    try {
+      const response = await api.get('/ai/insights', { headers: getAuthHeaders(token), params: { month, year } });
+      setData(response.data);
+    } catch (requestError) {
+      console.error(requestError);
+      setError('We could not prepare insights for this period.');
+    } finally {
+      setLoading(false);
     }
+  }, [token, month, year]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [token, selectedMonth, selectedYear]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { load(); }, [load]);
 
-  return (
-    <div>
-      <Navigation />
-      <main className="health-page">
-        <div className="page-heading">
-          <div>
-            <p className="eyebrow">Financial intelligence</p>
-            <h1>AI Insights</h1>
-            <p>Your health score, financial snapshot, and generated spending insights in one view.</p>
-          </div>
-          <div className="health-actions">
-            <label>
-              Month
-              <AppSelect
-                value={selectedMonth}
-                onChange={(nextValue) => setSelectedMonth(Number(nextValue))}
-                ariaLabel="AI Insights month"
-                options={monthOptions}
-              />
-            </label>
-            <label>
-              Year
-              <AppSelect
-                value={selectedYear}
-                onChange={(nextValue) => setSelectedYear(Number(nextValue))}
-                ariaLabel="AI Insights year"
-                options={yearOptions.map((year) => ({ value: year, label: String(year) }))}
-              />
-            </label>
+  const context = data?.context;
+  const metrics = context?.core_metrics;
+  const components = context?.health_score?.components;
+  const score = Number(data?.health_score || 0);
+  const scoreChart = [{ value: score, fill: '#9bf000' }];
+  const recommendations = data?.recommendations || [];
+
+  return <><Navigation /><main className="insights-page-v3">
+    <header className="insights-header">
+      <div className="insights-title"><span><Sparkles /> AI Insights Engine</span><h1>Your money, explained clearly.</h1></div>
+      <div className="insights-controls" aria-label="AI Insights period filters">
+        <label><span>Month</span><AppSelect ariaLabel="Select AI Insights month" value={month} onChange={value => setMonth(Number(value))} options={monthOptions} /></label>
+        <label><span>Year</span><AppSelect ariaLabel="Select AI Insights year" value={year} onChange={value => setYear(Number(value))} options={yearOptions} /></label>
+        <button type="button" onClick={load} disabled={loading}><RefreshCw className={loading ? 'spin' : ''} /> Refresh</button>
+      </div>
+    </header>
+
+    {loading ? <div className="insights-loading" aria-label="Preparing AI insights"><span /><span /><span /></div> : error ? <section className="insights-state is-error"><Activity /><h2>Insights are unavailable</h2><p>{error}</p><button type="button" onClick={load}>Try again</button></section> : !data ? <section className="insights-state"><Sparkles /><h2>No insights yet</h2><p>Upload a statement to start your financial analysis.</p></section> : <div className="insights-layout">
+      <section className="insights-hero">
+        <div className="score-column" tabIndex="0" aria-label="Financial health score. Hover or focus to view score details.">
+          <small>Financial health</small>
+          <div className="score-ring"><ResponsiveContainer width="100%" height="100%"><RadialBarChart innerRadius="78%" outerRadius="100%" data={scoreChart} startAngle={90} endAngle={-270}><PolarAngleAxis type="number" domain={[0, 100]} tick={false} /><RadialBar dataKey="value" background={{ fill: 'rgba(255,255,255,.10)' }} cornerRadius={10} /></RadialBarChart></ResponsiveContainer><div><strong>{score}</strong><span>/100</span></div></div>
+          <em>{data.status}</em>
+          <div className="score-hover-detail" aria-hidden="true">
+            <header><span>Score detail</span><strong>What shaped your score</strong></header>
+            {[['Savings', components?.savings_score], ['Subscriptions', components?.subscription_score], ['Stability', components?.spending_stability_score], ['Balance', components?.financial_balance_score]].map(([label, value]) => <div className="score-hover-row" key={label}><span><small>{label}</small><strong>{value ?? 0}/100</strong></span><div><i style={{ width: `${Math.max(0, Math.min(100, value || 0))}%` }} /></div></div>)}
           </div>
         </div>
+        <div className="summary-column">
+          <small>AI summary · {monthNames[month - 1]} {year}</small>
+          <h2>Your financial health for {monthNames[month - 1]} {year} is {data.status}.</h2>
+          <div className="priority-card"><span><Target /></span><div><small>Top priority</small><strong>{data.top_priority}</strong></div><ArrowRight /></div>
+        </div>
+      </section>
 
-        {error && <div className="surface-message error">{error}</div>}
+      <section className="insights-section insight-feed-section">
+        <div className="section-heading"><div><h2>Your insight feed</h2></div><p>Five focused views of the selected period.</p></div>
+        <div className="insight-feed-grid">{insightGroups.map(group => <InsightCard key={group.key} group={group} items={data[group.key] || []} />)}</div>
+      </section>
 
-        {loading ? (
-          <div className="empty-state">Preparing AI insights...</div>
-        ) : !score ? (
-          <div className="empty-state">Add income and expense transactions to calculate your financial health score.</div>
-        ) : (
-          <div className="health-layout">
-            <section className={`health-score-card ${statusClass(score.status_label)}`}>
-              <span>Overall score</span>
-              <strong>{score.overall_score}</strong>
-              <p>{score.status_label}</p>
-              <small>Calculated {new Date(score.calculated_at).toLocaleString()}</small>
-            </section>
+      <section className="insights-section action-section">
+        <div className="section-heading"><div><h2>Recommended priorities</h2></div><p>Ranked by what can help most right now.</p></div>
+        {recommendations.length ? <div className="recommendation-grid">{recommendations.slice(0, 4).map((item, index) => { const Icon = actionIcons[index] || Target; return <article key={`${item.priority}-${item.title}`}><header><span className="rank">0{index + 1}</span><span className="action-icon"><Icon /></span><span className="focus">{item.focus}</span></header><h3>{item.title}</h3><p>{item.reason}</p><footer><span>{item.action}</span><ArrowRight /></footer></article>; })}</div> : <div className="recommendation-empty"><Lightbulb /><span>No action is needed for this period.</span></div>}
+      </section>
 
-            <section className="health-breakdown-panel">
-              <div className="section-heading">
-                <h2>Score Breakdown</h2>
-                <p>Each component is scored out of 100 and combined into the final score.</p>
-              </div>
-              <div className="health-breakdown-list">
-                {score.breakdown.map((item) => (
-                  <article className="health-breakdown-row" key={item.label}>
-                    <div>
-                      <strong>{item.label}</strong>
-                      <span>{item.description}</span>
-                    </div>
-                    <div className="health-bar-wrap">
-                      <div className="health-bar">
-                        <div style={{ width: `${item.score}%` }} />
-                      </div>
-                      <span className={`health-status ${statusClass(item.status)}`}>{item.status}</span>
-                      <strong>{item.score}</strong>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
+      <section className="insights-bottom-grid">
+        <article className="period-snapshot"><header><div><span>Monthly overview</span><h2>{context?.period_label}</h2></div><CalendarDays /></header><dl><div><dt>Available funds</dt><dd>{formatMoney(metrics?.available_funds)}</dd></div><div><dt>Saved or invested</dt><dd>{formatMoney(metrics?.total_savings)}</dd></div><div><dt>Recurring costs</dt><dd>{formatMoney(context?.subscriptions?.monthly_total)}</dd></div><div><dt>Transactions</dt><dd>{context?.transaction_count || 0}</dd></div></dl></article>
+      </section>
 
-            <section className="health-tips-panel">
-              <h2>Improvement Tips</h2>
-              <div className="health-tips-list">
-                {score.improvement_tips.map((tip) => (
-                  <div className="health-tip" key={tip}>{tip}</div>
-                ))}
-              </div>
-            </section>
-
-            <section className="health-insights-panel">
-              <div className="section-heading">
-                <h2>Monthly Financial Snapshot</h2>
-                <p>Key figures for the selected month.</p>
-              </div>
-
-              <div className="health-snapshot-grid">
-                <article>
-                  <span>Income</span>
-                  <strong>{formatMoney(summary?.total_income)}</strong>
-                </article>
-                <article>
-                  <span>Opening Balance</span>
-                  <strong>{formatMoney(summary?.opening_balance)}</strong>
-                </article>
-                <article>
-                  <span>Available Funds</span>
-                  <strong>{formatMoney(summary?.available_funds)}</strong>
-                </article>
-                <article>
-                  <span>Expenses</span>
-                  <strong>{formatMoney(summary?.total_expenses)}</strong>
-                </article>
-                <article>
-                  <span>Savings Rate</span>
-                  <strong>{formatPercent(summary?.savings_rate)}</strong>
-                </article>
-                <article>
-                  <span>Projected Spending</span>
-                  <strong>{formatMoney(snapshot?.projected_month_end_spending)}</strong>
-                </article>
-                <article>
-                  <span>Projected Savings</span>
-                  <strong>{formatMoney(snapshot?.projected_month_end_savings)}</strong>
-                </article>
-                <article>
-                  <span>Top Signal</span>
-                  <strong>{snapshot?.top_signal || summary?.top_category || 'No signal'}</strong>
-                </article>
-              </div>
-
-              <div className="insight-section-heading">
-                <div>
-                  <h2>Generated AI Insights</h2>
-                  <p>Personalized observations generated from your transaction data.</p>
-                </div>
-                <span>{generatedInsights.length} insights</span>
-              </div>
-              <div className="health-insights-list generated-insights-list">
-                {generatedInsights.length === 0 ? (
-                  <div className="empty-state">Add transactions to generate AI insights.</div>
-                ) : generatedInsights.map((insight, index) => (
-                  <article className="health-insight-card" key={insight.id || `${insight.insight_type}-${index}`}>
-                    <span className="health-insight-index">{index + 1}</span>
-                    <div>
-                      <h3>{insight.insight_type?.replaceAll('_', ' ') || 'Insight'}</h3>
-                      <p>{insight.insight_text}</p>
-                    </div>
-                  </article>
-                ))}
-              </div>
-
-              <div className="insight-section-heading">
-                <div>
-                  <h2>Health Signals</h2>
-                  <p>Score-linked signals calculated from your current financial patterns.</p>
-                </div>
-                <span>{healthSignals.length} signals</span>
-              </div>
-              <div className="health-insights-list">
-                {healthSignals.length === 0 ? (
-                  <div className="empty-state">Add transactions to calculate health signals.</div>
-                ) : healthSignals.map((insight, index) => (
-                  <article className="health-insight-card" key={`${insight.title}-${index}`}>
-                    <span className="health-insight-index">{index + 1}</span>
-                    <div>
-                      <h3>{insight.title || 'Health signal'}</h3>
-                      <p>{insight.message}</p>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-          </div>
-        )}
-      </main>
-    </div>
-  );
-};
-
-export default AIInsights;
+    </div>}
+  </main></>;
+}

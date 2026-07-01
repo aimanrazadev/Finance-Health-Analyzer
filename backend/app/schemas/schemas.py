@@ -634,4 +634,98 @@ class AiInsightsResponse(BaseModel):
     year: int
     insights: List[AiInsightResponse]
 
+
+class AICoreMetrics(BaseModel):
+    opening_balance: float
+    total_income: float
+    total_expenses: float
+    total_savings: float
+    lifestyle_expenses: float
+    available_funds: float
+    savings_rate: Optional[float] = None
+    actual_closing_balance: float
+    expected_closing_balance: float
+    balance_difference: float
+    balance_mismatch: bool
+
+
+class AIHealthComponents(BaseModel):
+    savings_score: int
+    subscription_score: int
+    spending_stability_score: int
+    financial_balance_score: int
+
+
+class AIHealthContext(BaseModel):
+    overall_score: int
+    status: str
+    components: AIHealthComponents
+
+
+class AICategoryContext(BaseModel):
+    name: str
+    total: float
+    percentage: float
+
+
+class AIMerchantContext(BaseModel):
+    name: str
+    total: float
+    transaction_count: int
+
+
+class AISubscriptionContext(BaseModel):
+    count: int
+    monthly_total: float
+    share_of_income: Optional[float] = None
+
+
+class AITrendContext(BaseModel):
+    income_change_percentage: Optional[float] = None
+    expense_change_percentage: Optional[float] = None
+    savings_change_percentage: Optional[float] = None
+
+
+class AIFinancialContext(BaseModel):
+    period_label: str
+    month: int
+    year: int
+    transaction_count: int
+    core_metrics: AICoreMetrics
+    health_score: AIHealthContext
+    top_categories: List[AICategoryContext] = []
+    top_merchants: List[AIMerchantContext] = []
+    subscriptions: AISubscriptionContext
+    trends: AITrendContext
+
+
+class AIRecommendationItem(BaseModel):
+    priority: int
+    title: str
+    reason: str
+    action: str
+    focus: str
+
+
+class AIInsightsContent(BaseModel):
+    summary: str
+    spending_insights: List[str] = []
+    savings_insights: List[str] = []
+    merchant_insights: List[str] = []
+    subscription_insights: List[str] = []
+    health_insights: List[str] = []
+    recommendations: List[AIRecommendationItem]
+
+
+class AIInsightsEngineResponse(AIInsightsContent):
+    month: int
+    year: int
+    provider: str
+    generated_at: datetime
+    context: AIFinancialContext
+    health_score: int
+    status: str
+    top_priority: str
+    health_trend: str
+
 # ==================== End Schemas ====================
