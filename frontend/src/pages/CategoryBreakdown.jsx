@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import {
   Bar,
   BarChart,
@@ -16,6 +17,7 @@ import Navigation from '../components/Navigation';
 import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
 import { getCategoryChartColor } from '../utils/categoryDisplay';
+import { getPeriodSelection, savePeriodSelection } from '../utils/periodSession';
 import './CategoryBreakdown.css';
 
 const now = new Date();
@@ -57,8 +59,10 @@ const formatCompactMoney = (value) => compactMoneyFormatter.format(Number(value 
 const parsePeriod = (searchParams) => {
   const monthParam = searchParams.get('month');
   const yearParam = searchParams.get('year');
-  const month = monthParam === null ? now.getMonth() + 1 : Number(monthParam);
-  const year = yearParam === null ? now.getFullYear() : Number(yearParam);
+  const savedPeriod = getPeriodSelection();
+  const month = monthParam === null ? savedPeriod.month : Number(monthParam);
+  const year = yearParam === null ? savedPeriod.year : Number(yearParam);
+  if (month >= 1 && month <= 12 && Number.isFinite(year)) savePeriodSelection(month, year);
   return {
     month: Number.isFinite(month) ? month : now.getMonth() + 1,
     year: Number.isFinite(year) ? year : now.getFullYear(),
@@ -119,16 +123,17 @@ const CategoryBreakdown = () => {
   }));
 
   return (
-    <div>
+    <>
       <Navigation />
       <main className="category-breakdown-page">
         <header className="category-breakdown-header">
           <div>
             <p className="eyebrow">Category merchant analysis</p>
             <h1>Spending by Category</h1>
-            <p>Top vendors and merchants inside each category for {periodLabel}.</p>
           </div>
-          <Link className="category-breakdown-back" to="/dashboard">Dashboard</Link>
+          <Link className="category-breakdown-back" to="/dashboard" aria-label="Back to dashboard" title="Back to dashboard">
+            <ArrowLeft aria-hidden="true" />
+          </Link>
         </header>
 
         {error && <div className="surface-message error">{error}</div>}
@@ -150,9 +155,9 @@ const CategoryBreakdown = () => {
                       nameKey="name"
                       innerRadius="66%"
                       outerRadius="88%"
-                      paddingAngle={2}
-                      stroke="oklch(.16 0 0)"
-                      strokeWidth={4}
+                      paddingAngle={0}
+                      stroke="none"
+                      strokeWidth={0}
                       isAnimationActive={false}
                     >
                       {categoryChartData.map((entry) => (
@@ -212,8 +217,7 @@ const CategoryBreakdown = () => {
                   {category.merchants.length === 0 ? (
                     <div className="chart-empty-state small">No merchants found in this category.</div>
                   ) : (
-                    <>
-                      <div className="merchant-chart-frame">
+                    <div className="merchant-chart-frame" style={{ '--category-glow': categoryColor }}>
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart
                             data={category.merchants.map((merchant) => ({
@@ -229,18 +233,17 @@ const CategoryBreakdown = () => {
                           >
                             <defs>
                               <linearGradient id={`barGradient-${category.category_id || index}`} x1="0" x2="0" y1="0" y2="1">
-                                <stop offset="0%" stopColor="#ffffff" stopOpacity={0.55} />
-                                <stop offset="12%" stopColor={categoryColor} stopOpacity={1} />
+                                <stop offset="0%" stopColor={categoryColor} stopOpacity={1} />
+                                <stop offset="12%" stopColor={categoryColor} stopOpacity={0.92} />
                                 <stop offset="100%" stopColor={categoryColor} stopOpacity={0.55} />
                               </linearGradient>
                             </defs>
                             <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
                             <XAxis
                               dataKey="shortMerchant"
-                              tick={{ fill: 'oklch(.76 0 0)', fontSize: 11 }}
-                              axisLine={{ stroke: 'rgba(255,255,255,0.18)' }}
+                              tick={false}
+                              axisLine={false}
                               tickLine={false}
-                              interval={0}
                             />
                             <YAxis
                               tick={{ fill: 'oklch(.76 0 0)', fontSize: 11 }}
@@ -270,17 +273,7 @@ const CategoryBreakdown = () => {
                             </Bar>
                           </BarChart>
                         </ResponsiveContainer>
-                      </div>
-                      <div className="merchant-detail-list">
-                        {category.merchants.map((merchant) => (
-                          <div className="merchant-detail-row" key={`${category.category_name}-${merchant.merchant_name}`}>
-                            <span>{merchant.merchant_name}</span>
-                            <em>{merchant.transaction_count} txn{merchant.transaction_count === 1 ? '' : 's'}</em>
-                            <strong>{formatMoney(merchant.total_spent)}</strong>
-                          </div>
-                        ))}
-                      </div>
-                    </>
+                    </div>
                   )}
                 </div>
               </article>
@@ -288,7 +281,7 @@ const CategoryBreakdown = () => {
           })}
         </section>
       </main>
-    </div>
+    </>
   );
 };
 

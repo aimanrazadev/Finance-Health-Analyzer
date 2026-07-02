@@ -10,7 +10,6 @@ Do not describe the user as rich, poor, safe, or unsafe.
 Do not provide investment, tax, or legal advice.
 Give practical budgeting and spending guidance only.
 Use short sentences and common, everyday words.
-Recommendations must directly relate to an insight and name a clear action.
 Return valid JSON only, with no markdown fences or commentary."""
 
 
@@ -24,13 +23,13 @@ def build_insights_prompt(
         "merchant_insights": ["string"],
         "subscription_insights": ["string"],
         "health_insights": ["string"],
-        "recommendations": [
-            {"priority": 1, "title": "string", "reason": "string", "action": "string", "focus": "string"}
-        ],
     }
     return (
         f"{SYSTEM_RULES}\n\n"
-        "Explain the supplied analytics in simple language. Return 2-4 concise items per insight group and 3-5 ranked recommendations. "
+        "Explain the supplied analytics in simple language. Return 2-4 concise items per insight group. "
+        "The summary must be 2-3 useful sentences and no more than 70 words. First state the financial health status naturally. "
+        "Then explain the most important reason using one exact supplied figure. "
+        "Do not include the numeric health score in the summary, do not put the status in brackets, and do not use vague finance slogans. "
         "Keep all supplied numbers exact. Return this exact JSON shape:\n"
         f"{json.dumps(response_shape, ensure_ascii=True)}\n\n"
         "SUPPLIED DATA:\n"

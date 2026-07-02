@@ -234,6 +234,11 @@
   color: #b7f536 !important;
 }
 
+.upload-bottom-link.active::before {
+  background: transparent;
+  box-shadow: none;
+}
+
 .upload-bottom-link.active .nav-lucide-icon {
   filter: drop-shadow(0 0 10px rgba(183, 245, 54, 0.58));
 }

@@ -20,10 +20,10 @@ class Feature3Tests(unittest.TestCase):
     def test_context_and_prompt(self):
         c=build_financial_context(self.db,self.user.id,5,2026);self.assertEqual(c.core_metrics.total_income,50000);self.assertIn('Do not invent or recalculate',build_insights_prompt(c))
     def test_fallback_groups(self):
-        x=build_fallback_content(build_financial_context(self.db,self.user.id,5,2026));self.assertTrue(x.spending_insights and x.savings_insights and x.health_insights and x.recommendations)
+        x=build_fallback_content(build_financial_context(self.db,self.user.id,5,2026));self.assertTrue(x.spending_insights and x.savings_insights and x.health_insights)
     def test_bad_json(self):self.assertIsNone(validate_llm_content('bad'))
     @patch('app.services.feature3_insights_service.InsightsLLMService.generate',return_value=(None,'deterministic'))
     def test_response(self,_):
-        x=build_ai_insights_engine_response(self.db,self.user.id,5,2026);self.assertEqual(x.provider,'deterministic');self.assertEqual(x.health_score,x.context.health_score.overall_score);self.assertTrue(x.top_priority)
+        x=build_ai_insights_engine_response(self.db,self.user.id,5,2026);self.assertEqual(x.provider,'deterministic');self.assertEqual(x.health_score,x.context.health_score.overall_score)
 
 if __name__=='__main__':unittest.main()

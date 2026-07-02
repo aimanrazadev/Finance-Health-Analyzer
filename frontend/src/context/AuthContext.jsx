@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import AuthStateContext from './AuthStateContext';
 import api, { getAuthHeaders } from '../utils/api';
+import { clearPeriodSelection } from '../utils/periodSession';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -66,6 +67,7 @@ export const AuthProvider = ({ children }) => {
       setToken(access_token);
       setUser(userData);
       setError(null);
+      clearPeriodSelection();
 
       return { success: true, user: userData };
     } catch (err) {
@@ -110,6 +112,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    clearPeriodSelection();
     setToken(null);
     setUser(null);
     setError(null);

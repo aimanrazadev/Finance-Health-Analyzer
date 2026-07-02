@@ -1,33 +1,44 @@
-# AI Insights new-system UI — design QA
+**Comparison Target**
 
-- Source visual truth: old AI Insights visual language established in `ai-insights-v2-final.png` and the user-approved dark neon interface.
-- Implementation target: `http://127.0.0.1:5173/ai-insights`
-- Viewport/state: desktop, authenticated, current-period and May 2026 filter states.
-- Full-view comparison evidence: blocked; the in-app browser returned the redesigned DOM successfully but timed out repeatedly while capturing the final screenshot.
-- Focused-region comparison evidence: blocked for the same capture issue.
+- Source visual truth: Browser annotation screenshot supplied in the current conversation for `/dashboard/category-analytics`.
+- Implementation screenshot: In-app Browser capture of `http://localhost:5173/dashboard/category-analytics` from 2026-07-03.
+- Viewport: 1186 × 698 desktop.
+- State: February 2026 category analytics, loaded state, no tooltip pinned.
 
-## Verified without screenshot comparison
+**Full-view Comparison Evidence**
 
-- The new response contract is fully represented: five insight groups, ranked recommendations, score components, period metrics, trend, provider, and generated timestamp.
-- Old hard-coded period advice and fake fallback values were removed.
-- Month/year controls and refresh remain wired to `/ai/insights`.
-- Empty, loading, and error states are present.
-- Frontend lint and production build pass.
-- All four Feature 3 backend tests pass.
+- The former shared section surface is now transparent, borderless, shadowless, and unpadded.
+- Seven category charts render as seven independent two-column cards with a consistent 24px grid gap.
+- Card styling resolves to the Dashboard design tokens: 1px border, 14px radius, Dashboard gradient background, 24px padding, and no shadow.
+- All seven chart frames remain rendered and interactive; the redundant merchant detail lists are absent.
 
-## Findings
+**Focused Region Comparison Evidence**
 
-- [P2] Final visual comparison unavailable
-  - Location: in-app browser capture.
-  - Evidence: DOM inspection completed, but both viewport screenshot attempts timed out after the backend refresh.
-  - Impact: exact visual spacing and fold behavior could not be signed off from captured pixels.
-  - Fix: reopen/reconnect the in-app browser and repeat the screenshot comparison.
+- No extra focused crop was required because the card boundaries, spacing, headers, and chart frames are clearly readable in the full viewport capture.
 
-## Patches made
+**Findings**
 
-- Rebuilt the AI Insights page around the current Feature 3 API contract.
-- Restored the old black/lime card language with a redesigned hierarchy.
-- Added responsive desktop/tablet/mobile layouts.
-- Added real score breakdown and period snapshot sections.
+- No actionable P0, P1, or P2 visual mismatches remain within the requested scope.
+- Typography, colors, copy, and chart rendering remain unchanged from the existing application.
+- No image assets are involved in this scoped change.
 
-final result: blocked
+**Patches Made**
+
+- Removed merchant detail-list markup beneath every bar chart.
+- Removed all obsolete merchant-list CSS.
+- Neutralized the category grid container's inherited card surface.
+- Matched each chart card to the Dashboard border, radius, background, padding, shadow, and spacing tokens.
+
+**Implementation Checklist**
+
+- [x] Outer visual wrapper removed.
+- [x] Merchant lists removed.
+- [x] Dashboard card styling applied.
+- [x] Chart data, tooltip, animation setting, and interactions preserved.
+- [x] ESLint passed.
+
+**Follow-up Polish**
+
+- None required for this scope.
+
+final result: passed

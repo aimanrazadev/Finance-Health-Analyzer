@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ChevronRight, Eye, Plus, Upload } from 'lucide-react';
 import AppSelect from '../components/AppSelect';
 import Navigation from '../components/Navigation';
 import { useAuth } from '../hooks/useAuth';
@@ -29,6 +30,8 @@ const UploadStatement = () => {
   const [deletingUploadId, setDeletingUploadId] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [historyFilter, setHistoryFilter] = useState('all');
+  const [visibleHistoryCount, setVisibleHistoryCount] = useState(4);
 
   const headers = getAuthHeaders(token);
 
@@ -229,6 +232,11 @@ const UploadStatement = () => {
     needs_review: 'Needs Review',
   }[method] || 'Needs Review');
   const getCategoriesForType = () => categories;
+  const newestUploadTime = history.reduce((latest, item) => Math.max(latest, new Date(item.upload_date).getTime()), 0);
+  const filteredHistory = historyFilter === 'recent'
+    ? history.filter((item) => newestUploadTime - new Date(item.upload_date).getTime() <= 30 * 24 * 60 * 60 * 1000)
+    : history;
+  const visibleHistory = filteredHistory.slice(0, visibleHistoryCount);
 
   return (
     <div>
@@ -236,9 +244,8 @@ const UploadStatement = () => {
       <main className="upload-page">
         <div className="page-heading">
           <div>
-            <p className="eyebrow">Statement import</p>
             <h1>Upload PDF statement</h1>
-            <p>Review extracted transactions and categories before adding them to your account.</p>
+            <p>Upload, view and manage your PDF statements</p>
           </div>
         </div>
 
@@ -246,10 +253,11 @@ const UploadStatement = () => {
         {success && <div className="surface-message success">{success}</div>}
 
         <section className="upload-layout">
-          <div className="upload-panel">
+          <div className="upload-left-column">
+            <div className="upload-panel">
             <div className="upload-panel-heading">
               <div>
-                <h2>Select statement</h2>
+                <h2>Upload new statement</h2>
                 <span>PDF only, up to 10 MB</span>
               </div>
               <span className="pdf-format-badge">PDF</span>
@@ -257,14 +265,8 @@ const UploadStatement = () => {
             <form onSubmit={handlePreview} className="upload-form">
               <label className="statement-dropzone">
                 <input type="file" accept="application/pdf,.pdf" onChange={handleFileChange} />
-                <span className="dropzone-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M12 3v12" />
-                    <path d="m7 8 5-5 5 5" />
-                    <path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
-                  </svg>
-                </span>
-                <span className="dropzone-title">Drop your PDF statement here</span>
+                <span className="dropzone-icon" aria-hidden="true"><Upload /></span>
+                <span className="dropzone-title">Drag &amp; drop your PDF here</span>
                 <span className="dropzone-or">or</span>
                 <span className="dropzone-button">Choose file</span>
                 <span className="dropzone-file-name">
@@ -272,22 +274,57 @@ const UploadStatement = () => {
                 </span>
               </label>
               <button type="submit" className="primary-button preview-transactions-button" disabled={loadingPreview || !selectedFile}>
+                <Eye aria-hidden="true" />
                 {loadingPreview ? 'Reading PDF...' : 'Preview transactions'}
               </button>
             </form>
+            </div>
+
+            <div className="upload-panel import-profile-panel">
+              <div className="profile-panel-heading">
+                <div><h2>Import profiles</h2><p>Access and manage your saved import profiles</p></div>
+                <button type="button" onClick={() => setSuccess('Import profiles are created automatically after a confirmed statement upload.')}><Plus /> Create new profile</button>
+              </div>
+              {importProfiles.length === 0 ? (
+                <div className="empty-state">PDF bank profiles appear after a confirmed upload.</div>
+              ) : (
+                <div className="history-list">
+                  {importProfiles.slice(0, 4).map((profile) => (
+                    <div className="history-item" key={profile.id}>
+                      <div className="profile-copy">
+                        <strong>{profile.profile_name}</strong>
+                        <span>{profile.bank_name || 'Bank format'}</span>
+                        <i><span style={{ width: `${Math.round((profile.confidence_score || 0) * 100)}%` }} /></i>
+                        <em>{Math.round((profile.confidence_score || 0) * 100)}% confidence</em>
+                      </div>
+                      <div className="profile-usage"><b>{profile.usage_count}</b><span>uses</span></div>
+                      <ChevronRight className="profile-chevron" aria-hidden="true" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="upload-panel">
-            <h2>Upload history</h2>
-            {history.length === 0 ? (
+          <div className="upload-panel upload-history-panel">
+            <div className="history-panel-heading">
+              <div><h2>Upload history</h2><p>View and manage your previously uploaded statements</p></div>
+              <AppSelect
+                ariaLabel="Filter uploaded statements"
+                value={historyFilter}
+                onChange={setHistoryFilter}
+                options={[{ value: 'all', label: 'All statements' }, { value: 'recent', label: 'Last 30 days' }]}
+              />
+            </div>
+            {filteredHistory.length === 0 ? (
               <div className="empty-state">No statement uploads yet.</div>
             ) : (
               <div className="history-list">
-                {history.map((item) => (
+                {visibleHistory.map((item) => (
                   <div className="history-item" key={item.id}>
                     <div>
                       <strong>{item.filename}</strong>
-                      <span>PDF / {new Date(item.upload_date).toLocaleString()}</span>
+                      <span>{new Date(item.upload_date).toLocaleString()} {item.file_size ? ` · ${(item.file_size / 1024 / 1024).toFixed(1)} MB` : ''}</span>
                     </div>
                     <div className="history-actions">
                       <b>{item.successful_rows || item.transaction_count} saved</b>
@@ -302,28 +339,13 @@ const UploadStatement = () => {
                     </div>
                   </div>
                 ))}
+                {visibleHistoryCount < filteredHistory.length && (
+                  <button type="button" className="load-more-history" onClick={() => setVisibleHistoryCount((count) => count + 4)}>Load more statements</button>
+                )}
               </div>
             )}
           </div>
 
-          <div className="upload-panel import-profile-panel">
-            <h2>Import profiles</h2>
-            {importProfiles.length === 0 ? (
-              <div className="empty-state">PDF bank profiles appear after a confirmed upload.</div>
-            ) : (
-              <div className="history-list">
-                {importProfiles.slice(0, 4).map((profile) => (
-                  <div className="history-item" key={profile.id}>
-                    <div>
-                      <strong>{profile.profile_name}</strong>
-                      <span>{profile.bank_name || 'Bank format'} / {Math.round((profile.confidence_score || 0) * 100)}% confidence</span>
-                    </div>
-                    <b>{profile.usage_count} uses</b>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </section>
 
         {preview && (

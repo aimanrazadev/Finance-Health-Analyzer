@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Area,
@@ -18,6 +18,7 @@ import { AnimateNumber } from '../components/ui/AnimatedBlurNumber';
 import { useAuth } from '../hooks/useAuth';
 import api, { getAuthHeaders } from '../utils/api';
 import { getCategoryChartColor } from '../utils/categoryDisplay';
+import { getPeriodSelection, savePeriodSelection } from '../utils/periodSession';
 import './Dashboard.css';
 
 const now = new Date();
@@ -52,10 +53,11 @@ const emptyTrendSummary = {
   income_change_percentage: null,
   expense_change_percentage: null,
   savings_change_percentage: null,
+  current_balance_change_percentage: null,
+  savings_rate_change_points: null,
 };
 const emptyMerchants = { top_merchants: [], most_frequent_merchants: [], highest_spending_merchants: [] };
 const emptySubscriptions = { subscription_count: 0, total_monthly_cost: 0, total_annual_cost: 0, subscriptions: [] };
-const emptyInsights = { insights: [] };
 const emptyHealth = { overall_score: 0, status_label: 'Needs Improvement', breakdown: [], improvement_tips: [] };
 
 const monthOptions = [
@@ -109,14 +111,6 @@ const getMonthLabel = (month) => (
   Number(month) === 0 ? 'All' : monthOptions.find((item) => item.value === Number(month))?.label || 'This month'
 );
 
-const getPreviousMonthLabel = (month, year) => {
-  if (Number(month) === 0) return String(Number(year) - 1);
-  return new Date(year, Number(month) - 2, 1).toLocaleString('en-US', {
-    month: 'short',
-    year: 'numeric',
-  });
-};
-
 const MetricIcon = ({ name }) => {
   const common = {
     viewBox: '0 0 24 24',
@@ -139,7 +133,7 @@ const MetricIcon = ({ name }) => {
   return icons[name] || icons.balance;
 };
 
-const DashboardMetric = ({ icon, label, numericValue, helper, tone, loading, format = 'currency' }) => (
+const DashboardMetric = ({ icon, label, numericValue, helper, delta, deltaLabel, deltaDirection = 'higher-is-better', deltaUnit = 'percent', tone, loading, format = 'currency' }) => (
   <article className={`dashboard-card metric-card metric-format-${format} dashboard-card-selected tone-${tone}`}>
     <div className="metric-card-top">
       <span className="metric-icon"><MetricIcon name={icon} /></span>
@@ -162,7 +156,16 @@ const DashboardMetric = ({ icon, label, numericValue, helper, tone, loading, for
         />
       )}
     </strong>
-    <small>{helper}</small>
+    {delta !== null && delta !== undefined ? (
+      <small className={`metric-delta ${(
+        deltaDirection === 'lower-is-better' ? Number(delta) <= 0 : Number(delta) >= 0
+      ) ? 'is-favorable' : 'is-unfavorable'}`}>
+        <span className="metric-delta-value" aria-hidden="true">
+          {Number(delta) >= 0 ? '↑' : '↓'} {Math.abs(Number(delta)).toFixed(1)}{deltaUnit === 'points' ? ' pp' : '%'}
+        </span>
+        <span className="metric-delta-context">vs {deltaLabel}</span>
+      </small>
+    ) : helper ? <small>{helper}</small> : null}
   </article>
 );
 
@@ -195,38 +198,6 @@ const DonutTooltip = ({ active, payload }) => {
   );
 };
 
-const makeRecommendations = (summary, subscriptionAnalytics, health) => {
-  const recommendations = [];
-  const savingsRate = summary.savings_rate === null || summary.savings_rate === undefined
-    ? null
-    : Number(summary.savings_rate);
-  const expenses = Number(summary.total_expenses || 0);
-  const income = Number(summary.total_income || 0);
-  const subscriptions = subscriptionAnalytics.subscriptions || [];
-
-  const weakestSignal = [...(health.breakdown || [])].sort((a, b) => a.score - b.score)[0];
-  if (weakestSignal?.description) recommendations.push(weakestSignal.description);
-  if (savingsRate !== null && savingsRate < 20) recommendations.push('Lift your savings rate toward 20% by trimming flexible spending first.');
-  if (income > 0 && expenses / income > 0.75) recommendations.push('Expenses are taking most of income this period; review the highest category before adding new commitments.');
-  if (subscriptions.length > 0) recommendations.push(`Audit ${subscriptions.length} recurring payment${subscriptions.length === 1 ? '' : 's'} and cancel anything you no longer use.`);
-  if (summary.top_category) recommendations.push(`${summary.top_category} is the biggest spending area, so small limits there will move the score fastest.`);
-
-  return recommendations.length
-    ? recommendations.slice(0, 4)
-    : ['Add more transactions to unlock sharper financial health recommendations.'];
-};
-
-const normalizeInsights = (dashboardInsights, summary, subscriptionAnalytics, health) => {
-  const apiInsights = dashboardInsights.insights || [];
-  if (apiInsights.length > 0) return apiInsights;
-
-  return makeRecommendations(summary, subscriptionAnalytics, health).map((message, index) => ({
-    title: index === 0 ? 'Health score' : 'Recommendation',
-    message,
-    severity: index === 0 ? 'warning' : 'neutral',
-  }));
-};
-
 const Dashboard = () => {
   const { token, user } = useAuth();
   const [summary, setSummary] = useState(emptySummary);
@@ -234,11 +205,11 @@ const Dashboard = () => {
   const [trendSummary, setTrendSummary] = useState(emptyTrendSummary);
   const [merchantAnalytics, setMerchantAnalytics] = useState(emptyMerchants);
   const [subscriptionAnalytics, setSubscriptionAnalytics] = useState(emptySubscriptions);
-  const [dashboardInsights, setDashboardInsights] = useState(emptyInsights);
   const [health, setHealth] = useState(emptyHealth);
   const [recentTransactions, setRecentTransactions] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState(emptySummary.month);
-  const [selectedYear, setSelectedYear] = useState(emptySummary.year);
+  const initialPeriod = getPeriodSelection();
+  const [selectedMonth, setSelectedMonth] = useState(initialPeriod.month);
+  const [selectedYear, setSelectedYear] = useState(initialPeriod.year);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -262,7 +233,6 @@ const Dashboard = () => {
         setTrendSummary(data.trends || emptyTrendSummary);
         setMerchantAnalytics(data.merchants || emptyMerchants);
         setSubscriptionAnalytics(data.subscriptions || emptySubscriptions);
-        setDashboardInsights(data.insights || emptyInsights);
         setHealth(data.health || emptyHealth);
         setRecentTransactions(data.recent_transactions || []);
       } catch (err) {
@@ -271,7 +241,6 @@ const Dashboard = () => {
           setSummary(emptySummary);
           setCharts(emptyCharts);
           setTrendSummary(emptyTrendSummary);
-          setDashboardInsights(emptyInsights);
           setHealth(emptyHealth);
           setRecentTransactions([]);
           setError('Unable to load dashboard data.');
@@ -308,59 +277,55 @@ const Dashboard = () => {
   const previousMonthLabel = isAllTime
     ? 'earlier data'
     : selectedMonth === 0
-      ? `${numericSelectedYear - 1}`
-      : getPreviousMonthLabel(selectedMonth, numericSelectedYear);
+      ? 'last year'
+      : 'last month';
   const categoryBreakdownPath = `/dashboard/category-analytics?${new URLSearchParams(
     isAllTime ? { month: '-1' } : { month: String(selectedMonth), year: String(numericSelectedYear) },
   ).toString()}`;
   const isCurrentMonthSelected = !isAllTime
     && numericSelectedYear === now.getFullYear()
     && selectedMonth === now.getMonth() + 1;
-  const recommendations = useMemo(
-    () => normalizeInsights(dashboardInsights, summary, subscriptionAnalytics, health),
-    [dashboardInsights, summary, subscriptionAnalytics, health],
-  );
-
   const metrics = [
     {
       icon: 'balance',
       label: 'Opening Balance',
       numericValue: summary.opening_balance,
-      helper: 'Balance at the start of the selected period',
+      helper: null,
       tone: Number(summary.opening_balance || 0) >= 0 ? 'positive' : 'negative',
     },
     {
       icon: 'income',
       label: 'Total Income',
       numericValue: summary.total_income,
-      helper: formatDelta(trendSummary.income_change_percentage, previousMonthLabel, 'This period'),
+      helper: 'No previous-period income comparison',
+      delta: trendSummary.income_change_percentage,
+      deltaLabel: previousMonthLabel,
       tone: 'positive',
     },
     {
       icon: 'expenses',
       label: 'Total Expenses',
       numericValue: summary.total_expenses,
-      helper: formatDelta(trendSummary.expense_change_percentage, previousMonthLabel, 'This period'),
+      helper: 'No previous-period expense comparison',
+      delta: trendSummary.expense_change_percentage,
+      deltaLabel: previousMonthLabel,
+      deltaDirection: 'lower-is-better',
       tone: 'negative',
     },
     {
       icon: 'balance',
       label: 'Closing Balance',
       numericValue: summary.closing_balance,
-      helper: summary.pdf_closing_balance !== null && summary.pdf_closing_balance !== undefined
-        ? summary.balance_mismatch
-          ? `PDF balance kept · expected ${formatMoney(summary.expected_closing_balance)}`
-          : 'Final balance from the selected PDF statement'
-        : 'Latest transaction balance for the selected period',
+      helper: null,
       tone: Number(summary.closing_balance || 0) >= 0 ? 'positive' : 'negative',
     },
     {
       icon: 'savings',
       label: 'Total Savings',
       numericValue: summary.total_savings,
-      helper: summary.savings_rate === null || summary.savings_rate === undefined
-        ? 'Savings rate unavailable without available funds'
-        : `${percentFormatter.format(Number(summary.savings_rate))}% savings rate`,
+      helper: 'No previous-period savings comparison',
+      delta: trendSummary.savings_change_percentage,
+      deltaLabel: previousMonthLabel,
       tone: 'positive',
     },
     {
@@ -368,6 +333,9 @@ const Dashboard = () => {
       label: 'Savings Rate',
       numericValue: summary.savings_rate,
       helper: 'Intentional savings as a share of available funds',
+      delta: trendSummary.savings_rate_change_points,
+      deltaLabel: previousMonthLabel,
+      deltaUnit: 'percent',
       tone: summary.savings_rate === null || summary.savings_rate === undefined
         ? 'neutral'
         : Number(summary.savings_rate) >= 10 ? 'positive' : 'negative',
@@ -377,7 +345,9 @@ const Dashboard = () => {
       icon: 'balance',
       label: 'Current Balance',
       numericValue: isCurrentMonthSelected ? summary.current_balance : null,
-      helper: isCurrentMonthSelected ? 'Latest real account balance available' : 'Available only for the current month',
+      helper: null,
+      delta: isCurrentMonthSelected ? trendSummary.current_balance_change_percentage : null,
+      deltaLabel: previousMonthLabel,
       tone: isCurrentMonthSelected
         ? Number(summary.current_balance || 0) >= 0 ? 'positive' : 'negative'
         : 'neutral',
@@ -386,9 +356,7 @@ const Dashboard = () => {
       icon: 'category',
       label: 'Highest Spending Category',
       numericValue: summary.top_category || 'No spending yet',
-      helper: summary.category_breakdown?.[0]
-        ? `${formatMoney(summary.category_breakdown[0].total)} spent in this category`
-        : 'No expense category available for this period',
+      helper: null,
       tone: 'neutral',
       format: 'text',
     },
@@ -406,25 +374,33 @@ const Dashboard = () => {
           </div>
           <div className="dashboard-filters" aria-label="Dashboard filters">
             <label>
-              <span>Year</span>
-              <AppSelect
-                ariaLabel="Select dashboard year"
-                value={selectedYear}
-                onChange={(nextValue) => setSelectedYear(nextValue === ALL_YEARS ? ALL_YEARS : Number(nextValue))}
-                options={[
-                  { value: ALL_YEARS, label: 'All' },
-                  ...yearOptions.map((year) => ({ value: year, label: String(year) })),
-                ]}
-              />
-            </label>
-            <label>
               <span>Month</span>
               <AppSelect
                 ariaLabel="Select dashboard month"
                 value={isAllTime ? 0 : selectedMonth}
                 disabled={isAllTime}
-                onChange={(nextValue) => setSelectedMonth(Number(nextValue))}
+                onChange={(nextValue) => {
+                  const nextMonth = Number(nextValue);
+                  setSelectedMonth(nextMonth);
+                  savePeriodSelection(nextMonth, selectedYear);
+                }}
                 options={monthOptions}
+              />
+            </label>
+            <label>
+              <span>Year</span>
+              <AppSelect
+                ariaLabel="Select dashboard year"
+                value={selectedYear}
+                onChange={(nextValue) => {
+                  const nextYear = nextValue === ALL_YEARS ? ALL_YEARS : Number(nextValue);
+                  setSelectedYear(nextYear);
+                  if (nextYear !== ALL_YEARS) savePeriodSelection(selectedMonth, nextYear);
+                }}
+                options={[
+                  { value: ALL_YEARS, label: 'All' },
+                  ...yearOptions.map((year) => ({ value: year, label: String(year) })),
+                ]}
               />
             </label>
           </div>
@@ -484,7 +460,7 @@ const Dashboard = () => {
             )}
           </article>
 
-          <article className="dashboard-card chart-card category-chart-card">
+          <article className="dashboard-card chart-card category-chart-card has-route">
             <div className="dashboard-card-header">
               <div>
                 <h2>Spending by Category</h2>
@@ -505,9 +481,9 @@ const Dashboard = () => {
                         nameKey="name"
                         innerRadius="66%"
                         outerRadius="88%"
-                        paddingAngle={2}
-                        stroke="oklch(.16 0 0)"
-                        strokeWidth={4}
+                        paddingAngle={0}
+                        stroke="none"
+                        strokeWidth={0}
                         isAnimationActive={false}
                       >
                         {categoryBreakdown.map((entry, index) => (
@@ -542,10 +518,8 @@ const Dashboard = () => {
         </section>
 
         <section className="dashboard-grid dashboard-health-grid">
-          <Link
-            to="/ai-insights"
-            className="dashboard-card dashboard-health-card"
-            aria-label="Open AI Insights and financial health details"
+          <article
+            className="dashboard-card dashboard-health-card has-route"
             style={{ '--health-tone': healthToneColor, '--health-deg': `${healthRotation}deg` }}
           >
             <div className="dashboard-card-header">
@@ -553,7 +527,9 @@ const Dashboard = () => {
                 <h2>Financial Health Score</h2>
                 <p>Open AI Insights for the full score breakdown and financial signals</p>
               </div>
-              <span className="dashboard-health-pill">{boundedHealthScore < 70 ? 'Needs action' : 'On track'}</span>
+              <Link to="/ai-insights" className="dashboard-health-insights-link">
+                View Insights
+              </Link>
             </div>
             <div className="dashboard-health-content">
               <div className="dashboard-health-score-cluster">
@@ -571,26 +547,8 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
-
-              <div className="dashboard-signals-panel">
-                <div className="dashboard-signals-heading">
-                  <span>AI Insights</span>
-                  <small>{recommendations.length} signals</small>
-                </div>
-                <div className="dashboard-signal-list">
-                  {recommendations.map((item, index) => (
-                    <div className={`dashboard-signal-item severity-${item.severity || 'neutral'}`} key={`${item.title}-${item.message}-${index}`}>
-                      <span>{index + 1}</span>
-                      <div>
-                        <strong>{item.title}</strong>
-                        <p>{item.message}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
-          </Link>
+          </article>
         </section>
 
         <section className="dashboard-grid table-grid">
@@ -662,7 +620,7 @@ const Dashboard = () => {
             </div>
           </article>
 
-          <article className="dashboard-card table-card recent-transactions-card">
+          <article className="dashboard-card table-card recent-transactions-card has-route">
             <div className="dashboard-card-header">
               <div>
                 <h2>Recent Transactions</h2>

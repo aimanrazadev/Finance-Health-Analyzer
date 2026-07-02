@@ -22,6 +22,10 @@ const iconPaths = {
     <path key="categories-2" d="M9 9h6" />,
     <path key="categories-3" d="M9 15h6" />,
   ],
+  review: [
+    <path key="review-1" d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />,
+    <path key="review-2" d="m8 12 2.5 2.5L16 9" />,
+  ],
   friends: [
     <path key="friends-1" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />,
     <circle key="friends-2" cx="9" cy="7" r="4" />,
@@ -60,9 +64,10 @@ const LogoutIcon = () => (
 );
 
 const primaryLinks = [
-  { label: 'Dashboard', path: '/dashboard', icon: 'dashboard' },
+  { label: 'Dashboard', path: '/dashboard', icon: 'dashboard', end: true },
   { label: 'Transactions', path: '/transactions', icon: 'transactions' },
-  { label: 'Categories', path: '/categories', icon: 'categories' },
+  { label: 'Review', path: '/categories', icon: 'review' },
+  { label: 'Categories', path: '/dashboard/category-analytics', icon: 'categories' },
   { label: 'Friends', path: '/friends', icon: 'friends' },
   { label: 'AI Insights', path: '/ai-insights', icon: 'insights' },
 ];
@@ -89,7 +94,7 @@ const Navigation = () => {
       <nav className="sidebar-nav" aria-label="Main navigation">
         <span className="nav-section-label">Finance Health Analyzer</span>
         {primaryLinks.map((item) => (
-          <NavLink to={item.path} className="nav-link" key={item.path}>
+          <NavLink to={item.path} end={item.end} className="nav-link" key={item.path}>
             <span className="nav-icon" aria-hidden="true">
               <NavIcon name={item.icon} />
             </span>

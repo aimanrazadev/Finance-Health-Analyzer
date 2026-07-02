@@ -334,7 +334,12 @@ def build_dashboard_summary(
     income = transaction_total(db, user_id, "income", month, year, day)
     expenses = transaction_total(db, user_id, "expense", month, year, day)
     savings = savings_total(db, user_id, month, year, day)
-    opening_balance = monthly_opening_balance(db, user_id, month, year) if day is None and 1 <= month <= 12 else 0.0
+    opening_balance = (
+        monthly_opening_balance(db, user_id, month, year)
+        if day is None and 1 <= month <= 12
+        else monthly_opening_balance(db, user_id, 1, year) if day is None and month == 0
+        else 0.0
+    )
     lifestyle_expenses = round(max(expenses - savings, 0.0), 2)
     available_funds = round(opening_balance + income, 2)
     expected_closing_balance = round(available_funds - expenses, 2)
@@ -490,6 +495,10 @@ def build_period_trend_summary(
 
     current = _trend_point(db, user_id, month, year, "Current", current_day)
     previous = _trend_point(db, user_id, previous_month, previous_year, "Previous", previous_day)
+    current_summary = build_dashboard_summary(db, user_id, month, year, day)
+    previous_summary = build_dashboard_summary(db, user_id, previous_month, previous_year, previous_day)
+    current_rate = current_summary.savings_rate
+    previous_rate = previous_summary.savings_rate
     return MonthlyTrendResponse(
         year=year,
         trends=trends,
@@ -497,6 +506,11 @@ def build_period_trend_summary(
         expense_change_percentage=change_percentage(current.expenses, previous.expenses),
         savings_change_percentage=change_percentage(current.savings, previous.savings),
         investment_change_percentage=change_percentage(current.investments, previous.investments),
+        current_balance_change_percentage=change_percentage(current_summary.current_balance, previous_summary.closing_balance),
+        savings_rate_change_points=(
+            round(current_rate - previous_rate, 2)
+            if current_rate is not None and previous_rate is not None else None
+        ),
     )
 
 

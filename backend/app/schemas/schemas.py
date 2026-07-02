@@ -371,6 +371,8 @@ class MonthlyTrendResponse(BaseModel):
     expense_change_percentage: Optional[float] = None
     savings_change_percentage: Optional[float] = None
     investment_change_percentage: Optional[float] = None
+    current_balance_change_percentage: Optional[float] = None
+    savings_rate_change_points: Optional[float] = None
 
 
 class DashboardChartsResponse(BaseModel):
@@ -699,14 +701,6 @@ class AIFinancialContext(BaseModel):
     trends: AITrendContext
 
 
-class AIRecommendationItem(BaseModel):
-    priority: int
-    title: str
-    reason: str
-    action: str
-    focus: str
-
-
 class AIInsightsContent(BaseModel):
     summary: str
     spending_insights: List[str] = []
@@ -714,7 +708,6 @@ class AIInsightsContent(BaseModel):
     merchant_insights: List[str] = []
     subscription_insights: List[str] = []
     health_insights: List[str] = []
-    recommendations: List[AIRecommendationItem]
 
 
 class AIInsightsEngineResponse(AIInsightsContent):
@@ -725,7 +718,6 @@ class AIInsightsEngineResponse(AIInsightsContent):
     context: AIFinancialContext
     health_score: int
     status: str
-    top_priority: str
     health_trend: str
 
 # ==================== End Schemas ====================
