@@ -59,13 +59,6 @@ def parse_amount(value: Any) -> float | None:
     return float(text)
 
 
-def parse_date(value: Any) -> datetime:
-    if isinstance(value, datetime):
-        return value
-    parsed = datetime.strptime(str(value).strip(), "%d %b %Y")
-    return parsed
-
-
 def parse_date_flexible(value: Any) -> datetime:
     if isinstance(value, datetime):
         return value

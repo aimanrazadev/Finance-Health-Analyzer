@@ -52,7 +52,6 @@ def review_status_from_result(category_confidence: float, categorization_method:
 
 
 @router.post("", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
-@router.post("/", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def create_transaction(
     transaction_data: TransactionCreate,
     current_user: User = Depends(get_current_user),
@@ -119,7 +118,6 @@ def create_transaction(
 
 
 @router.get("", response_model=List[TransactionResponse])
-@router.get("/", response_model=List[TransactionResponse], include_in_schema=False)
 def get_transactions(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),

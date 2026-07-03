@@ -170,13 +170,6 @@
   white-space: nowrap;
 }
 
-.upload-hint {
-  margin-top: 14px;
-  color: var(--text-muted);
-  font-size: 13px;
-  line-height: 1.45;
-}
-
 .history-list {
   display: grid;
   gap: 10px;
@@ -284,18 +277,6 @@
   color: var(--text);
   font-size: 22px;
   font-weight: var(--font-thin);
-}
-
-.upload-errors {
-  display: grid;
-  gap: 6px;
-  margin-bottom: 14px;
-  padding: 12px;
-  border: 1px solid #fecdca;
-  border-radius: 6px;
-  background: rgba(255, 77, 94, 0.10);
-  color: var(--danger);
-  font-size: 13px;
 }
 
 .preview-table-wrapper {

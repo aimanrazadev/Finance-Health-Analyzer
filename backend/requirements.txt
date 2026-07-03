@@ -6,7 +6,6 @@ uvicorn[standard]
 # Database and ORM
 sqlalchemy
 pymysql  # MySQL driver; replace with mysqlclient if you prefer
-alembic
 
 # Validation / security
 pydantic
@@ -16,7 +15,6 @@ passlib[bcrypt]  # for password hashing
 
 # File uploads / static files
 python-multipart
-aiofiles
 
 # Data processing and ML
 scikit-learn
@@ -28,7 +26,6 @@ pdfplumber
 
 # Environment and external APIs
 python-dotenv
-openai  # optional: LLM integration (OpenAI)
 
 # Notes:
 # - Use `pymysql` as a pure-Python MySQL driver for ease of setup.

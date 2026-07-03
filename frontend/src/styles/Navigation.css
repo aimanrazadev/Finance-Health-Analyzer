@@ -152,53 +152,6 @@
   display: none;
 }
 
-.nav-plan-card {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 10px;
-  align-items: center;
-  min-height: 56px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 6px 8px;
-}
-
-.nav-avatar {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.20);
-  border-radius: 999px;
-  color: #ffffff;
-  font-size: 11px;
-}
-
-.nav-plan-card strong,
-.nav-plan-card small {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.nav-plan-card strong {
-  color: #f7f7f2;
-  font-size: 12px;
-  font-weight: 330;
-}
-
-.nav-plan-card small {
-  color: #b7f536;
-  font-size: 10px;
-}
-
-.nav-chevron {
-  color: #d9dfdc;
-  font-size: 14px;
-}
-
 .nav-user {
   display: grid;
   gap: 10px;

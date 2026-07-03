@@ -104,11 +104,6 @@ def predict_category_with_ml(db: Session, user_id: int, description: str) -> tup
     return str(model.classes_[best_index]), float(probabilities[best_index])
 
 
-def get_model_confidence(db: Session, user_id: int, description: str) -> float:
-    _category_name, confidence = predict_category_with_ml(db, user_id, description)
-    return confidence
-
-
 def retrain_after_correction(user_id: int) -> None:
     """Clear cached model so the next prediction trains from the latest labels."""
     _train_cached.cache_clear()

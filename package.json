@@ -1,5 +1,0 @@
-{
-  "devDependencies": {
-    "@babel/plugin-transform-react-jsx-source": "^7.29.7"
-  }
-}

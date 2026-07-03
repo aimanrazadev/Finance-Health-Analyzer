@@ -131,34 +131,6 @@ class ImportProfile(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
-class Merchant(Base):
-    """Canonical merchant directory built from extracted transaction merchants."""
-    __tablename__ = "merchants"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    canonical_name = Column(String(150), nullable=False)
-    normalized_name = Column(String(150), nullable=False, index=True)
-    aliases = Column(Text, nullable=True)
-    transaction_count = Column(Integer, default=0)
-    total_spent = Column(Numeric(14, 2), default=0.0)
-    last_seen_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-
-class AiInsight(Base):
-    """Stored AI-generated financial insight for a user."""
-    __tablename__ = "ai_insights"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    insight_text = Column(Text, nullable=False)
-    insight_type = Column(String(50), nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
-    is_read = Column(Boolean, default=False)
-
-
 class FinancialScore(Base):
     """Financial health score snapshots generated from transaction analytics."""
     __tablename__ = "financial_scores"

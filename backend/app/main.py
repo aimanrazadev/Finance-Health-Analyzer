@@ -66,9 +66,6 @@ def on_startup():
     seed_categories()
 
 
-seed_categories()
-
-
 @app.get("/")
 def home():
     return {

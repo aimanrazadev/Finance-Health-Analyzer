@@ -27,7 +27,6 @@ router = APIRouter(prefix="/friends", tags=["friends"])
 
 
 @router.post("", response_model=FriendCreateResponse, status_code=status.HTTP_201_CREATED)
-@router.post("/", response_model=FriendCreateResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def add_friend(
     payload: FriendCreate,
     current_user: User = Depends(get_current_user),
@@ -49,7 +48,6 @@ def add_friend(
 
 
 @router.get("", response_model=List[FriendResponse])
-@router.get("/", response_model=List[FriendResponse], include_in_schema=False)
 def list_friends(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),

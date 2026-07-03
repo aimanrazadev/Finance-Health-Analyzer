@@ -37,11 +37,6 @@ class TokenResponse(BaseModel):
     user: UserResponse
 
 
-class TokenData(BaseModel):
-    user_id: int
-    email: str
-
-
 class MessageResponse(BaseModel):
     message: str
 
@@ -71,34 +66,6 @@ class ImportProfileResponse(BaseModel):
     usage_count: int
     last_used_at: Optional[datetime]
     created_at: datetime
-
-
-class MerchantResponse(BaseModel):
-    id: int
-    user_id: int
-    canonical_name: str
-    normalized_name: str
-    aliases: List[str] = []
-    transaction_count: int = 0
-    total_spent: float = 0
-    last_seen_at: Optional[datetime] = None
-
-
-class MerchantRenameRequest(BaseModel):
-    canonical_name: str = Field(..., min_length=1, max_length=150)
-
-
-class MerchantMergeRequest(BaseModel):
-    source_merchant_id: int
-
-
-class MerchantDirectoryDetailResponse(BaseModel):
-    merchant: MerchantResponse
-    total_income: float = 0
-    total_expenses: float = 0
-    transaction_count: int = 0
-    average_amount: float = 0
-    transactions: List["TransactionResponse"] = []
 
 
 class FinancialSnapshotResponse(BaseModel):
@@ -287,11 +254,6 @@ class CategoryRetrainResponse(BaseModel):
 
 
 # ==================== Dashboard Analytics Schemas ====================
-
-class DashboardMetric(BaseModel):
-    label: str
-    value: float
-
 
 class CategoryBreakdownItem(BaseModel):
     category_id: Optional[int]
@@ -615,26 +577,6 @@ class UploadedFileResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
-
-# ==================== AI Insight Schemas ====================
-
-class AiInsightResponse(BaseModel):
-    id: int
-    user_id: int
-    insight_text: str
-    insight_type: str
-    created_at: datetime
-    is_read: bool
-
-    class Config:
-        from_attributes = True
-
-
-class AiInsightsResponse(BaseModel):
-    month: int
-    year: int
-    insights: List[AiInsightResponse]
 
 
 class AICoreMetrics(BaseModel):

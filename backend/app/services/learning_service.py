@@ -6,16 +6,6 @@ from app.models.models import CategoryCorrection, CategoryLearningRule, Transact
 from app.services.merchant_extractor_service import extract_merchant_name, normalize_merchant_name
 
 
-def get_user_learning_rules(db: Session, user_id: int) -> list[CategoryLearningRule]:
-    """Return merchant rules learned only from the current user."""
-    return (
-        db.query(CategoryLearningRule)
-        .filter(CategoryLearningRule.user_id == user_id)
-        .order_by(CategoryLearningRule.times_used.desc(), CategoryLearningRule.updated_at.desc())
-        .all()
-    )
-
-
 def increment_rule_usage(db: Session, rule: CategoryLearningRule) -> None:
     """Track learned-rule usage so the user can see what the app reused."""
     rule.times_used = (rule.times_used or 0) + 1

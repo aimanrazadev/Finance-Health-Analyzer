@@ -32,14 +32,12 @@ from app.services.transaction_type_service import normalize_transaction_type
 router = APIRouter(prefix="/categories", tags=["categories"])
 
 @router.get("", response_model=List[CategoryResponse])
-@router.get("/", response_model=List[CategoryResponse], include_in_schema=False)
 def get_categories(db: Session = Depends(get_db)):
     """Fetch user-facing categories in the product's preferred order."""
     return get_visible_categories(db)
 
 
 @router.post("", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED)
-@router.post("/", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def create_category(
     category_data: CategoryCreate,
     current_user: User = Depends(get_current_user),

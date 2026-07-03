@@ -21,7 +21,6 @@ router = APIRouter(tags=["statement upload"])
 
 
 @router.post("/uploads/preview", response_model=UploadPreviewResponse)
-@router.post("/upload/preview", response_model=UploadPreviewResponse, include_in_schema=False)
 async def preview_statement_upload(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
@@ -68,7 +67,6 @@ def _duplicate_exists(db: Session, user_id: int, row) -> bool:
 
 
 @router.post("/uploads/confirm", response_model=UploadConfirmResponse, status_code=status.HTTP_201_CREATED)
-@router.post("/upload/confirm", response_model=UploadConfirmResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 def confirm_statement_upload(
     upload_data: UploadConfirmRequest,
     current_user: User = Depends(get_current_user),
@@ -155,7 +153,6 @@ def confirm_statement_upload(
 
 
 @router.get("/uploads/history", response_model=List[UploadedFileResponse])
-@router.get("/upload/history", response_model=List[UploadedFileResponse], include_in_schema=False)
 def get_upload_history(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -169,7 +166,6 @@ def get_upload_history(
 
 
 @router.delete("/uploads/{uploaded_file_id}", status_code=status.HTTP_204_NO_CONTENT)
-@router.delete("/upload/{uploaded_file_id}", status_code=status.HTTP_204_NO_CONTENT, include_in_schema=False)
 def delete_uploaded_statement(
     uploaded_file_id: int,
     current_user: User = Depends(get_current_user),

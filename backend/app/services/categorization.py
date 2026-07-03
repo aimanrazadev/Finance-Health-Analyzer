@@ -70,16 +70,6 @@ def normalize_text(value: Optional[str]) -> str:
     return (value or "").strip().lower()
 
 
-def predict_category_name(description: str, merchant: Optional[str] = None) -> str:
-    searchable_text = f"{normalize_text(description)} {normalize_text(merchant)}"
-
-    for category_name, keywords in CATEGORY_KEYWORDS.items():
-        if any(keyword in searchable_text for keyword in keywords):
-            return category_name
-
-    return DEFAULT_CATEGORY_NAME
-
-
 def _keyword_prediction(description: str, merchant: Optional[str] = None) -> tuple[str, float]:
     searchable_text = f"{normalize_text(description)} {normalize_text(merchant)}"
     for category_name, keywords in CATEGORY_KEYWORDS.items():
@@ -208,18 +198,6 @@ def categorize_transaction(
 
 def get_category_by_name(db: Session, name: str) -> Optional[Category]:
     return db.query(Category).filter(Category.name == name).first()
-
-
-def get_predicted_category_id(
-    db: Session,
-    description: str,
-    merchant: Optional[str] = None,
-    user_id: Optional[int] = None,
-    amount: Optional[float] = None,
-    transaction_type: Optional[str] = None,
-) -> Optional[int]:
-    result = categorize_transaction(db, user_id, description, amount, transaction_type, merchant)
-    return result["category_id"] if isinstance(result["category_id"], int) else None
 
 
 def learn_user_category_preference(

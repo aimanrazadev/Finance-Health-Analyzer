@@ -69,8 +69,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/merchants" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/needs-review" element={<Navigate to="/categories" replace />} />
             <Route
               path="/friends"
               element={
@@ -87,10 +85,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/category-breakdown" element={<Navigate to="/dashboard/category-analytics" replace />} />
-            <Route path="/financial-health" element={<Navigate to="/ai-insights" replace />} />
-            <Route path="/insights" element={<Navigate to="/ai-insights" replace />} />
-
             {/* Redirect */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             </Routes>

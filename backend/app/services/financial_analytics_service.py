@@ -24,7 +24,6 @@ from app.services.analytics_service import (
     SUBSCRIPTION_CATEGORY_NAMES,
     build_dashboard_charts,
     build_dashboard_summary,
-    build_monthly_trends,
     build_period_trend_summary,
     period_bounds as month_bounds,
     previous_period,

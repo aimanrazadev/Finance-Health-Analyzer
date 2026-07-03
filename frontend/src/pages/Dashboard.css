@@ -707,10 +707,6 @@
   .dashboard-health-content {
     grid-template-columns: 1fr;
   }
-
-  .dashboard-signal-list {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 900px) {

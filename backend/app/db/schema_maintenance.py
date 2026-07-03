@@ -28,7 +28,6 @@ MONEY_COLUMNS = {
         "closing_balance": "DECIMAL(14,2) NULL",
     },
     "friends": {"total_amount": "DECIMAL(14,2) NULL DEFAULT 0.00"},
-    "merchants": {"total_spent": "DECIMAL(14,2) NULL DEFAULT 0.00"},
     "subscriptions": {"amount": "DECIMAL(14,2) NOT NULL DEFAULT 0.00"},
 }
 
