@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import declarative_base
 from dotenv import load_dotenv
@@ -7,23 +8,24 @@ from pathlib import Path
 
 load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "3306")
-DB_NAME = os.getenv("DB_NAME", "finance_analyzer")
+db_port = os.getenv("DB_PORT", "3306")
+if not db_port or db_port.lower() == "none":
+    db_port = "3306"
 
-if not DB_PORT or DB_PORT.lower() == "none":
-    DB_PORT = "3306"
-if DB_PASSWORD and DB_PASSWORD.lower() == "none":
-    DB_PASSWORD = ""
-
-DATABASE_URL = (
-    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}"
-    f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+DATABASE_URL = URL.create(
+    drivername="mysql+pymysql",
+    username=os.getenv("DB_USER", "root"),
+    password=os.getenv("DB_PASSWORD", ""),
+    host=os.getenv("DB_HOST", "localhost"),
+    port=int(db_port),
+    database=os.getenv("DB_NAME", "finance_analyzer"),
 )
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_recycle=280,
+)
 
 SessionLocal = sessionmaker(
     autocommit=False,

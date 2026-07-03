@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from app.database.database import SessionLocal
@@ -31,7 +33,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS: allow local frontend dev servers
+# CORS: allow local development plus the deployed frontend configured by Render.
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -40,6 +42,10 @@ origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
+frontend_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
+if frontend_url:
+    origins.append(frontend_url)
 
 app.add_middleware(
     CORSMiddleware,
