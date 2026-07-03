@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import AuthStateContext from './AuthStateContext';
-import api, { getAuthHeaders } from '../utils/api';
+import api, { getAuthHeaders } from '../services/api';
 import { clearPeriodSelection } from '../utils/periodSession';
 
 export const AuthProvider = ({ children }) => {

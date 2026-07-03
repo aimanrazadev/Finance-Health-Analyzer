@@ -141,3 +141,16 @@
 
 - The test suite was intentionally removed only after its final successful 29-test run, per the cleanup request.
 - The Product Design baseline contains one accepted Dashboard screenshot; further in-app Browser captures timed out and were rejected.
+
+## Structure migration
+
+The codebase was subsequently reorganized without changing business logic:
+
+- Backend API modules moved from `app/api` to responsibility-named modules in `app/routes`.
+- Database modules moved from `app/db` to `app/database`.
+- Parsing, analytics, AI, ML, and utility modules moved out of the generic service folder into their responsibility-based packages.
+- Frontend pages and their styles moved into feature-owned folders under `src/features`.
+- Shared frontend controls moved under `components/ui`; navigation and route protection moved under `components/layout`.
+- The API client moved from `utils/api.js` to `services/api.js`.
+- Global styles moved under `src/styles`.
+- Only module import paths and structural documentation were changed during this migration.

@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.models.models import CategoryCorrection, CategoryLearningRule, Transaction
-from app.services.merchant_extractor_service import extract_merchant_name, normalize_merchant_name
+from app.utils.merchant_extractor import extract_merchant_name, normalize_merchant_name
 
 
 def increment_rule_usage(db: Session, rule: CategoryLearningRule) -> None:

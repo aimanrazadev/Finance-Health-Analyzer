@@ -3,7 +3,7 @@ import unicodedata
 
 from rapidfuzz import fuzz
 
-from app.services.merchant_extractor_service import extract_transaction_merchant, normalize_description
+from app.utils.merchant_extractor import extract_transaction_merchant, normalize_description
 
 
 TRAILING_NOISE_WORDS = {

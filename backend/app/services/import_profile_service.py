@@ -7,7 +7,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.models.models import ImportProfile
-from app.services.transaction_cleaner_service import map_column_name
+from app.parsers.transaction_cleaner import map_column_name
 
 
 REQUIRED_FIELDS = {"date", "description"}

@@ -2,20 +2,20 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { UIProvider } from './context/UIContext';
-import ConfirmModal from './components/ConfirmModal';
-import ProtectedRoute from './components/ProtectedRoute';
-import ToastHost from './components/ToastHost';
-import './App.css';
+import ConfirmModal from './components/ui/ConfirmModal';
+import ProtectedRoute from './components/layout/ProtectedRoute';
+import ToastHost from './components/ui/ToastHost';
+import './styles/App.css';
 
-const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Transactions = lazy(() => import('./pages/Transactions'));
-const UploadStatement = lazy(() => import('./pages/UploadStatement'));
-const AIInsights = lazy(() => import('./pages/AIInsights'));
-const Categories = lazy(() => import('./pages/Categories'));
-const CategoryBreakdown = lazy(() => import('./pages/CategoryBreakdown'));
-const Friends = lazy(() => import('./pages/Friends'));
+const Login = lazy(() => import('./features/auth/Login'));
+const Register = lazy(() => import('./features/auth/Register'));
+const Dashboard = lazy(() => import('./features/dashboard/Dashboard'));
+const Transactions = lazy(() => import('./features/transactions/Transactions'));
+const UploadStatement = lazy(() => import('./features/upload/UploadStatement'));
+const AIInsights = lazy(() => import('./features/ai-insights/AIInsights'));
+const Categories = lazy(() => import('./features/categories/Categories'));
+const CategoryBreakdown = lazy(() => import('./features/categories/CategoryBreakdown'));
+const Friends = lazy(() => import('./features/friends/Friends'));
 
 function App() {
   return (

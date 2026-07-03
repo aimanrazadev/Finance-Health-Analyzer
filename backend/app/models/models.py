@@ -3,7 +3,7 @@
 from sqlalchemy import Boolean, Column, DateTime, Float, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.sql import func
 
-from app.db.database import Base
+from app.database.database import Base
 
 
 class User(Base):
