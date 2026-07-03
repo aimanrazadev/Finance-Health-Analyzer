@@ -60,6 +60,18 @@ const emptyMerchants = { top_merchants: [], most_frequent_merchants: [], highest
 const emptySubscriptions = { subscription_count: 0, total_monthly_cost: 0, total_annual_cost: 0, subscriptions: [] };
 const emptyHealth = { overall_score: 0, status_label: 'Needs Improvement', breakdown: [], improvement_tips: [] };
 
+const asObject = (value) => (
+  value && typeof value === 'object' && !Array.isArray(value) ? value : {}
+);
+const asArray = (value) => (Array.isArray(value) ? value : []);
+const asRecordArray = (value) => asArray(value).filter(
+  (item) => item && typeof item === 'object' && !Array.isArray(item),
+);
+const asNumber = (value) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
 const monthOptions = [
   { value: 0, label: 'All' },
   { value: 1, label: 'January' },
@@ -227,14 +239,46 @@ const Dashboard = () => {
         const response = await api.get('/dashboard', { headers, params });
 
         if (cancelled) return;
-        const data = response.data || {};
-        setSummary(data.summary || emptySummary);
-        setCharts(data.charts || emptyCharts);
-        setTrendSummary(data.trends || emptyTrendSummary);
-        setMerchantAnalytics(data.merchants || emptyMerchants);
-        setSubscriptionAnalytics(data.subscriptions || emptySubscriptions);
-        setHealth(data.health || emptyHealth);
-        setRecentTransactions(data.recent_transactions || []);
+        const data = asObject(response.data);
+        const summaryData = asObject(data.summary);
+        const chartsData = asObject(data.charts);
+        const trendData = asObject(data.trends);
+        const merchantData = asObject(data.merchants);
+        const subscriptionData = asObject(data.subscriptions);
+        const healthData = asObject(data.health);
+
+        setSummary({ ...emptySummary, ...summaryData });
+        setCharts({
+          ...emptyCharts,
+          ...chartsData,
+          category_breakdown: asRecordArray(chartsData.category_breakdown),
+          monthly_trends: asRecordArray(chartsData.monthly_trends),
+          top_merchants: asRecordArray(chartsData.top_merchants),
+        });
+        setTrendSummary({
+          ...emptyTrendSummary,
+          ...trendData,
+          trends: asRecordArray(trendData.trends),
+        });
+        setMerchantAnalytics({
+          ...emptyMerchants,
+          ...merchantData,
+          top_merchants: asRecordArray(merchantData.top_merchants),
+          most_frequent_merchants: asRecordArray(merchantData.most_frequent_merchants),
+          highest_spending_merchants: asRecordArray(merchantData.highest_spending_merchants),
+        });
+        setSubscriptionAnalytics({
+          ...emptySubscriptions,
+          ...subscriptionData,
+          subscriptions: asRecordArray(subscriptionData.subscriptions),
+        });
+        setHealth({
+          ...emptyHealth,
+          ...healthData,
+          breakdown: asRecordArray(healthData.breakdown),
+          improvement_tips: asArray(healthData.improvement_tips),
+        });
+        setRecentTransactions(asRecordArray(data.recent_transactions));
       } catch (err) {
         console.error(err);
         if (!cancelled) {
@@ -257,8 +301,20 @@ const Dashboard = () => {
     };
   }, [token, selectedMonth, selectedYear]);
 
-  const categoryBreakdown = charts.category_breakdown || [];
-  const trendData = charts.monthly_trends?.length ? charts.monthly_trends : (trendSummary.trends || []);
+  const categoryBreakdown = asRecordArray(charts.category_breakdown).map((item) => ({
+    ...item,
+    name: String(item.name || ''),
+    value: asNumber(item.value),
+  }));
+  const normalizeTrendData = (value) => asRecordArray(value).map((item) => ({
+    ...item,
+    month: String(item.month || ''),
+    income: asNumber(item.income),
+    expenses: asNumber(item.expenses),
+  }));
+  const monthlyTrends = normalizeTrendData(charts.monthly_trends);
+  const fallbackTrends = normalizeTrendData(trendSummary.trends);
+  const trendData = monthlyTrends.length ? monthlyTrends : fallbackTrends;
   const totalCategorySpend = categoryBreakdown.reduce((sum, item) => sum + Number(item.value || 0), 0);
   const hasCategoryData = categoryBreakdown.length > 0 && totalCategorySpend > 0;
   const hasTrendData = trendData.some((item) => Number(item.income || 0) || Number(item.expenses || 0));
@@ -426,7 +482,9 @@ const Dashboard = () => {
                 <span className="negative">Expenses</span>
               </div>
             </div>
-            {!hasTrendData ? (
+            {loading ? (
+              <div className="chart-empty-state">Loading monthly trends...</div>
+            ) : !hasTrendData ? (
               <div className="chart-empty-state">No monthly trend data yet.</div>
             ) : (
               <div className="line-chart-frame">
@@ -468,7 +526,9 @@ const Dashboard = () => {
               </div>
               <Link to={categoryBreakdownPath}>View</Link>
             </div>
-            {!hasCategoryData ? (
+            {loading ? (
+              <div className="chart-empty-state">Loading expense categories...</div>
+            ) : !hasCategoryData ? (
               <div className="chart-empty-state">No expense categories found for this period.</div>
             ) : (
               <div className="donut-layout">
