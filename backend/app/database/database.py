@@ -11,7 +11,7 @@ load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 raw_database_url = next(
     (
         os.getenv(variable_name, "").strip()
-        for variable_name in ("MYSQL_URL", "DATABASE_URL", "MYSQL_PUBLIC_URL")
+        for variable_name in ("DATABASE_URL", "MYSQL_URL", "MYSQL_PUBLIC_URL")
         if os.getenv(variable_name, "").strip()
     ),
     "",
