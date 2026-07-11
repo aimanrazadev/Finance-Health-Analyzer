@@ -4,10 +4,10 @@ from typing import List, Optional
 from sqlalchemy import or_
 from datetime import datetime
 
-from app.database.database import get_db
+from app.db.session import get_db
 from app.models.models import Category, Transaction, User
 from app.schemas.schemas import TransactionCategoryCorrectionRequest, TransactionCreate, TransactionResponse
-from app.routes.auth_routes import get_current_user
+from app.api.deps import get_current_user
 from app.services.categorization_service import (
     categorize_transaction,
     learn_user_category_preference,

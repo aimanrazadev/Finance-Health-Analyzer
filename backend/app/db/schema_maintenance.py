@@ -1,7 +1,7 @@
 from sqlalchemy import inspect, text
 from sqlalchemy.schema import CreateColumn
 
-from app.database.database import Base, engine
+from app.db.session import Base, engine
 
 
 UNIQUE_INDEXES = {

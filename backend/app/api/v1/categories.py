@@ -3,7 +3,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from typing import List
 
-from app.database.database import get_db
+from app.db.session import get_db
 from app.models.models import Category, CategoryCorrection, CategoryLearningRule, Transaction, User
 from app.schemas.schemas import (
     CategorizationRequest,
@@ -19,7 +19,7 @@ from app.schemas.schemas import (
     CategoryRetrainResponse,
     TransactionResponse,
 )
-from app.routes.auth_routes import get_current_user
+from app.api.deps import get_current_user
 from app.services.categorization_service import categorize_transaction as smart_categorize_transaction
 from app.services.category_service import create_category as create_category_service
 from app.services.category_service import get_visible_categories

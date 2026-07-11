@@ -2,17 +2,17 @@ import os
 
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-from app.database.database import SessionLocal
-from app.routes.auth_routes import router as auth_router
-from app.routes.ai_insight_routes import router as ai_insights_router
-from app.routes.category_routes import router as categories_router
-from app.routes.dashboard_routes import router as dashboard_router
-from app.routes.financial_health_routes import router as financial_health_router
-from app.routes.friend_routes import router as friends_router
-from app.routes.import_profile_routes import router as import_profiles_router
-from app.routes.transaction_routes import router as transactions_router
-from app.routes.upload_routes import router as uploads_router
-from app.database.schema_maintenance import ensure_database_schema
+from app.db.session import SessionLocal
+from app.api.v1.auth import router as auth_router
+from app.api.v1.ai_insights import router as ai_insights_router
+from app.api.v1.categories import router as categories_router
+from app.api.v1.dashboard import router as dashboard_router
+from app.api.v1.financial_health import router as financial_health_router
+from app.api.v1.friends import router as friends_router
+from app.api.v1.import_profiles import router as import_profiles_router
+from app.api.v1.transactions import router as transactions_router
+from app.api.v1.uploads import router as uploads_router
+from app.db.schema_maintenance import ensure_database_schema
 from app.models import models
 from app.services.category_service import seed_default_categories
 from app.utils.transaction_merchant_cleanup import clean_existing_transaction_merchants

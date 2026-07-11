@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.routes.auth_routes import get_current_user
-from app.database.database import get_db
+from app.api.deps import get_current_user
+from app.db.session import get_db
 from app.models.models import ImportProfile, User
 from app.schemas.schemas import ImportProfileCreate, ImportProfileResponse
 from app.services.import_profile_service import serialize_import_profile

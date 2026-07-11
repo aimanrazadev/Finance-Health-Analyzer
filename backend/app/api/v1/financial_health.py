@@ -3,8 +3,8 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.routes.auth_routes import get_current_user
-from app.database.database import get_db
+from app.api.deps import get_current_user
+from app.db.session import get_db
 from app.models.models import User
 from app.schemas.schemas import FinancialHealthScoreResponse
 from app.analytics.financial_health import calculate_financial_health_score
