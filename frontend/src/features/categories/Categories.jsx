@@ -14,6 +14,7 @@ import AppSelect from '../../components/ui/AppSelect';
 import Navigation from '../../components/layout/Navigation';
 import useAuth from '../auth/useAuth';
 import api, { getAuthHeaders } from '../../shared/services/apiClient';
+import { getPeriodDateRange } from '../../utils/periodSession';
 import './NeedsReview.css';
 
 const PAGE_SIZE = 10;
@@ -59,6 +60,11 @@ const Categories = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [learningAccuracy, setLearningAccuracy] = useState(null);
+  const uncategorizedOnly = searchParams.get('uncategorized') === '1';
+  const periodDateRange = useMemo(() => getPeriodDateRange(
+    searchParams.get('month'),
+    searchParams.get('year'),
+  ), [searchParams]);
 
   const headers = useMemo(() => getAuthHeaders(token), [token]);
 
@@ -91,7 +97,15 @@ const Categories = () => {
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredTransactions = useMemo(() => transactions.filter((transaction) => {
+    if (uncategorizedOnly && transaction.category_id != null) return false;
+
+    const transactionDate = String(transaction.date || '').slice(0, 10);
+    const startDate = periodDateRange.startDate?.slice(0, 10);
+    const endDate = periodDateRange.endDate?.slice(0, 10);
+    if (startDate && transactionDate < startDate) return false;
+    if (endDate && transactionDate > endDate) return false;
     if (!normalizedSearch) return true;
+
     return [
       transaction.description,
       merchantName(transaction),
@@ -101,7 +115,7 @@ const Categories = () => {
     ]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(normalizedSearch));
-  }), [normalizedSearch, transactions]);
+  }), [normalizedSearch, periodDateRange, transactions, uncategorizedOnly]);
 
   const sortedTransactions = useMemo(() => [...filteredTransactions].sort((left, right) => {
     if (sortBy === 'oldest') return new Date(left.date) - new Date(right.date);

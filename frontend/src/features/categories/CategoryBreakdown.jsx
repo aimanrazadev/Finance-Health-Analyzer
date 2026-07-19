@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import {
   Bar,
@@ -70,12 +70,32 @@ const parsePeriod = (searchParams) => {
 };
 
 const CategoryBreakdown = () => {
+  const navigate = useNavigate();
   const { token } = useAuth();
   const [searchParams] = useSearchParams();
   const [{ month, year }] = useState(() => parsePeriod(searchParams));
   const [breakdown, setBreakdown] = useState({ total_expenses: 0, categories: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const openMerchantTransactions = (category, merchantName) => {
+    const params = new URLSearchParams({
+      search: merchantName,
+      month: String(month),
+      year: String(year),
+    });
+    const isUncategorized = !category.category_id
+      || String(category.category_name || '').trim().toLowerCase() === 'uncategorized';
+
+    if (isUncategorized) {
+      params.set('uncategorized', '1');
+      navigate(`/categories?${params.toString()}`);
+      return;
+    }
+
+    params.set('category_id', String(category.category_id));
+    navigate(`/transactions?${params.toString()}`);
+  };
 
   const periodLabel = useMemo(() => {
     if (month === -1) return 'all transaction data';
@@ -268,7 +288,13 @@ const CategoryBreakdown = () => {
                             />
                             <Bar dataKey="total" radius={[12, 12, 4, 4]} fill={`url(#barGradient-${category.category_id || index})`} isAnimationActive={false}>
                               {category.merchants.map((merchant) => (
-                                <Cell key={merchant.merchant_name} fill={`url(#barGradient-${category.category_id || index})`} />
+                                <Cell
+                                  key={merchant.merchant_name}
+                                  fill={`url(#barGradient-${category.category_id || index})`}
+                                  cursor="pointer"
+                                  onClick={() => openMerchantTransactions(category, merchant.merchant_name)}
+                                  aria-label={`View transactions for ${merchant.merchant_name}`}
+                                />
                               ))}
                             </Bar>
                           </BarChart>

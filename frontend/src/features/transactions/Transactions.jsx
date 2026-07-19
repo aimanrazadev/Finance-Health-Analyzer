@@ -12,7 +12,7 @@ import {
   Tag,
   UserRound,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import useAuth from '../auth/useAuth';
 import AppSelect from '../../components/ui/AppSelect';
 import CategoryBadge from '../../components/ui/CategoryBadge';
@@ -20,6 +20,7 @@ import Navigation from '../../components/layout/Navigation';
 import Skeleton from '../../components/ui/Skeleton';
 import useUI from '../../shared/context/useUI';
 import api, { getAuthHeaders } from '../../shared/services/apiClient';
+import { getPeriodDateRange } from '../../utils/periodSession';
 import './Transactions.css';
 
 const createDefaultFormState = () => ({
@@ -53,15 +54,16 @@ const formatAmount = (value) => new Intl.NumberFormat('en-IN', {
 
 const Transactions = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { token } = useAuth();
   const { confirm, showToast } = useUI();
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState(createDefaultFormState);
   const [editingId, setEditingId] = useState(null);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => searchParams.get('search') || '');
   const [filterType, setFilterType] = useState('');
-  const [filterCategory, setFilterCategory] = useState('');
+  const [filterCategory, setFilterCategory] = useState(() => searchParams.get('category_id') || '');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(true);
@@ -71,6 +73,10 @@ const Transactions = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const authHeaders = useMemo(() => getAuthHeaders(token), [token]);
+  const periodDateRange = useMemo(() => getPeriodDateRange(
+    searchParams.get('month'),
+    searchParams.get('year'),
+  ), [searchParams]);
 
   const loadTransactions = useCallback(async () => {
     setLoading(true);
@@ -81,6 +87,8 @@ const Transactions = () => {
       if (search) params.search = search;
       if (filterType) params.transaction_type = filterType;
       if (filterCategory) params.category_id = filterCategory;
+      if (periodDateRange.startDate) params.start_date = periodDateRange.startDate;
+      if (periodDateRange.endDate) params.end_date = periodDateRange.endDate;
 
       const response = await api.get('/transactions', { headers: authHeaders, params });
       setTransactions(response.data);
@@ -90,7 +98,7 @@ const Transactions = () => {
     } finally {
       setLoading(false);
     }
-  }, [authHeaders, filterCategory, filterType, search]);
+  }, [authHeaders, filterCategory, filterType, periodDateRange, search]);
 
   useEffect(() => {
     const loadInitialCategories = async () => {

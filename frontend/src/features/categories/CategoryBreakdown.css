@@ -320,6 +320,10 @@
   filter: drop-shadow(0 0 7px var(--category-glow));
 }
 
+.merchant-chart-frame .recharts-bar-rectangle path:hover {
+  filter: brightness(1.16) drop-shadow(0 0 9px var(--category-glow));
+}
+
 @media (max-width: 1100px) {
   .category-summary-card,
   .category-summary-chart,
