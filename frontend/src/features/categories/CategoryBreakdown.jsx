@@ -119,7 +119,7 @@ const CategoryBreakdown = () => {
   const categoryChartData = categories.map((category, index) => ({
     name: category.category_name,
     value: Number(category.total || 0),
-    color: category.color || getCategoryChartColor(category.category_name, index),
+    color: getCategoryChartColor(category.category_name, index),
   }));
 
   return (
@@ -199,7 +199,7 @@ const CategoryBreakdown = () => {
           ) : categories.length === 0 ? (
             <div className="chart-empty-state">No category spending found for this period.</div>
           ) : categories.map((category, index) => {
-            const categoryColor = category.color || getCategoryChartColor(category.category_name, index);
+            const categoryColor = getCategoryChartColor(category.category_name, index);
             return (
               <article className="category-breakdown-card" key={`${category.category_id || 'uncategorized'}-${category.category_name}`}>
                 <div className="category-breakdown-card-header">

@@ -38,7 +38,9 @@ export const getCategoryColor = (categoryOrName) => {
   if (typeof categoryOrName === 'string') {
     return CATEGORY_COLORS[categoryOrName] || CATEGORY_COLORS.Uncategorized;
   }
-  return categoryOrName.color || CATEGORY_COLORS[categoryOrName.name] || CATEGORY_COLORS.Uncategorized;
+  return CATEGORY_COLORS[categoryOrName.name]
+    || categoryOrName.color
+    || CATEGORY_COLORS.Uncategorized;
 };
 
 export const getCategoryChartColor = (categoryOrName, index = 0) => (
