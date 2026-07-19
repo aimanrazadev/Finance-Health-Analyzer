@@ -136,6 +136,76 @@ def evaluate_user_category_model(db: Session, user_id: int, test_size: float = 0
     }
 
 
+def _manual_correction_rows(db: Session, user_id: int) -> list[tuple[str, str]]:
+    """Return one ground-truth label per corrected description, newest correction first."""
+    correction_rows = (
+        db.query(CategoryCorrection, Category)
+        .join(Category, CategoryCorrection.new_category_id == Category.id)
+        .filter(CategoryCorrection.user_id == user_id)
+        .order_by(CategoryCorrection.created_at.desc(), CategoryCorrection.id.desc())
+        .all()
+    )
+    rows: list[tuple[str, str]] = []
+    seen_descriptions: set[str] = set()
+    for correction, category in correction_rows:
+        text = (correction.original_description or correction.description or correction.merchant or "").strip()
+        normalized_text = " ".join(text.lower().split())
+        if not normalized_text or normalized_text in seen_descriptions:
+            continue
+        seen_descriptions.add(normalized_text)
+        rows.append((text, category.name))
+    return rows
+
+
+@lru_cache(maxsize=128)
+def _learning_accuracy_cached(
+    labels_signature: tuple[tuple[str, str], ...],
+    test_size: float,
+) -> dict[str, object]:
+    label_count = len(labels_signature)
+    labels = [label for _text, label in labels_signature]
+    class_counts = Counter(labels)
+    class_count = len(class_counts)
+
+    if label_count < MIN_TRAINING_LABELS:
+        return {
+            "accuracy": None,
+            "message": f"Correct at least {MIN_TRAINING_LABELS} transactions to measure learning accuracy.",
+        }
+    if class_count < 2:
+        return {
+            "accuracy": None,
+            "message": "Correct transactions in at least two categories to measure learning accuracy.",
+        }
+
+    from sklearn.model_selection import train_test_split
+
+    texts = [text for text, _label in labels_signature]
+    can_stratify = min(class_counts.values()) >= 2 and label_count >= max(8, class_count * 2)
+    x_train, x_test, y_train, y_test = train_test_split(
+        texts,
+        labels,
+        test_size=test_size,
+        random_state=42,
+        stratify=labels if can_stratify else None,
+    )
+    model = _build_model()
+    model.fit(x_train, y_train)
+    predictions = model.predict(x_test)
+    correct_count = sum(predicted == actual for predicted, actual in zip(predictions, y_test))
+    accuracy = correct_count / len(y_test)
+    return {
+        "accuracy": round(accuracy, 4),
+        "message": f"Matched {correct_count} of {len(y_test)} held-out manual corrections.",
+    }
+
+
+def evaluate_user_learning_accuracy(db: Session, user_id: int, test_size: float = 0.20) -> dict[str, object]:
+    """Evaluate learning quality using only held-out manual corrections as ground truth."""
+    rows = tuple(_manual_correction_rows(db, user_id))
+    return _learning_accuracy_cached(rows, test_size)
+
+
 def train_user_category_model(db: Session, user_id: int):
     """Train a user-specific classifier when enough corrected labels exist."""
     rows = _training_rows(db, user_id)
@@ -184,6 +254,7 @@ def predict_category_with_ml(db: Session, user_id: int, description: str) -> tup
 def retrain_after_correction(user_id: int) -> None:
     """Clear cached model so the next prediction trains from the latest labels."""
     _train_cached.cache_clear()
+    _learning_accuracy_cached.cache_clear()
     path = _model_path(user_id)
     if path.exists():
         path.unlink()

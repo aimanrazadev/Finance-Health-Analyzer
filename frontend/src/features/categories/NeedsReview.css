@@ -90,6 +90,7 @@
 }
 
 .categories-stat-card p,
+
 .categories-stat-card span {
   margin: 0;
   color: var(--categories-muted);
@@ -99,7 +100,7 @@
   position: relative;
 }
 
-.categories-stat-card > div:not(.categories-confidence-chart) {
+.categories-stat-card > div {
   display: grid;
   gap: 7px;
   min-width: 0;
@@ -119,18 +120,6 @@
 
 .categories-stat-card span {
   font-size: 13px;
-}
-
-.categories-confidence-card {
-  padding-right: 18px !important;
-}
-
-.categories-confidence-chart {
-  align-self: flex-end;
-  flex: 1 1 116px;
-  min-width: 96px;
-  height: 72px;
-  margin-left: auto;
 }
 
 .categories-surface-message {
@@ -196,8 +185,11 @@
 }
 
 .categories-search-control:focus-within,
+
 .categories-bulk-select.is-open .app-select-trigger,
+
 .categories-review-table .app-select.is-open .app-select-trigger,
+
 .categories-table-toolbar .app-select.is-open .app-select-trigger {
   border-color: rgba(163, 255, 18, .56) !important;
   outline: 0;
@@ -228,7 +220,9 @@
 }
 
 .categories-bulk-select .app-select-trigger,
+
 .categories-review-table .app-select-trigger,
+
 .categories-table-toolbar .app-select-trigger {
   min-width: 0;
   height: 54px;
@@ -241,6 +235,7 @@
 }
 
 .categories-primary-action,
+
 .categories-secondary-action {
   min-height: 54px;
   padding: 0 20px;
@@ -294,6 +289,7 @@
 }
 
 .categories-table-toolbar p,
+
 .categories-table-toolbar label > span {
   margin: 0;
   color: var(--categories-muted);
@@ -331,6 +327,7 @@
 }
 
 .categories-review-table th,
+
 .categories-review-table td {
   padding: 16px 18px;
   border-bottom: 1px solid var(--categories-border);
@@ -382,6 +379,7 @@
 }
 
 .categories-date-cell > div,
+
 .categories-description-cell {
   display: grid !important;
   gap: 7px;
@@ -389,6 +387,7 @@
 }
 
 .categories-date-cell strong,
+
 .categories-description-cell strong {
   font-size: 14px;
   font-weight: 520;
@@ -576,7 +575,9 @@
   }
 
   .categories-primary-action,
+
   .categories-secondary-action,
+
   .categories-bulk-select {
     width: 100%;
   }
@@ -589,7 +590,9 @@
   }
 
   .categories-primary-action,
+
   .categories-secondary-action,
+
   .categories-bulk-select {
     width: 100%;
   }
@@ -602,6 +605,7 @@
   }
 
   .categories-review-summary,
+
   .categories-review-toolbar {
     grid-template-columns: 1fr;
   }
@@ -613,11 +617,6 @@
 
   .categories-review-heading h1 {
     font-size: 28px;
-  }
-
-  .categories-confidence-card {
-    display: grid;
-    grid-template-columns: 48px minmax(0, 1fr) 100px;
   }
 
   .categories-table-toolbar {

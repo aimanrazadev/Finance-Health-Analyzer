@@ -9,7 +9,6 @@ import {
   MoreVertical,
   Search,
 } from 'lucide-react';
-import { Line, LineChart, ResponsiveContainer } from 'recharts';
 import { useSearchParams } from 'react-router-dom';
 import AppSelect from '../../components/ui/AppSelect';
 import Navigation from '../../components/layout/Navigation';
@@ -59,6 +58,7 @@ const Categories = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [learningAccuracy, setLearningAccuracy] = useState(null);
 
   const headers = useMemo(() => getAuthHeaders(token), [token]);
 
@@ -66,15 +66,17 @@ const Categories = () => {
     setLoading(true);
     setError('');
     try {
-      const [categoryQueueResponse, categoriesResponse] = await Promise.all([
+      const [categoryQueueResponse, categoriesResponse, learningAccuracyResponse] = await Promise.all([
         api.get('/categories/needs-review', {
           headers,
           params: { include_learned: includeLearned },
         }),
         api.get('/categories'),
+        api.get('/categories/learning-accuracy', { headers }),
       ]);
       setTransactions(categoryQueueResponse.data);
       setCategories(categoriesResponse.data);
+      setLearningAccuracy(learningAccuracyResponse.data);
     } catch (err) {
       console.error(err);
       setError('Unable to load category queue.');
@@ -113,20 +115,6 @@ const Categories = () => {
   const currentPage = Math.min(page, pageCount);
   const pageStart = (currentPage - 1) * PAGE_SIZE;
   const visibleTransactions = sortedTransactions.slice(pageStart, pageStart + PAGE_SIZE);
-
-  const averageConfidence = useMemo(() => {
-    if (!transactions.length) return 0;
-    const total = transactions.reduce((sum, transaction) => sum + confidenceValue(transaction.category_confidence), 0);
-    return Math.round((total / transactions.length) * 100);
-  }, [transactions]);
-
-  const confidenceTrend = useMemo(() => {
-    const points = [...transactions]
-      .sort((left, right) => new Date(left.date) - new Date(right.date))
-      .slice(-12)
-      .map((transaction, index) => ({ index, confidence: Math.round(confidenceValue(transaction.category_confidence) * 100) }));
-    return points.length > 1 ? points : [{ index: 0, confidence: averageConfidence }, { index: 1, confidence: averageConfidence }];
-  }, [averageConfidence, transactions]);
 
   const selectedCount = Object.values(selectedCategories).filter(Boolean).length;
 
@@ -212,25 +200,22 @@ const Categories = () => {
           <article className="categories-dashboard-card categories-stat-card">
             <span className="categories-icon-box"><FileText /></span>
             <div>
-              <p>Low-confidence transactions</p>
+              <p>{includeLearned ? 'All transactions' : 'Low-confidence transactions'}</p>
               <strong>{transactions.length}</strong>
-              <span>Out of {transactions.length} total</span>
+              <span>{includeLearned ? 'Including learned and categorized transactions' : 'Current review queue'}</span>
             </div>
           </article>
 
-          <article className="categories-dashboard-card categories-stat-card categories-confidence-card">
+          <article className="categories-dashboard-card categories-stat-card">
             <span className="categories-icon-box"><ChartNoAxesCombined /></span>
             <div>
-              <p>Avg. confidence</p>
-              <strong>{averageConfidence}%</strong>
-              <span>Across all transactions</span>
-            </div>
-            <div className="categories-confidence-chart" aria-hidden="true">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={confidenceTrend}>
-                  <Line type="monotone" dataKey="confidence" stroke="var(--categories-accent)" strokeWidth={2.5} dot={false} isAnimationActive />
-                </LineChart>
-              </ResponsiveContainer>
+              <p>Learning Accuracy</p>
+              <strong>{learningAccuracy?.accuracy == null ? '--' : `${Math.round(learningAccuracy.accuracy * 100)}%`}</strong>
+              <span>
+                {learningAccuracy?.accuracy == null
+                  ? learningAccuracy?.message || 'Not enough correction data yet'
+                  : 'How accurately the system learns from your corrections'}
+              </span>
             </div>
           </article>
         </section>

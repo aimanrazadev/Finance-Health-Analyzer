@@ -14,16 +14,20 @@
 }
 
 .app-shell > main,
+
 .app-shell > div:not(.app-sidebar) {
   min-width: 0;
 }
 
-.app-shell .dashboard-container,
+
 .app-shell .transactions-page,
+
 .app-shell .review-page,
+
 .app-shell .upload-page,
+
 .app-shell .insights-page,
-.app-shell .health-page,
+
 .app-shell .friends-page {
   width: min(1480px, calc(100% - 48px));
   margin-right: auto;
@@ -36,12 +40,15 @@
     padding-bottom: 84px;
   }
 
-  .app-shell .dashboard-container,
+  
   .app-shell .transactions-page,
+
   .app-shell .review-page,
+
   .app-shell .upload-page,
+
   .app-shell .insights-page,
-  .app-shell .health-page,
+
   .app-shell .friends-page {
     width: min(100% - 24px, 1480px);
   }
@@ -53,26 +60,43 @@
 }
 
 html body .app-shell,
+
 html body .app-shell main,
+
 html body .app-shell p,
+
 html body .app-shell label,
+
 html body .app-shell small,
+
 html body .app-shell input,
+
 html body .app-shell textarea,
+
 html body .app-shell button,
+
 html body .app-shell .app-select-trigger,
+
 html body .app-shell .app-select-option,
+
 html body .app-shell .empty-state,
+
 html body .app-shell .surface-message,
+
 html body .app-sidebar {
   font-family: var(--font-interface) !important;
 }
 
 html body .app-shell main h1,
+
 html body .app-shell main h2,
+
 html body .app-shell main h3,
+
 html body .app-shell .page-heading h1,
+
 html body .app-shell .transactions-header h1,
+
 html body .app-shell .dashboard-header h1 {
   font-family: var(--font-display) !important;
   font-weight: 600 !important;
@@ -83,28 +107,38 @@ html body .app-shell main h3 {
 }
 
 html body .app-shell .metric-value,
+
 html body .app-shell .dashboard-health-ring-label strong,
-html body .app-shell .health-score-card > strong,
+
 html body .app-shell .friends-stats strong,
+
 html body .app-shell .categories-review-summary > article strong,
+
 html body .app-shell .upload-summary strong,
+
 html body .app-shell .category-breakdown-summary strong {
   font-family: var(--font-display) !important;
   font-weight: 600 !important;
 }
 
 html body .app-sidebar .nav-link,
-html body .app-sidebar .nav-bottom-button,
+
 html body .app-sidebar .brand-copy,
+
 html body .app-sidebar .brand-copy strong,
+
 html body .app-sidebar .brand-copy span {
   font-family: var(--font-interface) !important;
 }
 
 html body .app-shell table,
+
 html body .app-shell table tbody,
+
 html body .app-shell table tr,
+
 html body .app-shell table td,
+
 html body .app-shell table td * {
   font-family: var(--font-data) !important;
   font-weight: 400 !important;
@@ -112,6 +146,7 @@ html body .app-shell table td * {
 }
 
 html body .app-shell table th,
+
 html body .app-shell table th * {
   font-family: var(--font-data) !important;
   font-weight: 600 !important;
@@ -120,10 +155,10 @@ html body .app-shell table th * {
 }
 
 html body .app-shell .eyebrow,
+
 html body .app-shell .metric-label,
-html body .app-shell .helper-text,
-html body .app-shell .meta,
-html body .app-shell .muted {
+
+html body .app-shell .meta {
   font-family: var(--font-interface) !important;
   font-weight: 500 !important;
 }
@@ -172,16 +207,7 @@ html body .app-shell .muted {
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
-.metric-card:hover,
-.chart-panel:hover,
-.analytics-section:hover,
-.budget-card:hover,
-.planning-card:hover,
-.investment-goal-card:hover,
-.investment-list-panel:hover,
-.investment-form-panel:hover,
-.transaction-form-panel:hover,
-.transaction-list-panel:hover {
+.metric-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow);
 }
@@ -220,7 +246,9 @@ html body .app-shell .muted {
 }
 
 input,
+
 select,
+
 textarea {
   border: 1px solid var(--border-strong);
   border-radius: 24px;
@@ -232,7 +260,9 @@ textarea {
 }
 
 input:focus,
+
 select:focus,
+
 textarea:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(0, 115, 234, 0.12);
@@ -253,6 +283,7 @@ table th {
 }
 
 table th,
+
 table td {
   border-bottom: 1px solid var(--border);
   padding: 12px 14px;
@@ -261,9 +292,10 @@ table td {
 }
 
 .primary-button,
+
 .secondary-button,
-.danger-button,
-.table-button {
+
+.danger-button {
   border: 0;
   border-radius: 24px;
   cursor: pointer;
@@ -285,29 +317,24 @@ table td {
 }
 
 
-.danger-button,
-.table-button.danger {
+.danger-button {
   background: #e5484d;
   color: var(--bg);
 }
 
-.surface-message,
-.form-error,
-.form-success {
+.surface-message {
   border-radius: 8px;
   padding: 12px 14px;
   font-weight: var(--font-regular);
 }
 
-.surface-message.error,
-.form-error {
+.surface-message.error {
   border: 1px solid #ffbdad;
   background: rgba(255, 77, 94, 0.10);
   color: #bf2600;
 }
 
-.surface-message.success,
-.form-success {
+.surface-message.success {
   border: 1px solid #abf5d1;
   background: #effff7;
   color: #006644;
@@ -342,38 +369,6 @@ table td {
 
 /* Laptop dashboard redesign inspired by the supplied finance-app references. */
 
-.dashboard-container .page-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 28px;
-  margin-bottom: 28px;
-}
-
-.dashboard-container .page-heading h1 {
-  margin: 4px 0 8px;
-  color: var(--text);
-  font-size: clamp(34px, 4vw, 58px);
-  line-height: 0.95;
-  letter-spacing: 0;
-  font-weight: var(--font-thin);
-}
-
-.dashboard-container .page-heading p:not(.eyebrow) {
-  max-width: 620px;
-  color: var(--text-muted);
-  font-size: 15px;
-  line-height: 1.6;
-}
-
-.dashboard-container .eyebrow {
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: var(--font-thin);
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
 .dashboard-filters {
   align-items: center;
   gap: 12px;
@@ -402,17 +397,6 @@ table td {
   background: var(--bg);
   color: var(--text);
   font-weight: var(--font-thin);
-}
-
-.balance-hero-card > .secondary-button {
-  position: relative;
-  z-index: 2;
-  min-height: 52px;
-  padding: 0 18px;
-  border: 0;
-  border-radius: 999px;
-  background: rgb(23, 23, 23);
-  color: var(--text);
 }
 
 .metric-card {
@@ -454,55 +438,6 @@ table td {
   font-style: normal;
 }
 
-.metric-card.metric-positive strong,
-.metric-card.metric-positive small,
-.metric-card.metric-positive .an-root {
-  color: #15803d;
-}
-
-.metric-card.metric-negative strong,
-.metric-card.metric-negative small,
-.metric-card.metric-negative .an-root {
-  color: #b91c1c;
-}
-
-.metric-card.metric-neutral strong,
-.metric-card.metric-neutral .an-root {
-  color: #111111;
-}
-
-
-.metric-card.metric-positive:hover {
-  border-color: rgba(21, 128, 61, 0.42);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    0 18px 48px rgba(16, 24, 40, 0.10),
-    0 0 0 4px rgba(21, 128, 61, 0.12);
-}
-
-.metric-card.metric-negative:hover {
-  border-color: rgba(185, 28, 28, 0.42);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    0 18px 48px rgba(16, 24, 40, 0.10),
-    0 0 0 4px rgba(185, 28, 28, 0.12);
-}
-
-.balance-hero-card .an-root,
-.metric-card .an-root {
-  display: inline-flex;
-  align-items: baseline;
-  white-space: nowrap;
-}
-
-.balance-hero-card .an-slot,
-.metric-card .an-slot,
-.balance-hero-card .an-layer,
-.metric-card .an-layer {
-  display: inline-block;
-  text-transform: none;
-}
-
 .section-heading h2 {
   color: var(--text);
   font-size: 15px;
@@ -514,33 +449,16 @@ table td {
   font-size: 11px;
 }
 
-.category-donut-panel .section-heading {
-  margin-bottom: 18px;
-}
-
-.category-donut-panel .section-heading h2 {
-  font-size: 34px;
-  line-height: 1.08;
-}
-
-.category-donut-panel .section-heading p {
-  margin-top: 6px;
-  font-size: 14px;
-}
-
 .primary-button,
+
 .secondary-button,
-.danger-button,
-.table-button {
+
+.danger-button {
   border-radius: 999px;
 }
 
 
 @media (max-width: 1180px) {
-
-  .dashboard-container .page-heading {
-    flex-direction: column;
-  }
 
   .dashboard-filters {
     width: 100%;
@@ -550,134 +468,9 @@ table td {
 
 /* Dashboard metric cards */
 
-.dashboard-cards .metric-card {
-  --card-accent: #2563eb;
-  --card-soft: rgba(37, 99, 235, 0.1);
-  display: grid;
-  align-content: space-between;
-  gap: 10px;
-  min-height: 154px;
-  padding: 20px;
-  border: 1px solid rgba(203, 213, 225, 0.92);
-  border-radius: 18px !important;
-  background:
-    linear-gradient(145deg, rgb(23, 23, 23), rgb(17, 17, 17)),
-    radial-gradient(circle at 100% 0%, var(--card-soft), transparent 42%);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.82) inset,
-    0 14px 34px rgba(15, 23, 42, 0.07);
-  transition:
-    transform 180ms ease,
-    box-shadow 180ms ease,
-    border-color 180ms ease;
-}
-
-.dashboard-cards .metric-card::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  z-index: 0;
-  height: 5px;
-  border-radius: inherit inherit 0 0;
-  background: linear-gradient(90deg, var(--card-accent), color-mix(in srgb, var(--card-accent) 45%, white));
-  pointer-events: none;
-}
-
-.dashboard-cards .metric-card:hover {
-  transform: translateY(-3px);
-  border-color: color-mix(in srgb, var(--card-accent) 34%, var(--border));
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.88) inset,
-    0 20px 44px rgba(15, 23, 42, 0.11);
-}
-
-.dashboard-cards .metric-card > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: var(--font-medium);
-  line-height: 1.2;
-  text-transform: uppercase;
-}
-
-.dashboard-cards .metric-card > span::before {
-  content: '';
-  width: 9px;
-  height: 9px;
-  flex: 0 0 auto;
-  border-radius: 999px;
-  background: var(--card-accent);
-  box-shadow: 0 0 0 4px var(--card-soft);
-}
-
-.dashboard-cards .metric-card strong {
-  margin: 0;
-  color: var(--text);
-  font-size: clamp(25px, 2.15vw, 34px);
-  line-height: 1.04;
-  font-weight: var(--font-regular);
-}
-
-.dashboard-cards .metric-card small {
-  display: grid;
-  gap: 6px;
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.dashboard-cards .metric-card small em {
-  margin: 0;
-  color: var(--card-accent);
-  font-size: 12px;
-  line-height: 1.35;
-}
-
-.dashboard-cards .metric-card:nth-child(5) {
-  --card-accent: #b7791f;
-  --card-soft: rgba(183, 121, 31, 0.12);
-}
-
-.dashboard-cards .metric-card:nth-child(7) {
-  --card-accent: #6d5bd0;
-  --card-soft: rgba(109, 91, 208, 0.12);
-}
-
-@media (max-width: 620px) {
-
-  .dashboard-cards .metric-card {
-    min-height: 138px;
-    padding: 18px;
-  }
-}
-
 /* Compact dashboard density for normal browser zoom */
 .app-shell {
   --sidebar-width: 232px;
-}
-
-.dashboard-container .page-heading {
-  gap: 20px;
-  margin-bottom: 22px;
-}
-
-.dashboard-container .page-heading h1 {
-  margin: 2px 0 6px;
-  font-size: clamp(34px, 3.3vw, 48px);
-  line-height: 1;
-}
-
-.dashboard-container .page-heading p:not(.eyebrow) {
-  max-width: 660px;
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.dashboard-container .eyebrow {
-  font-size: 12px;
 }
 
 .dashboard-filters {
@@ -690,63 +483,11 @@ table td {
   border-radius: 14px;
 }
 
-.balance-hero-card > .secondary-button {
-  min-height: 44px;
-}
-
-.dashboard-cards .metric-card {
-  min-height: 124px;
-  gap: 8px;
-  padding: 16px;
-  border-radius: 14px !important;
-}
-
-.dashboard-cards .metric-card::before {
-  height: 4px;
-}
-
-.dashboard-cards .metric-card > span {
-  font-size: 10px;
-}
-
-.dashboard-cards .metric-card strong {
-  font-size: clamp(22px, 1.75vw, 29px);
-}
-
-.dashboard-cards .metric-card small,
-.dashboard-cards .metric-card small em {
-  font-size: 11px;
-}
-
 .section-heading {
   margin-bottom: 12px;
 }
 
-.category-donut-panel .section-heading {
-  margin-bottom: 10px;
-}
-
-.category-donut-panel .section-heading h2 {
-  font-size: 26px;
-}
-
-.category-donut-panel .section-heading p {
-  font-size: 12px;
-}
-
 /* Extra compact dashboard content */
-
-.dashboard-container .page-heading {
-  margin-bottom: 16px;
-}
-
-.dashboard-container .page-heading h1 {
-  font-size: clamp(30px, 2.8vw, 40px);
-}
-
-.dashboard-container .page-heading p:not(.eyebrow) {
-  font-size: 13px;
-}
 
 .dashboard-filters {
   min-width: 320px;
@@ -762,122 +503,33 @@ table td {
   font-size: 12px;
 }
 
-.dashboard-cards .metric-card {
-  min-height: 104px;
-  padding: 13px 14px;
-}
-
-.dashboard-cards .metric-card strong {
-  font-size: clamp(19px, 1.45vw, 25px);
-}
-
-.dashboard-cards .metric-card small,
-.dashboard-cards .metric-card small em {
-  font-size: 10px;
-  line-height: 1.35;
-}
-
-.category-donut-panel .section-heading h2 {
-  font-size: 22px;
-}
-
-.chart-panel .recharts-responsive-container {
-  min-height: 0;
-}
-
 /* Dashboard visual consistency */
 
-.dashboard-container .page-heading h1,
-.balance-hero-card strong,
-.dashboard-cards .metric-card strong,
-.category-donut-panel .section-heading h2,
+
 .section-heading h2 {
   color: var(--text);
   font-weight: var(--font-regular);
 }
 
-.dashboard-container .eyebrow,
-.dashboard-container .page-heading p,
-.balance-hero-copy > span,
-.dashboard-cards .metric-card > span,
-.dashboard-cards .metric-card small,
-.section-heading p,
-.category-legend-row,
-.category-legend-row > span:not(.legend-dot) {
+
+.section-heading p {
   color: var(--text-muted);
 }
 
-.dashboard-container .eyebrow,
-.dashboard-cards .metric-card > span {
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-.dashboard-container .page-heading h1 {
-  line-height: 1.06;
-}
-
-.dashboard-container .page-heading p:not(.eyebrow) {
-  color: var(--text-muted);
-  font-weight: var(--font-thin);
-}
-
-.dashboard-filters,
-.balance-hero-card,
-.dashboard-cards .metric-card,
-.analytics-section,
-.chart-panel,
-.category-legend-row {
+.dashboard-filters {
   border-color: var(--border);
   background: var(--surface);
 }
 
-.dashboard-filters,
-.dashboard-cards .metric-card,
-.analytics-section,
-.chart-panel {
+.dashboard-filters {
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
-}
-
-.dashboard-cards .metric-card {
-  --card-accent: var(--primary);
-  --card-soft: rgba(37, 99, 235, 0.09);
-}
-
-.dashboard-cards .metric-card:nth-child(5) {
-  --card-accent: #d97706;
-  --card-soft: rgba(217, 119, 6, 0.1);
-}
-
-.dashboard-cards .metric-card:nth-child(7) {
-  --card-accent: #7c3aed;
-  --card-soft: rgba(124, 58, 237, 0.09);
-}
-
-.dashboard-cards .metric-positive strong,
-.dashboard-cards .metric-positive small,
-.dashboard-cards .metric-positive .an-root {
-  color: #15803d;
-}
-
-.dashboard-cards .metric-negative strong,
-.dashboard-cards .metric-negative small,
-.dashboard-cards .metric-negative .an-root {
-  color: #b91c1c;
-}
-
-.dashboard-cards .metric-neutral strong,
-.dashboard-cards .metric-neutral .an-root {
-  color: var(--text);
-}
-
-.dashboard-cards .metric-card > span::before {
-  box-shadow: 0 0 0 3px var(--card-soft);
 }
 
 /* Fixed black dashboard theme */
 input,
+
 select,
+
 textarea {
   border-color: rgb(43, 44, 44);
   background: rgb(17, 17, 17);
@@ -890,119 +542,44 @@ table th {
 }
 
 .dashboard-filters,
-.balance-hero-card,
-.dashboard-cards .metric-card,
-.analytics-section,
-.chart-panel,
-.category-legend-row,
+
 .empty-state,
+
 .chart-empty-state,
-.surface-message,
-.form-error,
-.form-success {
+
+.surface-message {
   border-color: rgb(43, 44, 44);
   background: rgb(23, 23, 23);
   box-shadow: none;
 }
 
 .dashboard-filters select,
+
 .dashboard-filters input {
   background: rgb(17, 17, 17);
   border-color: rgb(43, 44, 44);
   color: var(--text);
 }
 
-.dashboard-container .page-heading h1,
-.balance-hero-card strong,
-.dashboard-cards .metric-card strong,
-.category-donut-panel .section-heading h2,
-.section-heading h2,
-.category-legend-row strong {
+
+.section-heading h2 {
   color: #ffffff;
 }
 
-.dashboard-container .eyebrow,
-.dashboard-container .page-heading p,
-.balance-hero-copy > span,
-.dashboard-cards .metric-card > span,
-.dashboard-cards .metric-card small,
+
 .section-heading p,
-.category-legend-row,
-.category-legend-row > span:not(.legend-dot),
+
 .dashboard-filters label {
   color: #a8b0bf;
 }
 
-.balance-hero-card small,
+
 .secondary-button,
+
 .primary-button {
   border-color: rgb(43, 44, 44);
   background: rgb(17, 17, 17);
   color: var(--text);
-}
-
-.dashboard-cards .metric-card {
-  display: grid;
-  min-height: 164px;
-  align-content: space-between;
-  justify-items: start;
-  gap: 16px;
-  padding: 26px 30px;
-  border: 1px solid rgb(43, 44, 44) !important;
-  border-radius: 12px !important;
-  background: rgb(23, 23, 23);
-}
-
-.dashboard-cards .metric-card::before,
-.dashboard-cards .metric-card > span::before,
-.dashboard-cards .prediction-card::after {
-  display: none;
-}
-
-.dashboard-cards .metric-card > span {
-  width: 100%;
-  justify-content: flex-start;
-  color: #7d8795;
-  font-size: 15px;
-  font-weight: var(--font-regular);
-  text-align: left;
-  text-transform: none;
-}
-
-.dashboard-cards .metric-card strong {
-  margin: 0;
-  color: #ffffff !important;
-  font-size: clamp(36px, 3.1vw, 52px);
-  font-weight: var(--font-regular);
-  line-height: 0.98;
-  text-align: left;
-  letter-spacing: 0;
-}
-
-.dashboard-cards .metric-card small {
-  justify-items: start;
-  color: #a8b0bf;
-  font-size: 15px;
-  line-height: 1.35;
-  text-align: left;
-}
-
-.dashboard-cards .metric-card small em {
-  color: inherit;
-  font-size: 15px;
-  line-height: 1.25;
-}
-
-.dashboard-cards .metric-positive small,
-.dashboard-cards .metric-positive small em,
-.dashboard-cards .metric-positive small .an-root {
-  color: var(--success);
-}
-
-.dashboard-cards .metric-negative small,
-.dashboard-cards .metric-negative small em,
-.dashboard-cards .metric-negative small .an-root {
-  color: var(--danger);
 }
 
 .recharts-cartesian-grid line {
@@ -1010,6 +587,7 @@ table th {
 }
 
 .recharts-text,
+
 .recharts-legend-item-text {
   fill: #a8b0bf !important;
   color: #a8b0bf !important;
@@ -1022,12 +600,12 @@ table th {
 }
 
 .primary-button,
+
 .secondary-button,
+
 .danger-button,
-.table-button,
-.history-delete-button,
-.assistant-suggestions button,
-.assistant-window-actions button {
+
+.history-delete-button {
   border: 1px solid rgb(43, 44, 44) !important;
   background: rgb(17, 17, 17) !important;
   color: var(--text) !important;
@@ -1040,63 +618,24 @@ table th {
 }
 
 .danger-button,
-.table-button.danger,
+
 .history-delete-button {
   color: var(--danger) !important;
 }
 
-.surface-message.error,
-.form-error,
-.assistant-error,
-.upload-errors {
+.surface-message.error {
   border-color: rgba(255, 77, 94, 0.45) !important;
   background: rgba(255, 77, 94, 0.10) !important;
   color: #ff8c98 !important;
 }
 
-.surface-message.success,
-.form-success {
+.surface-message.success {
   border-color: rgba(0, 230, 118, 0.38) !important;
   background: rgba(0, 230, 118, 0.10) !important;
   color: #66ffa9 !important;
 }
 
 /* Dashboard final density pass */
-
-.dashboard-container .page-heading {
-  align-items: center;
-  gap: 18px;
-  margin-bottom: 14px;
-}
-
-.dashboard-container .page-heading h1 {
-  max-width: 760px;
-  margin: 2px 0 4px;
-  font-size: clamp(28px, 2.2vw, 36px);
-  line-height: 1.08;
-}
-
-.dashboard-container .page-heading p:not(.eyebrow) {
-  max-width: 720px;
-  font-size: 12px;
-  line-height: 1.35;
-}
-
-.dashboard-container .eyebrow {
-  font-size: 10px;
-}
-
-.dashboard-snapshot-heading h2,
-.dashboard-insights .section-heading h2 {
-  font-size: 14px;
-  line-height: 1.1;
-}
-
-.dashboard-snapshot-heading p,
-.dashboard-insights .section-heading p {
-  margin-top: 2px;
-  font-size: 10px;
-}
 
 .dashboard-filters {
   min-width: 260px;
@@ -1110,46 +649,7 @@ table th {
   border-radius: 8px;
 }
 
-.dashboard-card-link .metric-card {
-  height: 100%;
-}
-
-.dashboard-cards .metric-card {
-  min-height: 108px;
-  gap: 9px;
-  padding: 16px;
-  border-radius: 8px !important;
-}
-
-.dashboard-cards .metric-card > span {
-  min-width: 0;
-  font-size: 11px;
-  line-height: 1.2;
-}
-
-.dashboard-cards .metric-card strong {
-  max-width: 100%;
-  font-size: clamp(25px, 2.1vw, 34px);
-  line-height: 1.05;
-  overflow-wrap: anywhere;
-}
-
-.dashboard-cards .metric-format-text strong {
-  font-size: clamp(20px, 1.5vw, 26px);
-  line-height: 1.12;
-}
-
-.dashboard-cards .metric-card small {
-  max-width: 100%;
-  font-size: 11px;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-}
-
 @media (max-width: 760px) {
-  .dashboard-container .page-heading {
-    align-items: stretch;
-  }
 
   .dashboard-filters {
     min-width: 0;
@@ -1158,68 +658,102 @@ table th {
 
 /* Ultra-thin typography pass */
 body,
+
 button,
+
 input,
+
 select,
+
 textarea,
+
 table,
+
 .app-shell,
+
 .app-loading {
   font-weight: var(--font-regular) !important;
 }
 
 h1,
+
 h2,
+
 h3,
+
 h4,
+
 h5,
+
 h6,
+
 strong,
+
 b,
+
 th,
+
 label,
+
 button,
+
 .primary-button,
+
 .secondary-button,
+
 .danger-button,
-.table-button,
+
 .auth-button,
+
 .logout-button,
+
 .metric-card strong,
+
 .metric-card > span,
-.dashboard-insight-card span,
-.dashboard-insight-card p,
+
 .page-heading h1,
+
 .section-heading h2,
-.brand-text,
+
 .nav-label,
+
 .category-badge,
-.status-badge,
+
 .method-badge,
-.priority-badge,
+
 .amount,
+
 .value {
   font-weight: var(--font-regular) !important;
 }
 
 small,
+
 p,
+
 span,
+
 td,
+
 li,
+
 em,
+
 .eyebrow,
-.helper-text,
-.user-email,
+
 .section-heading p,
+
 .page-heading p,
+
 .metric-card small {
   font-weight: var(--font-thin) !important;
 }
 
 /* Premium dark product redesign */
 html,
+
 body,
+
 #root {
   min-height: 100%;
   background:
@@ -1235,32 +769,28 @@ body,
     radial-gradient(circle at 100% 0%, rgba(180, 188, 193, 0.15), transparent 34%),
     linear-gradient(90deg, #050606 0%, #0a0b0b 46%, #191d1f 100%);
 }
-.app-shell .dashboard-container,
-.app-shell .wallet-page,
+
 .app-shell .transactions-page,
-.app-shell .budgets-page,
+
 .app-shell .review-page,
+
 .app-shell .upload-page,
-.app-shell .insights-page,
-.app-shell .investments-page,
-.app-shell .health-page,
-.app-shell .forecast-page,
-.app-shell .subscriptions-page,
-.app-shell .goals-page{
+
+.app-shell .insights-page{
   width: min(1500px, calc(100% - 48px));
   margin-right: auto;
   margin-left: auto;
 }
 
 .page-heading,
-.transactions-header,
-.premium-dashboard-header {
+
+.transactions-header {
   color: var(--text);
 }
 
 .page-heading h1,
-.transactions-header h1,
-.premium-dashboard-header h1 {
+
+.transactions-header h1 {
   color: #ffffff !important;
   font-size: clamp(28px, 2.4vw, 40px);
   font-weight: 300 !important;
@@ -1268,8 +798,9 @@ body,
 }
 
 .page-heading p,
+
 .transactions-header p,
-.premium-dashboard-header p,
+
 .section-heading p {
   color: #8e979d !important;
   font-size: 13px;
@@ -1281,11 +812,8 @@ body,
   letter-spacing: 0.08em;
 }
 
-.premium-filter-bar label,
-.dashboard-filters label,
-.budget-filters label,
-.health-actions label,
-.insights-actions label {
+
+.dashboard-filters label {
   display: grid;
   gap: 6px;
   color: #8e979d;
@@ -1293,7 +821,7 @@ body,
   text-transform: uppercase;
 }
 
-.premium-filter-bar select,
+
 .dashboard-filters select {
   min-width: 150px;
   height: 42px;
@@ -1302,40 +830,15 @@ body,
   background: #090a0a !important;
   color: #f7f7f2 !important;
 }
-.premium-metric-card,
-.premium-panel,
-.wallet-cash-card,
-.wallet-card,
-.wallet-cash-stats article,
-.transaction-form-panel,
-.transaction-list-panel,
+
 .review-panel,
-.review-row,
+
 .upload-panel,
+
 .preview-panel,
-.budget-edit-panel,
-.budget-detail-panel,
-.budget-wallet-row,
-.goals-panel,
-.goal-wallet-card,
-.investment-explainer,
-.investment-summary-grid article,
-.investment-list-panel,
-.investment-form-panel,
-.investment-connect-panel,
-.subscription-card,
-.subscription-chart-panel,
+
 .insights-section,
-.insight-card,
-.recommendation-card,
-.forecast-panel,
-.forecast-main-card,
-.forecast-metric-card,
-.health-score-card,
-.health-breakdown-panel,
-.health-tips-panel,
-.assistant-popup,
-.assistant-message,
+
 .modal-backdrop .confirm-modal{
   border: 1px solid rgba(255, 255, 255, 0.10) !important;
   border-radius: 11px !important;
@@ -1372,13 +875,11 @@ body,
   font-style: normal;
 }
 
-.metric-delta.negative,
-.text-negative {
+.metric-delta.negative {
   color: #ff4d4d !important;
 }
 
-.metric-delta.positive,
-.text-positive {
+.metric-delta.positive {
   color: #28e978 !important;
 }
 
@@ -1434,9 +935,13 @@ body,
 }
 
 input,
+
 select,
+
 textarea,
+
 .category-select,
+
 .preview-category-select {
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   background: #090a0a !important;
@@ -1444,7 +949,9 @@ textarea,
 }
 
 input:focus,
+
 select:focus,
+
 textarea:focus {
   border-color: rgba(183, 245, 54, 0.65) !important;
   box-shadow: 0 0 0 3px rgba(183, 245, 54, 0.10) !important;
@@ -1452,32 +959,32 @@ textarea:focus {
 }
 
 button,
+
 .primary-button,
+
 .secondary-button,
+
 .danger-button,
-.table-button,
-.wallet-manage-button,
+
 .auth-button {
   border-radius: 9px !important;
   font-weight: 260 !important;
 }
 
 .primary-button,
+
 .auth-button {
   border-color: rgba(183, 245, 54, 0.55) !important;
   background: linear-gradient(180deg, #c8ff47, #9cdb19) !important;
   color: #081009 !important;
 }
 
-.secondary-button,
-.table-button,
-.wallet-manage-button {
+.secondary-button {
   background: rgba(255, 255, 255, 0.04) !important;
   color: #f7f7f2 !important;
 }
 
-.danger-button,
-.table-button.danger {
+.danger-button {
   color: #ff7777 !important;
 }
 
@@ -1487,18 +994,18 @@ button,
 }
 
 table th,
+
 .transaction-table th,
-.preview-table th,
-.holdings-table th,
-.debt-table th {
+
+.preview-table th {
   background: rgba(0, 0, 0, 0.16) !important;
 }
 
 table td,
+
 .transaction-table td,
-.preview-table td,
-.holdings-table td,
-.debt-table td {
+
+.preview-table td {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
@@ -1530,23 +1037,18 @@ table td,
 }
 
 @media (max-width: 760px) {
-.app-shell .dashboard-container,
-.app-shell .wallet-page,
+
 .app-shell .transactions-page,
-.app-shell .budgets-page,
+
 .app-shell .review-page,
+
 .app-shell .upload-page,
-.app-shell .insights-page,
-.app-shell .investments-page,
-.app-shell .health-page,
-.app-shell .forecast-page,
-.app-shell .subscriptions-page,
-.app-shell .goals-page{
+
+.app-shell .insights-page{
     width: min(100% - 24px, 1500px);
   }
 
-  .premium-metrics-grid,
-  .premium-wallet-grid,
+  
   .transaction-form {
     grid-template-columns: 1fr !important;
   }
@@ -1554,7 +1056,9 @@ table td,
 
 /* Screenshot-1 dashboard match pass */
 html,
+
 body,
+
 #root {
   background:
     radial-gradient(circle at 100% 0%, rgba(151, 159, 162, 0.22), transparent 35%),
@@ -1568,30 +1072,6 @@ body,
   background:
     radial-gradient(circle at 100% 0%, rgba(151, 159, 162, 0.22), transparent 35%),
     linear-gradient(90deg, #050606 0%, #080909 52%, #1d2225 100%) !important;
-}
-
-.app-shell:has(.premium-dashboard) .floating-assistant {
-  display: none;
-}
-
-.app-shell .premium-dashboard {
-  width: min(1340px, calc(100% - 44px));
-  padding: 20px 0 22px;
-}
-
-.premium-dashboard-header .eyebrow {
-  margin-bottom: 5px;
-  color: #8b9398 !important;
-  font-size: 9px !important;
-  font-weight: 350 !important;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-}
-
-.premium-dashboard-header p:not(.eyebrow) {
-  color: #a0a7ab !important;
-  font-size: 11px !important;
-  line-height: 1.35;
 }
 
 .metric-icon {
@@ -1614,15 +1094,13 @@ body,
   font-size: 11px;
 }
 
-.tone-positive .metric-icon,
-.premium-wallet-card.tone-positive .wallet-card-icon {
+.tone-positive .metric-icon {
   border-color: rgba(183, 245, 54, 0.34);
   background: rgba(183, 245, 54, 0.12);
   color: #b7f536;
 }
 
-.tone-negative .metric-icon,
-.premium-wallet-card.tone-negative .wallet-card-icon {
+.tone-negative .metric-icon {
   border-color: rgba(255, 77, 77, 0.36);
   background: rgba(255, 77, 77, 0.12);
   color: #ff4d4d;
@@ -1643,22 +1121,16 @@ body,
   line-height: 1.2;
 }
 
-.metric-delta.negative,
-.text-negative {
+.metric-delta.negative {
   color: #ff4d4d !important;
 }
 
-.metric-delta.positive,
-.text-positive {
+.metric-delta.positive {
   color: #28e978 !important;
 }
 
 .metric-delta.neutral {
   color: #b7f536;
-}
-
-.metric-sparkline.negative path {
-  stroke: #ff4d4d;
 }
 
 .donut-center {
@@ -1682,10 +1154,6 @@ body,
   font-size: 10px;
 }
 
-.premium-category-list.compact {
-  gap: 8px;
-}
-
 .chart-empty-state {
   display: grid;
   min-height: 164px;
@@ -1707,6 +1175,7 @@ body,
 }
 
 .recharts-text,
+
 .recharts-legend-item-text {
   fill: #9aa2a8 !important;
   color: #9aa2a8 !important;
@@ -1731,37 +1200,10 @@ body,
   }
 }
 
-@media (max-width: 760px) {
-  .app-shell .premium-dashboard {
-    width: min(100% - 24px, 1340px);
-    padding-top: 18px;
-  }
-}
-
 /* Screenshot-1 compactness fixes after QA capture */
 .app-sidebar {
   border-radius: 0 !important;
   overflow: visible !important;
-}
-
-.premium-dashboard-header .eyebrow {
-  display: none;
-}
-
-.premium-dashboard-header p:not(.eyebrow) {
-  font-size: 10.5px !important;
-}
-
-.premium-table .category-badge {
-  min-height: 20px;
-  gap: 5px;
-  padding: 0 7px;
-  font-size: 10px;
-}
-
-.premium-table .category-badge-dot {
-  width: 5px;
-  height: 5px;
 }
 
 /* Reference card/background correction: simple graphite gradient + bottom-left card lift */
@@ -1787,8 +1229,11 @@ body,
 }
 
 html,
+
 body,
+
 #root,
+
 .app-shell {
   background: var(--fs-reference-bg) !important;
 }
@@ -1832,20 +1277,24 @@ body {
   min-height: 100vh;
   background: transparent;
 }
-.app-shell .dashboard-container,
+
 .app-shell .transactions-page,
+
 .app-shell .review-page,
+
 .app-shell .upload-page,
-.app-shell .insights-page,
-.app-shell .health-page,
-.app-shell .merchants-page{
+
+.app-shell .insights-page{
   width: min(1360px, calc(100% - 48px)) !important;
   animation: finance-page-enter 420ms ease both;
 }
 
 .app-shell .dashboard-page,
+
 .app-shell .categories-review-page,
+
 .app-shell .category-breakdown-page,
+
 .app-shell .friends-page {
   animation: finance-page-enter 420ms ease both;
 }
@@ -1862,18 +1311,18 @@ body {
 }
 
 .page-heading h1,
-.transactions-header h1,
-.premium-dashboard-header h1 {
+
+.transactions-header h1 {
   color: var(--text) !important;
   font-weight: 300 !important;
   letter-spacing: -0.035em;
 }
 
 .page-heading p,
+
 .transactions-header p,
-.premium-dashboard-header p:not(.eyebrow),
-.section-heading p,
-.premium-panel-header p {
+
+.section-heading p {
   color: var(--text-muted) !important;
 }
 
@@ -1882,20 +1331,16 @@ body {
   font-weight: 400 !important;
   letter-spacing: 0.06em;
 }
-.premium-metric-card,
-.premium-panel,
-.transaction-form-panel,
-.transaction-list-panel,
+
 .review-panel,
-.review-row,
+
 .upload-panel,
+
 .preview-panel,
-.merchant-panel,
+
 .insights-section,
-.score-card,
-.health-card,
-.recommendation-card,
-.insight-card{
+
+.health-card{
   border: 1px solid var(--border) !important;
   border-radius: 16px !important;
   background:
@@ -1908,15 +1353,11 @@ body {
     background-color 180ms ease,
     box-shadow 180ms ease !important;
 }
-.premium-metric-card,
-.premium-panel,
-.premium-insight-card,
-.premium-wallet-card,
-.transaction-form-panel,
-.transaction-list-panel,
+
 .upload-panel,
+
 .preview-panel,
-.merchant-panel,
+
 .insights-section{
   animation: finance-card-enter 480ms ease both;
 }
@@ -1942,26 +1383,13 @@ body {
   display: none !important;
 }
 
-.transactions-page .transactions-main {
-  display: grid !important;
-  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr) !important;
-  gap: 18px !important;
-  align-items: start !important;
-  background: transparent !important;
-}
 
-.transactions-page .transaction-form-panel,
-.transactions-page .transaction-list-panel,
 .transactions-page .transaction-filters,
+
 .transactions-page .transaction-table-wrapper {
   background: var(--finance-card-bg) !important;
   border: 1px solid var(--finance-card-border-soft) !important;
   box-shadow: var(--finance-card-shadow) !important;
-}
-
-.transactions-page .transaction-form-panel {
-  position: sticky !important;
-  top: 24px !important;
 }
 
 .transactions-page .transaction-form {
@@ -1972,28 +1400,16 @@ body {
   margin-top: 6px !important;
 }
 
-@media (max-width: 1040px) {
-  .transactions-page .transactions-main {
-    grid-template-columns: 1fr !important;
-  }
-
-  .transactions-page .transaction-form-panel {
-    position: static !important;
-  }
-}
-
 /* Final sidebar color lock. */
 .app-sidebar {
   background: #060B0D !important;
   background-color: #060B0D !important;
 }
-.premium-metric-card:hover,
-.premium-panel:hover,
-.transaction-form-panel:hover,
-.transaction-list-panel:hover,
+
 .upload-panel:hover,
+
 .preview-panel:hover,
-.merchant-panel:hover,
+
 .insights-section:hover{
   transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.14) !important;
@@ -2010,23 +1426,12 @@ body {
   font-weight: 300 !important;
 }
 
-.metric-delta,
-.text-positive {
+.metric-delta {
   color: var(--primary) !important;
 }
 
-.metric-delta.negative,
-.text-negative {
+.metric-delta.negative {
   color: var(--danger) !important;
-}
-
-.metric-sparkline.positive path,
-.metric-sparkline path {
-  stroke: var(--primary) !important;
-}
-
-.metric-sparkline.negative path {
-  stroke: var(--danger) !important;
 }
 
 .donut-center strong {
@@ -2039,36 +1444,47 @@ body {
   color: var(--text-muted) !important;
 }
 
-.premium-table td,
+
 .transaction-table td,
+
 .preview-table td {
   color: var(--text) !important;
   font-size: 13px !important;
   font-weight: 400 !important;
 }
 
-.premium-table tr,
+
 .transaction-table tr,
+
 .preview-table tr {
   height: 54px;
 }
 
-.premium-table th,
-.premium-table td,
+
 .transaction-table th,
+
 .transaction-table td,
+
 .preview-table th,
+
 .preview-table td {
   border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 
 input,
+
 select,
+
 textarea,
+
 .transaction-form input,
+
 .transaction-form select,
+
 .transaction-filters input,
+
 .transaction-filters select,
+
 .preview-category-select {
   border: 1px solid rgba(255, 255, 255, 0.10) !important;
   border-radius: 10px !important;
@@ -2077,7 +1493,9 @@ textarea,
 }
 
 input:focus,
+
 select:focus,
+
 textarea:focus {
   border-color: rgba(155, 225, 75, 0.55) !important;
   box-shadow: 0 0 0 3px rgba(155, 225, 75, 0.08) !important;
@@ -2090,8 +1508,7 @@ textarea:focus {
   font-weight: 500 !important;
 }
 
-.secondary-button,
-.table-button {
+.secondary-button {
   border: 1px solid rgba(255, 255, 255, 0.10) !important;
   border-radius: 10px !important;
   background: #111719 !important;
@@ -2100,8 +1517,8 @@ textarea:focus {
 }
 
 .primary-button:hover,
-.secondary-button:hover,
-.table-button:hover {
+
+.secondary-button:hover {
   transform: translateY(-1px);
 }
 
@@ -2112,64 +1529,30 @@ textarea:focus {
 
 /* Remove the large wrapper-card look from dashboard sections; keep the actual data cards inside. */
 
-.premium-dashboard .dashboard-card,
-.premium-dashboard .snapshot-grid div,
-.premium-dashboard .premium-insight-card,
-.premium-dashboard .premium-category-list.compact {
-  border: 1px solid var(--border) !important;
-  border-radius: 16px !important;
-  background:
-    radial-gradient(circle at 0% 100%, rgba(255, 255, 255, 0.035), transparent 34%),
-    linear-gradient(180deg, #111719 0%, #0E1416 100%) !important;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.20) !important;
-  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-}
-
-.premium-dashboard .dashboard-card:hover,
-.premium-dashboard .snapshot-grid div:hover,
-.premium-dashboard .premium-insight-card:hover,
-.premium-dashboard .premium-category-list.compact:hover {
-  border-color: rgba(255, 255, 255, 0.14) !important;
-  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.30) !important;
-  transform: translateY(-2px);
-}
-
-.premium-dashboard .dashboard-card {
-  padding: 18px !important;
-}
-
-.premium-dashboard .premium-category-list.compact {
-  padding: 14px;
-}
-.transactions-page .transaction-list-panel,
 .review-page .review-panel,
-.upload-page .preview-panel,
-.merchants-page .merchant-panel{
+
+.upload-page .preview-panel{
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
   padding: 0 !important;
 }
-.transactions-page .transaction-list-panel:hover,
+
 .review-page .review-panel:hover,
-.upload-page .preview-panel:hover,
-.merchants-page .merchant-panel:hover{
+
+.upload-page .preview-panel:hover{
   transform: none !important;
   border-color: transparent !important;
   box-shadow: none !important;
 }
 .transactions-page .transaction-filters,
+
 .transactions-page .transaction-table-wrapper,
-.review-page .bulk-review-actions,
-.review-page .review-row,
+
 .upload-page .preview-table-wrapper,
-.upload-page .failed-row,
-.merchants-page .merchant-list,
-.merchants-page .merchant-rename-row,
-.merchants-page .merchant-stats,
-.merchants-page .merchant-aliases,
-.merchants-page .merchant-transactions{
+
+.upload-page .failed-row{
   border: 1px solid var(--border) !important;
   border-radius: 16px !important;
   background:
@@ -2177,22 +1560,21 @@ textarea:focus {
     linear-gradient(180deg, #111719 0%, #0E1416 100%) !important;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.20) !important;
 }
-.transactions-page .transaction-list-panel,
+
 .review-page .review-panel,
-.upload-page .preview-panel,
-.merchants-page .merchant-panel{
+
+.upload-page .preview-panel{
   display: grid;
   gap: 14px;
 }
 
 .transactions-page .transaction-table-wrapper,
+
 .upload-page .preview-table-wrapper {
   overflow: hidden;
 }
 
-.upload-page .preview-panel > .section-heading,
-.review-page .review-count,
-.merchants-page .merchant-panel > h2 {
+.upload-page .preview-panel > .section-heading {
   padding: 0 !important;
 }
 
@@ -2200,14 +1582,7 @@ textarea:focus {
   background: #050709 !important;
 }
 
-.app-sidebar .nav-plan-card {
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
 
-.app-sidebar .nav-bottom-button,
 .app-sidebar .logout-button {
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 12px !important;
@@ -2225,7 +1600,7 @@ textarea:focus {
     transform 180ms ease;
 }
 
-.app-sidebar .nav-bottom-button:hover,
+
 .app-sidebar .logout-button:hover {
   border-color: rgba(183, 245, 54, 0.46) !important;
   background:
@@ -2251,141 +1626,18 @@ textarea:focus {
 }
 
 /* Premium widget card pass: make every dashboard card read as an individual component. */
-.premium-dashboard .premium-metric-card,
-.premium-dashboard .dashboard-card,
-.premium-dashboard .snapshot-grid div,
-.premium-dashboard .premium-insight-card,
-.premium-dashboard .premium-category-list.compact,
+
 .transactions-page .transaction-filters,
+
 .transactions-page .transaction-table-wrapper,
-.review-page .bulk-review-actions,
-.review-page .review-row,
+
 .upload-page .preview-table-wrapper,
-.upload-page .failed-row,
-.merchants-page .merchant-list,
-.merchants-page .merchant-rename-row,
-.merchants-page .merchant-stats,
-.merchants-page .merchant-aliases,
-.merchants-page .merchant-transactions{
+
+.upload-page .failed-row{
   border: 1px solid var(--widget-border) !important;
   border-radius: 14px !important;
   background: var(--widget-bg) !important;
   box-shadow: var(--widget-shadow) !important;
-}
-
-.premium-dashboard .premium-metric-card,
-.premium-dashboard .dashboard-card,
-.premium-dashboard .premium-insight-card,
-.premium-dashboard .premium-category-list.compact {
-  position: relative;
-  overflow: hidden;
-}
-
-.premium-dashboard .premium-metric-card::before,
-.premium-dashboard .dashboard-card::before,
-.premium-dashboard .premium-insight-card::before,
-.premium-dashboard .premium-category-list.compact::before {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 28%),
-    radial-gradient(circle at 0% 100%, rgba(255, 255, 255, 0.045), transparent 38%);
-  content: "";
-}
-
-.premium-dashboard .premium-metric-card > *,
-.premium-dashboard .dashboard-card > *,
-.premium-dashboard .premium-insight-card > *,
-.premium-dashboard .premium-category-list.compact > * {
-  position: relative;
-  z-index: 1;
-}
-
-.premium-dashboard .premium-metric-card:hover,
-.premium-dashboard .dashboard-card:hover,
-.premium-dashboard .snapshot-grid div:hover,
-.premium-dashboard .premium-insight-card:hover,
-.premium-dashboard .premium-category-list.compact:hover {
-  border-color: var(--widget-border-hot) !important;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.10) inset,
-    0 0 0 1px rgba(155, 225, 75, 0.08),
-    0 24px 54px rgba(0, 0, 0, 0.44) !important;
-  transform: translateY(-2px);
-}
-
-.premium-dashboard .metric-icon {
-  width: 40px !important;
-  height: 40px !important;
-  border: 1px solid rgba(255, 255, 255, 0.20) !important;
-  border-radius: 999px !important;
-  background:
-    radial-gradient(circle at 35% 20%, rgba(255, 255, 255, 0.13), transparent 42%),
-    rgba(255, 255, 255, 0.035) !important;
-  color: #e5ebe7 !important;
-  box-shadow:
-    0 0 0 5px rgba(255, 255, 255, 0.025),
-    0 12px 24px rgba(0, 0, 0, 0.24) !important;
-}
-
-.premium-dashboard .tone-positive .metric-icon {
-  border-color: rgba(155, 225, 75, 0.38) !important;
-  background: rgba(155, 225, 75, 0.11) !important;
-  color: var(--primary) !important;
-  box-shadow: 0 0 24px rgba(155, 225, 75, 0.12) !important;
-}
-
-.premium-dashboard .tone-negative .metric-icon {
-  border-color: rgba(255, 90, 82, 0.38) !important;
-  background: rgba(255, 90, 82, 0.11) !important;
-  color: var(--danger) !important;
-  box-shadow: 0 0 24px rgba(255, 90, 82, 0.10) !important;
-}
-
-.premium-dashboard .tone-warning .metric-icon {
-  border-color: rgba(229, 169, 58, 0.38) !important;
-  background: rgba(229, 169, 58, 0.11) !important;
-  color: var(--warning) !important;
-}
-
-.premium-dashboard .metric-delta {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 10px;
-  color: var(--primary) !important;
-  font-size: 11px !important;
-  font-style: normal;
-  font-weight: 400;
-}
-
-.premium-dashboard .metric-delta::before {
-  color: currentColor;
-  content: "▲";
-  font-size: 9px;
-}
-
-.premium-dashboard .metric-delta.negative {
-  color: var(--danger) !important;
-}
-
-.premium-dashboard .metric-delta.negative::before {
-  content: "▼";
-}
-
-.premium-dashboard .metric-sparkline.negative {
-  filter: drop-shadow(0 0 8px rgba(255, 90, 82, 0.22));
-}
-
-.premium-dashboard .dashboard-card {
-  min-height: 250px;
-  padding: 20px !important;
-}
-
-.premium-dashboard .premium-category-list.compact {
-  padding: 14px !important;
 }
 
 /* Dashboard card independence pass: grids and sections are layout only. */
@@ -2396,21 +1648,21 @@ textarea:focus {
     --sidebar-width: 216px;
   }
 
-  .app-shell .dashboard-container,
+  
   .app-shell .transactions-page,
+
   .app-shell .review-page,
+
   .app-shell .upload-page,
-  .app-shell .insights-page,
-  .app-shell .health-page,
-  .app-shell .merchants-page {
+
+  .app-shell .insights-page {
     width: min(100% - 32px, 1480px) !important;
     max-width: none !important;
     padding-right: 0 !important;
     padding-left: 0 !important;
   }
 
-  .premium-chart-grid,
-  .merchant-layout,
+  
   .upload-layout {
     grid-template-columns: 1fr !important;
   }
@@ -2418,7 +1670,9 @@ textarea:focus {
 
 @media (max-width: 900px) {
   html,
+
   body,
+
   #root {
     overflow-x: hidden;
   }
@@ -2427,13 +1681,14 @@ textarea:focus {
     padding-left: 0 !important;
     padding-bottom: 92px !important;
   }
-.app-shell .dashboard-container,
+
 .app-shell .transactions-page,
+
 .app-shell .review-page,
+
 .app-shell .upload-page,
-.app-shell .insights-page,
-.app-shell .health-page,
-.app-shell .merchants-page{
+
+.app-shell .insights-page{
     width: min(100% - 24px, 1480px) !important;
     margin-right: auto !important;
     margin-left: auto !important;
@@ -2456,7 +1711,9 @@ textarea:focus {
   }
 
   .app-sidebar .navbar-brand,
+
   .app-sidebar .nav-user,
+
   .app-sidebar .nav-section-label {
     display: none !important;
   }
@@ -2495,49 +1752,45 @@ textarea:focus {
     height: 24px !important;
   }
 
-  .premium-dashboard-header,
+  
   .page-heading,
+
   .transactions-header,
+
   .section-heading {
     align-items: stretch !important;
     flex-direction: column !important;
     gap: 14px !important;
   }
 
-  .premium-header-actions,
+  
   .dashboard-filters,
+
   .preview-actions,
+
   .form-actions {
     width: 100% !important;
     flex-wrap: wrap !important;
   }
 
-  .premium-header-actions label,
-  .premium-header-actions select,
-  .premium-date-control,
-  .premium-year-control,
+  
   .dashboard-filters label,
+
   .dashboard-filters select {
     width: 100% !important;
     min-width: 0 !important;
   }
-.premium-metrics-grid,
-.merchant-stats,
-.upload-summary,
-.health-summary-grid,
-.score-breakdown-grid{
+
+.upload-summary{
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
-.snapshot-grid,
-.transactions-main,
-.transaction-filters,
-.bulk-review-actions,
-.review-row,
-.merchant-rename-row{
+
+.transaction-filters{
     grid-template-columns: 1fr !important;
   }
 
   .transaction-table-wrapper,
+
   .preview-table-wrapper {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
@@ -2545,35 +1798,31 @@ textarea:focus {
 }
 
 @media (max-width: 720px) {
-.app-shell .dashboard-container,
+
 .app-shell .transactions-page,
+
 .app-shell .review-page,
+
 .app-shell .upload-page,
-.app-shell .insights-page,
-.app-shell .health-page,
-.app-shell .merchants-page{
+
+.app-shell .insights-page{
     width: min(100% - 18px, 1480px) !important;
   }
 
-  .premium-dashboard-header h1,
+  
   .page-heading h1,
+
   .transactions-header h1 {
     font-size: clamp(24px, 8vw, 34px) !important;
     line-height: 1.08 !important;
   }
-.premium-metrics-grid,
-.premium-chart-grid,
-.premium-right-rail,
-.merchant-layout,
-.merchant-stats,
+
 .upload-layout,
-.upload-summary,
-.health-summary-grid,
-.score-breakdown-grid{
+
+.upload-summary{
     grid-template-columns: 1fr !important;
   }
-.history-item,
-.merchant-list button{
+.history-item{
     gap: 10px !important;
   }
 }
@@ -2599,21 +1848,11 @@ textarea:focus {
     padding: 0 10px !important;
   }
 
-  .premium-dashboard .metric-icon {
-    width: 34px !important;
-    height: 34px !important;
-    font-size: 15px !important;
-  }
-.premium-dashboard .dashboard-card,
-.premium-dashboard .premium-metric-card,
-.premium-dashboard .premium-insight-card,
-.premium-dashboard .snapshot-grid div,
-.transaction-form-panel,
-.transaction-list-panel,
 .review-panel,
+
 .upload-panel,
-.preview-panel,
-.merchant-panel{
+
+.preview-panel{
     padding: 14px !important;
     border-radius: 14px !important;
   }
@@ -2645,202 +1884,66 @@ textarea:focus {
   --premium-red-glow: 0 0 12px rgba(255, 90, 82, 0.38);
   --premium-cyan-glow: 0 0 12px rgba(94, 234, 212, 0.32);
 }
-.premium-dashboard .premium-dashboard-main,
-.premium-dashboard .premium-dashboard-grid,
-.premium-dashboard .premium-metrics-grid,
-.premium-dashboard .premium-chart-grid,
-.premium-dashboard .premium-right-rail,
-.premium-dashboard .dashboard-section,
-.premium-dashboard .rail-section,
-.transactions-page .transactions-main,
+
 .upload-page .upload-layout,
-.review-page .review-panel,
-.merchants-page .merchant-layout{
+
+.review-page .review-panel{
   border: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
   outline: 0 !important;
 }
-.premium-dashboard .premium-metric-card,
-.premium-dashboard .dashboard-card,
-.premium-dashboard .ai-snapshot-card,
-.premium-dashboard .premium-insight-card,
-.premium-dashboard .snapshot-grid > div,
-.premium-dashboard .premium-category-list.compact,
+
 .transactions-page .transaction-filters,
+
 .transactions-page .transaction-table-wrapper,
-.transactions-page .transaction-form-panel,
-.review-page .bulk-review-actions,
-.review-page .review-row,
+
 .upload-page .upload-panel,
-.upload-page .upload-card,
+
 .upload-page .preview-table-wrapper,
-.upload-page .history-item,
-.merchants-page .merchant-panel,
-.merchants-page .merchant-list,
-.merchants-page .merchant-stats,
-.merchants-page .merchant-rename-row,
-.merchants-page .merchant-aliases,
-.merchants-page .merchant-transactions,
-.health-page .score-card,
-.health-page .score-breakdown-card{
+
+.upload-page .history-item{
   border: 1px solid var(--premium-card-border) !important;
   border-radius: 16px !important;
   background: var(--premium-card-bg) !important;
   box-shadow: var(--premium-card-shadow) !important;
 }
 
-.premium-dashboard .premium-metric-card,
-.premium-dashboard .dashboard-card,
-.premium-dashboard .ai-snapshot-card,
-.premium-dashboard .premium-insight-card,
-.premium-dashboard .snapshot-grid > div {
-  transition:
-    transform 180ms ease,
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-}
 
-.premium-dashboard .premium-metric-card:hover,
-.premium-dashboard .dashboard-card:hover,
-.premium-dashboard .ai-snapshot-card:hover,
-.premium-dashboard .premium-insight-card:hover,
-.premium-dashboard .snapshot-grid > div:hover {
-  border-color: rgba(155, 225, 75, 0.30) !important;
-  box-shadow: var(--premium-card-shadow-hover) !important;
-  transform: translateY(-2px);
-}
-
-.premium-dashboard .premium-metric-card:has(.metric-sparkline) .metric-card-copy > div:not(.metric-icon) {
-  padding-right: 0 !important;
-}
-
-.premium-dashboard .metric-icon {
-  flex: 0 0 auto !important;
-  width: 40px !important;
-  height: 40px !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  border-radius: 999px !important;
-  background:
-    radial-gradient(circle at 35% 20%, rgba(255, 255, 255, 0.16), transparent 42%),
-    rgba(255, 255, 255, 0.035) !important;
-  color: #eef3ef !important;
-  box-shadow:
-    0 0 0 5px rgba(255, 255, 255, 0.025),
-    0 12px 24px rgba(0, 0, 0, 0.24) !important;
-}
-
-.premium-dashboard .metric-delta,
-.metric-positive,
-.metric-positive small,
-.metric-positive em,
-.metric-positive .an-root,
-.premium-dashboard .tone-positive .metric-delta,
-.premium-dashboard .tone-positive .metric-icon,
-.premium-dashboard .premium-panel-header a,
-.premium-dashboard .health-label,
-.premium-dashboard .snapshot-alerts span {
-  color: #9be14b !important;
-  text-shadow: var(--premium-lime-glow) !important;
-}
-
-.metric-negative,
-.metric-negative small,
-.metric-negative em,
-.metric-negative .an-root,
-.premium-dashboard .tone-negative .metric-delta,
-.premium-dashboard .tone-negative .metric-icon {
-  color: #ff5a52 !important;
-  text-shadow: var(--premium-red-glow) !important;
-}
-
-.premium-dashboard .tone-warning .metric-icon,
-.premium-dashboard .premium-category-row strong,
 .category-badge,
-.type-badge,
+
 .method-badge {
   text-shadow: var(--premium-cyan-glow);
 }
 
-.premium-dashboard .metric-sparkline.negative path,
-.premium-dashboard .tone-negative .metric-sparkline path {
-  stroke: #ff5a52 !important;
-  filter: drop-shadow(0 0 7px rgba(255, 90, 82, 0.34));
-}
-
-.premium-dashboard .dashboard-card {
-  min-width: 0 !important;
-}
-
 /* Compact dashboard date picker, matched to the reference pill. */
-
-@media (max-width: 980px) {
-
-  .premium-dashboard .premium-metric-card:has(.metric-sparkline) .metric-card-copy > div:not(.metric-icon) {
-    padding-right: 0 !important;
-  }
-}
-
-@media (max-width: 560px) {
-
-  .premium-dashboard .premium-metric-card:has(.metric-sparkline) .metric-card-copy > div:not(.metric-icon) {
-    padding-right: 0 !important;
-  }
-}
 .page-heading .eyebrow,
+
 .page-heading > p,
-.premium-dashboard-header .eyebrow,
-.premium-dashboard-header p,
+
 .section-heading p,
-.premium-panel-header p,
+
 .metric-card small,
-.premium-metric-card small,
-.premium-wallet-card small,
-.premium-insight-card small,
-.dashboard-insight-card small,
+
 .dashboard-card > p,
-.health-panel > p,
-.rail-section > p,
+
 .upload-page .page-heading p,
-.upload-card > p,
+
 .transactions-header p,
-.categories-page .page-heading p,
-.ai-insights-page .page-heading p,
-.health-page .page-heading p,
-.helper-text,
+
 [class*="subtitle"],
+
 [class*="description"]{
   display: none !important;
 }
 
 .page-heading,
-.premium-dashboard-header,
-.premium-panel-header,
+
 .section-heading {
   gap: 8px !important;
 }
 
 /* KPI trend row: keep percent change beside the sparkline, not under the amount. */
-
-.premium-dashboard .premium-metric-card .metric-trend-row .metric-delta {
-  display: inline-flex !important;
-  width: fit-content !important;
-  max-width: 100% !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 4px 8px !important;
-  border-radius: 999px !important;
-  background: rgba(155, 225, 75, 0.075) !important;
-  font-size: 11px !important;
-  font-style: normal !important;
-  font-weight: 420 !important;
-  line-height: 1.1 !important;
-  white-space: nowrap !important;
-}
-
-.premium-dashboard .tone-negative .metric-trend-row .metric-delta {
-  background: rgba(255, 90, 82, 0.075) !important;
-}
 
 /* Final app background: one vertical gradient shared by every page. */
 :root {
@@ -2848,8 +1951,11 @@ textarea:focus {
 }
 
 html,
+
 body,
+
 #root,
+
 .app-shell {
   min-height: 100%;
   background: var(--finance-app-bg) !important;
@@ -2857,19 +1963,20 @@ body,
 }
 
 body::before,
+
 .app-shell::before,
+
 .app-shell::after {
   display: none !important;
 }
-.app-shell .dashboard-container,
+
 .app-shell .transactions-page,
+
 .app-shell .review-page,
+
 .app-shell .upload-page,
-.app-shell .insights-page,
-.app-shell .ai-insights-page,
-.app-shell .health-page,
-.premium-dashboard,
-.transactions-main{
+
+.app-shell .insights-page{
   background: transparent !important;
 }
 
@@ -2886,84 +1993,18 @@ body::before,
   --finance-card-shadow: 0 16px 34px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.035);
   --finance-card-shadow-hover: 0 20px 42px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.045);
 }
-.premium-dashboard .premium-metric-card,
-.premium-dashboard .dashboard-card,
-.premium-dashboard .ai-snapshot-card,
-.premium-dashboard .premium-insight-card,
-.premium-dashboard .snapshot-grid > div,
-.premium-dashboard .premium-category-list.compact,
-.upload-page .upload-card,
+
 .review-page .review-panel,
-.categories-page .review-panel,
-.health-page .score-card,
-.health-page .score-breakdown-card,
-.transactions-page .transaction-form-card,
-.transactions-page .transactions-toolbar,
-.transactions-page .transactions-table-card,
-.transactions-page .transaction-table-card{
+
+.transactions-page .transaction-form-card{
   background: var(--finance-card-bg) !important;
   border: 1px solid var(--finance-card-border-soft) !important;
   box-shadow: var(--finance-card-shadow) !important;
   backdrop-filter: none !important;
 }
-.premium-dashboard .premium-insight-card,
-.premium-dashboard .premium-category-list.compact,
-.premium-dashboard .snapshot-grid > div,
-.transactions-page tbody tr,
-.upload-page .upload-history-item{
+
+.transactions-page tbody tr{
   background: var(--finance-card-bg-deep) !important;
-}
-.premium-dashboard .premium-metric-card::before,
-.premium-dashboard .premium-metric-card::after,
-.premium-dashboard .dashboard-card::before,
-.premium-dashboard .dashboard-card::after,
-.premium-dashboard .ai-snapshot-card::before,
-.premium-dashboard .ai-snapshot-card::after,
-.premium-dashboard .premium-insight-card::before,
-.premium-dashboard .premium-insight-card::after,
-.premium-dashboard .premium-category-list.compact::before,
-.premium-dashboard .premium-category-list.compact::after,
-.upload-page .upload-card::before,
-.upload-page .upload-card::after{
-  display: none !important;
-  opacity: 0 !important;
-  background: none !important;
-}
-.premium-dashboard .premium-metric-card:hover,
-.premium-dashboard .dashboard-card:hover,
-.premium-dashboard .ai-snapshot-card:hover,
-.premium-dashboard .premium-insight-card:hover,
-.upload-page .upload-card:hover{
-  transform: translateY(-2px);
-  border-color: var(--finance-card-border) !important;
-  box-shadow: var(--finance-card-shadow-hover) !important;
-}
-
-.premium-dashboard .metric-delta,
-.premium-dashboard .premium-link,
-.premium-dashboard .status-good,
-.premium-dashboard .tone-positive .metric-delta,
-.premium-dashboard .snapshot-alert {
-  text-shadow: 0 0 12px rgba(149, 239, 56, 0.28);
-}
-
-.premium-dashboard .tone-negative .metric-delta {
-  text-shadow: 0 0 12px rgba(255, 86, 78, 0.24);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-.premium-dashboard .premium-metric-card,
-.premium-dashboard .dashboard-card,
-.premium-dashboard .ai-snapshot-card,
-.premium-dashboard .premium-insight-card {
-    animation: finance-card-enter 420ms ease both;
-  }
-
-  .premium-dashboard .premium-metric-card:nth-child(2),
-  .premium-dashboard .dashboard-card:nth-child(2),
-  .premium-dashboard .premium-insight-card:nth-child(2) {
-    animation-delay: 45ms;
-  }
 }
 
 @keyframes finance-card-enter {
@@ -2978,129 +2019,119 @@ body::before,
   }
 }
 .app-shell main,
+
 .app-shell .transactions-page,
+
 .app-shell .review-page,
-.app-shell .categories-page,
+
 .app-shell .upload-page,
-.app-shell .insights-page,
-.app-shell .ai-insights-page,
-.app-shell .health-page,
-.app-shell .auth-page{
+
+.app-shell .insights-page{
   color: #eef4f0 !important;
 }
 
 .app-shell h1,
+
 .app-shell h2,
+
 .app-shell h3,
+
 .app-shell h4,
-.app-shell .page-heading h1,
-.app-shell .premium-dashboard-header h1 {
+
+.app-shell .page-heading h1 {
   color: #f8fbf8 !important;
   font-weight: 420 !important;
   letter-spacing: 0 !important;
 }
 
 .app-shell p,
+
 .app-shell small,
+
 .app-shell label,
-.app-shell .muted,
+
 .app-shell .meta,
-.app-shell .subtle,
-.app-shell .form-hint,
+
 .app-shell .empty-state {
   color: rgba(210, 220, 216, 0.68) !important;
 }
-.transaction-form-panel,
-.transaction-list-panel,
+
 .transaction-filters,
+
 .transaction-table-wrapper,
-.transactions-page .transactions-toolbar,
-.transactions-page .transactions-table-card,
-.transactions-page .transaction-table-card,
+
 .transactions-page .transaction-form-card,
+
 .review-panel,
-.review-row,
-.review-card,
-.bulk-review-actions,
-.category-colors-panel,
-.category-color-row,
+
 .upload-panel,
-.upload-card,
+
 .preview-panel,
+
 .preview-table-wrapper,
+
 .history-item,
-.upload-history-item,
+
 .statement-dropzone,
-.simple-advice-card,
-.simple-advice-list > div,
-.ai-insights-page .premium-insight-card,
-.ai-insights-page .dashboard-card,
-.ai-insights-page .ai-insights-list-section,
-.ai-insights-page .ai-insights-card-grid > *,
-.health-page .score-card,
-.health-page .score-breakdown-card,
-.health-page .health-panel,
-.health-page .health-metric-card,
-.health-page .score-tip-card,
-.auth-card,
-.surface-card{
+
+.auth-card{
   background: var(--finance-card-bg) !important;
   border: 1px solid var(--finance-card-border-soft) !important;
   border-radius: 18px !important;
   box-shadow: var(--finance-card-shadow) !important;
   backdrop-filter: none !important;
 }
-.review-row,
-.category-color-row,
+
 .history-item,
-.upload-history-item,
-.simple-advice-list > div,
+
 .preview-table tbody tr,
+
 .transaction-table tbody tr,
+
 .transactions-table tbody tr{
   background: var(--finance-card-bg-deep) !important;
   border-color: rgba(49, 59, 61, 0.82) !important;
 }
-.transaction-form-panel::before,
-.transaction-form-panel::after,
-.transaction-list-panel::before,
-.transaction-list-panel::after,
+
 .transaction-filters::before,
+
 .transaction-filters::after,
+
 .transaction-table-wrapper::before,
+
 .transaction-table-wrapper::after,
+
 .review-panel::before,
+
 .review-panel::after,
+
 .upload-panel::before,
+
 .upload-panel::after,
-.upload-card::before,
-.upload-card::after,
-.health-page .score-card::before,
-.health-page .score-card::after,
+
 .auth-card::before,
+
 .auth-card::after{
   display: none !important;
   opacity: 0 !important;
   background: none !important;
 }
-.transaction-form-panel:hover,
-.transaction-list-panel:hover,
+
 .review-panel:hover,
-.review-row:hover,
+
 .upload-panel:hover,
-.upload-card:hover,
+
 .history-item:hover,
-.upload-history-item:hover,
-.simple-advice-card:hover,
-.health-page .score-card:hover,
-.health-page .score-breakdown-card:hover,
+
 .auth-card:hover{
   border-color: var(--finance-card-border) !important;
   box-shadow: var(--finance-card-shadow-hover) !important;
 }
 
 .app-shell input,
+
 .app-shell select,
+
 .app-shell textarea {
   background: #070b0c !important;
   border: 1px solid rgba(54, 64, 66, 0.9) !important;
@@ -3110,7 +2141,9 @@ body::before,
 }
 
 .app-shell input:focus,
+
 .app-shell select:focus,
+
 .app-shell textarea:focus {
   border-color: rgba(155, 239, 56, 0.58) !important;
   outline: none !important;
@@ -3118,22 +2151,20 @@ body::before,
 }
 
 .app-shell input::placeholder,
+
 .app-shell textarea::placeholder {
   color: rgba(190, 203, 198, 0.46) !important;
 }
 
 .app-shell button,
-.app-shell .button,
-.app-shell .btn,
-.app-shell .action-button {
+
+.app-shell .button {
   border-radius: 12px;
 }
 
 .app-shell .secondary-button,
-.app-shell .ghost-button,
-.app-shell .outline-button,
-.app-shell .delete-button,
-.app-shell .hide-button {
+
+.app-shell .delete-button {
   background: #070b0c !important;
   border: 1px solid rgba(54, 64, 66, 0.9) !important;
   color: #eef4f0 !important;
@@ -3141,6 +2172,7 @@ body::before,
 }
 
 .app-shell .delete-button,
+
 .app-shell .danger-button {
   color: #ff8f88 !important;
   border-color: rgba(255, 86, 78, 0.34) !important;
@@ -3148,7 +2180,9 @@ body::before,
 }
 
 .transaction-table,
+
 .transactions-table,
+
 .preview-table {
   background: transparent !important;
   border-collapse: collapse !important;
@@ -3156,10 +2190,15 @@ body::before,
 }
 
 .transaction-table thead,
+
 .transactions-table thead,
+
 .preview-table thead,
+
 .transaction-table th,
+
 .transactions-table th,
+
 .preview-table th {
   background: rgba(7, 10, 11, 0.96) !important;
   color: rgba(220, 230, 226, 0.78) !important;
@@ -3167,14 +2206,18 @@ body::before,
 }
 
 .transaction-table td,
+
 .transactions-table td,
+
 .preview-table td {
   border-color: rgba(41, 49, 51, 0.82) !important;
   color: #eef4f0 !important;
 }
 
 .transaction-table tbody tr:hover,
+
 .transactions-table tbody tr:hover,
+
 .preview-table tbody tr:hover {
   background:
     radial-gradient(80% 110% at 0% 100%, rgba(155, 239, 56, 0.045), transparent 46%),
@@ -3182,13 +2225,12 @@ body::before,
 }
 
 .category-badge,
+
 .method-badge,
-.status-badge,
-.review-status-badge,
-.transaction-category,
+
 .badge,
-.pill,
-.snapshot-alert {
+
+.pill {
   border: 1px solid rgba(155, 239, 56, 0.26) !important;
   background: rgba(155, 239, 56, 0.08) !important;
   color: #c4fa74 !important;
@@ -3196,43 +2238,39 @@ body::before,
 }
 
 .negative,
+
 .expense,
-.tone-negative,
-.app-shell .text-danger {
+
+.tone-negative {
   color: #ff6f67 !important;
   text-shadow: 0 0 12px rgba(255, 86, 78, 0.22) !important;
 }
 
 .positive,
+
 .income,
+
 .savings,
-.tone-positive,
-.app-shell .text-success {
+
+.tone-positive {
   color: #9bef38 !important;
   text-shadow: 0 0 12px rgba(149, 239, 56, 0.28) !important;
 }
 
-.surface-message.success,
-.form-success,
-.success-message,
-.alert-success {
+.surface-message.success {
   background: rgba(155, 239, 56, 0.09) !important;
   border: 1px solid rgba(155, 239, 56, 0.34) !important;
   color: #c4fa74 !important;
 }
 
 .surface-message.error,
-.form-error,
-.error-message,
-.alert-error {
+
+.error-message {
   background: rgba(255, 86, 78, 0.09) !important;
   border: 1px solid rgba(255, 86, 78, 0.34) !important;
   color: #ffaaa4 !important;
 }
-.empty-state,
-.upload-empty,
-.review-empty,
-.no-data-state{
+.empty-state{
   background: rgba(7, 10, 11, 0.72) !important;
   border: 1px dashed rgba(72, 84, 86, 0.8) !important;
   border-radius: 16px !important;
@@ -3248,53 +2286,17 @@ body::before,
 }
 
 @media (prefers-reduced-motion: no-preference) {
-.transaction-form-panel,
-.transaction-list-panel,
+
 .review-panel,
+
 .upload-panel,
-.upload-card,
-.health-page .score-card,
+
 .auth-card{
     animation: finance-card-enter 380ms ease both;
   }
 }
 
 /* Dashboard KPI emphasis: center the main text so the metric feels primary. */
-
-.premium-dashboard .premium-metric-card .metric-icon {
-  position: absolute !important;
-  top: 20px !important;
-  left: 20px !important;
-  z-index: 3 !important;
-}
-
-.premium-dashboard .premium-metric-card .metric-card-copy > div:not(.metric-icon):not(.metric-trend-row) {
-  display: flex !important;
-  min-height: 64px !important;
-  width: 100% !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 58px !important;
-  text-align: center !important;
-}
-
-@media (max-width: 980px) {
-  .premium-dashboard .premium-metric-card .metric-card-copy > div:not(.metric-icon):not(.metric-trend-row) {
-    padding: 0 46px !important;
-  }
-}
-
-@media (max-width: 560px) {
-  .premium-dashboard .premium-metric-card .metric-icon {
-    top: 16px !important;
-    left: 16px !important;
-  }
-
-  .premium-dashboard .premium-metric-card .metric-card-copy > div:not(.metric-icon):not(.metric-trend-row) {
-    padding: 0 38px !important;
-  }
-}
 
 /* Quiet premium surfaces: reduce shine/glow so cards match the simple reference. */
 :root {
@@ -3307,74 +2309,36 @@ body::before,
   --finance-card-shadow: 0 12px 28px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.025);
   --finance-card-shadow-hover: 0 14px 32px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
-.premium-dashboard .premium-metric-card,
-.premium-dashboard .dashboard-card,
-.premium-dashboard .ai-snapshot-card,
-.premium-dashboard .premium-insight-card,
-.premium-dashboard .snapshot-grid > div,
-.transaction-form-panel,
-.transaction-list-panel,
+
 .transaction-filters,
+
 .transaction-table-wrapper,
+
 .review-panel,
-.review-row,
-.upload-panel,
-.upload-card,
-.simple-advice-card,
-.health-page .score-card,
-.health-page .score-breakdown-card{
+
+.upload-panel{
   background: var(--finance-card-bg) !important;
   border-color: var(--finance-card-border-soft) !important;
   box-shadow: var(--finance-card-shadow) !important;
 }
 
-.premium-dashboard .premium-metric-card::before,
-.premium-dashboard .premium-metric-card::after,
-.premium-dashboard .dashboard-card::before,
-.premium-dashboard .dashboard-card::after,
-.premium-dashboard .premium-insight-card::before,
-.premium-dashboard .premium-insight-card::after {
-  display: none !important;
-  opacity: 0 !important;
-  background: none !important;
-}
 
-.premium-dashboard .metric-icon {
-  background: rgba(255, 255, 255, 0.035) !important;
-  border-color: rgba(255, 255, 255, 0.14) !important;
-  box-shadow: none !important;
-  filter: none !important;
-}
-
-.premium-dashboard .tone-positive .metric-icon,
-.premium-dashboard .tone-negative .metric-icon,
-.premium-dashboard .tone-warning .metric-icon {
-  box-shadow: none !important;
-}
-
-.premium-dashboard .metric-sparkline.negative path,
-.premium-dashboard .tone-negative .metric-sparkline path {
-  filter: drop-shadow(0 0 3px rgba(255, 90, 82, 0.16)) !important;
-}
-
-.premium-dashboard .metric-delta,
-.premium-dashboard .premium-link,
-.premium-dashboard .status-good,
-.premium-dashboard .tone-positive .metric-delta,
-.premium-dashboard .snapshot-alert,
 .positive,
+
 .income,
+
 .savings,
-.tone-positive,
-.app-shell .text-success {
+
+.tone-positive {
   text-shadow: 0 0 6px rgba(149, 239, 56, 0.16) !important;
 }
 
-.premium-dashboard .tone-negative .metric-delta,
+
 .negative,
+
 .expense,
-.tone-negative,
-.app-shell .text-danger {
+
+.tone-negative {
   text-shadow: 0 0 6px rgba(255, 86, 78, 0.14) !important;
 }
 
@@ -3390,11 +2354,17 @@ body::before,
 }
 
 html,
+
 body,
+
 button,
+
 input,
+
 select,
+
 textarea,
+
 .app-shell {
   font-family: var(--finance-font) !important;
   font-size: var(--type-body) !important;
@@ -3405,17 +2375,20 @@ textarea,
 }
 
 .app-shell h1,
-.app-shell .page-heading h1,
-.app-shell .premium-dashboard-header h1 {
+
+.app-shell .page-heading h1 {
   font-size: var(--type-page-title) !important;
   font-weight: 460 !important;
   line-height: 1.08 !important;
 }
 .app-shell h2,
+
 .app-shell .section-heading h2,
-.app-shell .premium-panel-header h2,
+
 .app-shell .dashboard-card h2,
+
 .app-shell .upload-panel h2,
+
 .app-shell .review-panel h2{
   font-size: var(--type-section-title) !important;
   font-weight: 560 !important;
@@ -3423,40 +2396,45 @@ textarea,
 }
 
 .app-shell h3,
-.app-shell h4,
-.app-shell .card-title,
-.app-shell .premium-insight-card strong,
-.app-shell .dashboard-insight-card strong,
-.app-shell .simple-advice-card strong {
+
+.app-shell h4 {
   font-size: var(--type-card-title) !important;
   font-weight: 560 !important;
   line-height: 1.25 !important;
 }
 
 .app-shell p,
+
 .app-shell label,
+
 .app-shell input,
+
 .app-shell select,
+
 .app-shell textarea,
+
 .app-shell button,
+
 .app-shell .surface-message,
+
 .app-shell .empty-state {
   font-size: var(--type-body) !important;
   line-height: 1.45 !important;
 }
 
 .app-shell small,
+
 .app-shell .meta,
-.app-shell .muted,
-.app-shell .helper-text,
+
 .app-shell .eyebrow {
   font-size: var(--type-small) !important;
   line-height: 1.35 !important;
 }
 
 .app-sidebar .nav-link,
-.app-sidebar .nav-bottom-button,
+
 .app-sidebar .brand-copy strong,
+
 .app-sidebar .brand-copy span {
   font-family: var(--finance-font) !important;
   font-size: 15px !important;
@@ -3476,12 +2454,13 @@ textarea,
 }
 
 .app-sidebar .nav-icon,
-.app-sidebar .nav-link svg,
-.app-sidebar .nav-bottom-button svg {
+
+.app-sidebar .nav-link svg {
   flex: 0 0 auto !important;
 }
 
 .metric-icon svg,
+
 .app-shell .metric-icon svg {
   width: 18px !important;
   height: 18px !important;
@@ -3489,21 +2468,25 @@ textarea,
 }
 
 .transaction-table th,
+
 .transaction-table td,
+
 .transactions-table th,
+
 .transactions-table td,
+
 .preview-table th,
-.preview-table td,
-.premium-table th,
-.premium-table td {
+
+.preview-table td {
   font-size: var(--type-table) !important;
   line-height: 1.45 !important;
 }
 
 .transaction-table th,
+
 .transactions-table th,
-.preview-table th,
-.premium-table th {
+
+.preview-table th {
   font-size: 12px !important;
   font-weight: 520 !important;
   letter-spacing: 0.02em !important;
@@ -3511,22 +2494,15 @@ textarea,
 }
 
 .category-badge,
-.type-badge,
+
 .method-badge,
-.status-badge,
-.review-status-badge,
-.transaction-category,
+
 .badge,
+
 .pill {
   font-size: 13px !important;
   font-weight: 480 !important;
   line-height: 1.2 !important;
-}
-
-.premium-dashboard .premium-metric-card small,
-.premium-dashboard .metric-delta {
-  font-size: 12.5px !important;
-  font-weight: 480 !important;
 }
 
 @media (max-width: 760px) {
@@ -3540,36 +2516,7 @@ textarea,
 /* Dashboard health score belongs in the main flow, directly after KPI cards. */
 
 /* KPI cards follow the reference: icon left, content right, no centered text block. */
-
-.premium-dashboard .premium-metric-card .metric-icon {
-  position: static !important;
-  grid-column: 1 !important;
-  grid-row: 1 / span 2 !important;
-  width: 42px !important;
-  height: 42px !important;
-}
-
-.premium-dashboard .premium-metric-card .metric-card-copy > div:not(.metric-icon):not(.metric-trend-row) {
-  grid-column: 2 !important;
-  display: block !important;
-  min-height: 0 !important;
-  width: auto !important;
-  padding: 0 !important;
-  text-align: left !important;
-}
-
-.premium-dashboard .premium-metric-card .metric-trend-row .metric-delta {
-  justify-self: start !important;
-}
-
-.premium-dashboard .premium-insight-card .metric-icon {
-  width: 42px !important;
-  height: 42px !important;
-}
-.upload-page .upload-layout,
-.transactions-page .transactions-main,
-.review-page .review-list,
-.categories-page .review-list{
+.upload-page .upload-layout{
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
@@ -3583,57 +2530,13 @@ textarea,
 
 /* Dashboard KPI final alignment: consistent two-row cards with trend text and sparklines visible. */
 
-.premium-dashboard .premium-metric-card .metric-icon {
-  width: 42px !important;
-  height: 42px !important;
-  margin: 0 !important;
-  align-self: start !important;
-  justify-self: start !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  border-radius: 50% !important;
-  background: rgba(255, 255, 255, 0.035) !important;
-  box-shadow: none !important;
-}
-
-.premium-dashboard .premium-metric-card .metric-icon svg {
-  width: 20px !important;
-  height: 20px !important;
-}
-
-.premium-dashboard .premium-metric-card .metric-delta {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-self: start !important;
-  width: auto !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  background: transparent !important;
-  font-size: 12.5px !important;
-  font-weight: 520 !important;
-  line-height: 1.15 !important;
-  white-space: normal !important;
-  text-align: left !important;
-  text-shadow: 0 0 12px currentColor !important;
-}
-
 /* Transactions table: keep filters visible and make the ledger itself scroll. */
-.transactions-page .transaction-list-panel {
-  min-width: 0 !important;
-  overflow: visible !important;
-}
 
 .app-shell .transactions-page {
   width: min(1720px, calc(100% - 24px)) !important;
   max-width: none !important;
   padding-right: 12px !important;
   padding-left: 12px !important;
-}
-
-.transactions-page .transactions-main {
-  grid-template-columns: minmax(260px, 330px) minmax(760px, 1fr) !important;
-  gap: 16px !important;
 }
 
 .transactions-page .transaction-table-wrapper {
@@ -3675,7 +2578,9 @@ textarea,
 }
 
 .friends-page .friends-workspace,
+
 .friends-page .friends-directory,
+
 .friends-page .friend-detail {
   border: 0 !important;
   background: transparent !important;
@@ -3689,6 +2594,7 @@ textarea,
 }
 
 .friends-page .friends-directory,
+
 .friends-page .friend-detail {
   overflow: hidden !important;
 }
@@ -3721,6 +2627,7 @@ textarea,
 }
 
 .friends-page .friend-form input,
+
 .friends-page .friend-search {
   height: 52px !important;
   border: 1px solid rgba(58, 68, 70, 0.72) !important;
@@ -3729,6 +2636,7 @@ textarea,
 }
 
 .friends-page .friend-row,
+
 .friends-page button.friend-row {
   border: 1px solid rgba(58, 68, 70, 0.58) !important;
   border-radius: 12px !important;
@@ -3739,6 +2647,7 @@ textarea,
 }
 
 .app-shell .friends-page .friend-row[role="button"],
+
 .app-shell .friends-page button.friend-row {
   border: 1px solid rgba(58, 68, 70, 0.58) !important;
   border-radius: 12px !important;
@@ -3749,8 +2658,11 @@ textarea,
 }
 
 .friends-page .friend-row.active,
+
 .friends-page .friend-row:hover,
+
 .friends-page button.friend-row.active,
+
 .friends-page button.friend-row:hover {
   border-color: rgba(183, 245, 54, 0.34) !important;
   background: linear-gradient(145deg, rgba(18, 23, 24, 0.98), rgba(8, 11, 12, 0.99)) !important;
@@ -3758,6 +2670,7 @@ textarea,
 }
 
 .friends-page .friend-row.active,
+
 .friends-page button.friend-row.active {
   box-shadow: inset 3px 0 0 rgba(183, 245, 54, 0.88) !important;
 }
@@ -3767,6 +2680,7 @@ textarea,
 }
 
 .friends-page .friends-list,
+
 .friends-page .friend-transaction-list {
   max-height: calc(100vh - 284px) !important;
 }
@@ -3789,6 +2703,7 @@ textarea,
 }
 
 .friends-page .friend-transaction-table th,
+
 .friends-page .friend-transaction-table td {
   padding: 13px 16px !important;
   border-bottom: 1px solid rgba(58, 68, 70, 0.46) !important;
@@ -3817,12 +2732,15 @@ textarea,
 }
 
 .friends-page .friend-transaction-table td:nth-child(1),
+
 .friends-page .friend-transaction-table td:nth-child(3),
+
 .friends-page .friend-transaction-table span {
   color: rgba(210, 220, 216, 0.68) !important;
 }
 
 .friends-page .friend-transaction-table td:nth-child(2) strong,
+
 .friends-page .friend-transaction-table td:nth-child(2) span {
   display: block !important;
   overflow: hidden !important;
@@ -3838,6 +2756,7 @@ textarea,
 }
 
 .friends-page .friend-transaction-table td:nth-child(4),
+
 .friends-page .friend-transaction-table th:nth-child(4) {
   text-align: right !important;
   white-space: nowrap !important;
@@ -3848,6 +2767,7 @@ textarea,
 }
 
 .friends-page .primary-button,
+
 .friends-page .secondary-button {
   min-height: 44px !important;
   border-radius: 12px !important;
@@ -3861,57 +2781,6 @@ textarea,
 /* Dashboard filters: keep only the active Year + Month selectors. */
 
 /* Dashboard Concept A: executive overview, sidebar untouched. */
-.app-shell .premium-dashboard {
-  width: min(1560px, calc(100% - 48px)) !important;
-  max-width: none !important;
-  padding: 28px 0 72px !important;
-  background: transparent !important;
-}
-
-.premium-dashboard .premium-dashboard-header p:not(.eyebrow) {
-  max-width: 520px !important;
-  color: rgba(210, 220, 216, 0.64) !important;
-  font-size: 14px !important;
-  line-height: 1.4 !important;
-}
-
-.premium-dashboard .premium-dashboard-header .eyebrow {
-  margin: 0 0 5px !important;
-  color: rgba(155, 239, 56, 0.78) !important;
-  font-size: 12px !important;
-  font-weight: 560 !important;
-  letter-spacing: 0.02em !important;
-}
-
-.premium-dashboard .premium-metric-card .metric-card-copy > div:not(.metric-icon) {
-  min-width: 0 !important;
-}
-
-.premium-dashboard .metric-icon {
-  width: 44px !important;
-  height: 44px !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-  box-shadow: none !important;
-}
-
-.premium-dashboard .metric-delta {
-  min-width: 0 !important;
-  color: rgba(155, 239, 56, 0.88) !important;
-  font-size: 12px !important;
-  white-space: normal !important;
-}
-
-.premium-dashboard .tone-negative .metric-delta {
-  color: rgba(255, 100, 112, 0.9) !important;
-}
-
-@media (max-width: 760px) {
-  .app-shell .premium-dashboard {
-    width: min(100% - 24px, 1560px) !important;
-    padding-bottom: 108px !important;
-  }
-}
 
 /* Category merchant drilldown. */
 .app-shell .category-breakdown-page {
@@ -3974,6 +2843,7 @@ textarea,
 }
 
 .category-breakdown-summary span,
+
 .category-breakdown-summary em {
   color: rgba(210, 220, 216, 0.64);
   font-size: 13px;
@@ -4052,6 +2922,7 @@ textarea,
   }
 
   .category-breakdown-header,
+
   .category-breakdown-card-header {
     flex-direction: column;
   }

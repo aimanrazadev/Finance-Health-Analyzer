@@ -15,6 +15,7 @@ from app.schemas.schemas import (
     CategoryCreate,
     CategoryLearningRuleResponse,
     CategoryLearningRuleUpdate,
+    LearningAccuracyResponse,
     CategoryResponse,
     CategoryRetrainResponse,
     TransactionResponse,
@@ -29,6 +30,7 @@ from app.utils.merchant_extractor import normalize_merchant_name
 from app.ml.categorization import (
     MIN_TRAINING_LABELS,
     evaluate_user_category_model,
+    evaluate_user_learning_accuracy,
     retrain_after_correction,
     train_user_category_model,
 )
@@ -217,6 +219,16 @@ def get_needs_review_transactions(
         or_(*filters),
     )
     return query.order_by(Transaction.date.desc()).all()
+
+
+@router.get("/learning-accuracy", response_model=LearningAccuracyResponse)
+def get_learning_accuracy(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return held-out accuracy based only on the user's manual corrections."""
+    evaluation = evaluate_user_learning_accuracy(db, current_user.id)
+    return LearningAccuracyResponse(**evaluation)
 
 
 @router.post("/retrain", response_model=CategoryRetrainResponse)

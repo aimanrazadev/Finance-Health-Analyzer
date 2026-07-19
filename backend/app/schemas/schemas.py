@@ -230,6 +230,11 @@ class CategoryRetrainResponse(BaseModel):
     evaluation_type: str = "not_evaluated"
 
 
+class LearningAccuracyResponse(BaseModel):
+    accuracy: Optional[float] = None
+    message: str
+
+
 # ==================== Dashboard Analytics Schemas ====================
 
 class CategoryBreakdownItem(BaseModel):
