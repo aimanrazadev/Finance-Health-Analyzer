@@ -41,33 +41,6 @@ class MessageResponse(BaseModel):
     message: str
 
 
-# ==================== Phase 2 Shared Schemas ====================
-
-class ImportProfileCreate(BaseModel):
-    profile_name: str = Field(..., min_length=1, max_length=150)
-    bank_name: Optional[str] = None
-    file_type: Optional[str] = None
-    header_signature: str
-    column_mapping: dict[str, str]
-    preferences: dict[str, Any] = {}
-    confidence_score: float = 0
-
-
-class ImportProfileResponse(BaseModel):
-    id: int
-    user_id: int
-    profile_name: str
-    bank_name: Optional[str]
-    file_type: Optional[str]
-    header_signature: str
-    column_mapping: dict[str, str]
-    preferences: dict[str, Any] = {}
-    confidence_score: float
-    usage_count: int
-    last_used_at: Optional[datetime]
-    created_at: datetime
-
-
 class FinancialSnapshotResponse(BaseModel):
     month: int
     year: int
@@ -251,6 +224,10 @@ class CategoryRetrainResponse(BaseModel):
     trained: bool
     label_count: int
     message: str
+    accuracy: Optional[float] = None
+    class_count: int = 0
+    test_sample_count: int = 0
+    evaluation_type: str = "not_evaluated"
 
 
 # ==================== Dashboard Analytics Schemas ====================
@@ -523,13 +500,8 @@ class UploadPreviewResponse(BaseModel):
     file_name: str
     file_size: int
     file_type: str
-    import_profile_id: Optional[int] = None
-    import_profile_name: Optional[str] = None
-    import_confidence: float = 0
-    bank_name: Optional[str] = None
     opening_balance: Optional[float] = None
     closing_balance: Optional[float] = None
-    column_mapping: dict[str, str] = {}
     total_rows: int
     successful_rows: int
     valid_rows: int
@@ -543,10 +515,8 @@ class UploadConfirmRequest(BaseModel):
     file_name: str
     file_size: int
     file_type: Optional[str] = None
-    bank_name: Optional[str] = None
     opening_balance: Optional[float] = None
     closing_balance: Optional[float] = None
-    column_mapping: dict[str, str] = {}
     total_rows: Optional[int] = None
     failed_rows: Optional[int] = None
     rows: List[UploadPreviewRow]

@@ -66,6 +66,12 @@ def ensure_database_schema():
     existing_tables = set(inspector.get_table_names())
 
     with engine.begin() as connection:
+        # Import profiles were removed from the product. Drop the legacy table
+        # after the model has been removed so existing deployments are cleaned up.
+        if "import_profiles" in existing_tables:
+            connection.execute(text("DROP TABLE import_profiles"))
+            existing_tables.remove("import_profiles")
+
         for table in Base.metadata.sorted_tables:
             if table.name not in existing_tables:
                 continue

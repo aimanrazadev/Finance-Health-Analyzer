@@ -12,7 +12,6 @@ Personal finance reviews often require manually copying statement rows into spre
 
 - JWT-based registration, login, refresh, logout, and protected user data
 - PDF bank statement validation, parsing, preview, confirmation, upload history, and duplicate detection
-- Reusable import profiles for recognized statement column mappings
 - Hybrid transaction categorization using learned merchant rules, keyword matching, fuzzy similarity, and a per-user TF-IDF + Logistic Regression classifier
 - Confidence-based automatic assignment, needs-review queues, manual and bulk corrections, and model retraining
 - Monthly dashboard metrics for income, expenses, balances, savings allocation, categories, merchants, and trends

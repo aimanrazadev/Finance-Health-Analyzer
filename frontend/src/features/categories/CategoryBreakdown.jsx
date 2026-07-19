@@ -14,8 +14,8 @@ import {
   YAxis,
 } from 'recharts';
 import Navigation from '../../components/layout/Navigation';
-import { useAuth } from '../../hooks/useAuth';
-import api, { getAuthHeaders } from '../../services/api';
+import { useAuth } from '../auth/authContext';
+import api, { getAuthHeaders } from '../../shared/services/apiClient';
 import { getCategoryChartColor } from '../../utils/categoryDisplay';
 import { getPeriodSelection, savePeriodSelection } from '../../utils/periodSession';
 import './CategoryBreakdown.css';

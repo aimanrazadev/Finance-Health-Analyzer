@@ -13,13 +13,13 @@ import {
   UserRound,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../auth/authContext';
 import AppSelect from '../../components/ui/AppSelect';
 import CategoryBadge from '../../components/ui/CategoryBadge';
 import Navigation from '../../components/layout/Navigation';
 import Skeleton from '../../components/ui/Skeleton';
-import { useUI } from '../../hooks/useUI';
-import api, { getAuthHeaders } from '../../services/api';
+import { useUI } from '../../shared/context/UIContext';
+import api, { getAuthHeaders } from '../../shared/services/apiClient';
 import './Transactions.css';
 
 const createDefaultFormState = () => ({

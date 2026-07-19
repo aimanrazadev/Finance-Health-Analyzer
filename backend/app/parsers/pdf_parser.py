@@ -4,7 +4,6 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.services.import_profile_service import resolve_import_mapping
 from app.parsers.transaction_cleaner import map_column_name, standardize_transaction
 
 
@@ -224,9 +223,6 @@ def parse_pdf_statement(
         raw_rows = _extract_rows_from_text(content)
         columns = ["Date", "Description", "Reference No", "Withdrawal", "Deposit", "Balance"]
 
-    profile_context = resolve_import_mapping(db, user_id, file_name, "pdf", columns)
-    profile = profile_context["profile"]
-
     transactions: list[dict[str, Any]] = []
     failed_items: list[dict[str, Any]] = []
     for index, raw in enumerate(raw_rows, start=1):
@@ -248,12 +244,4 @@ def parse_pdf_statement(
         "closing_balance": closing_balance,
         "transactions": transactions,
         "failed_items": failed_items,
-        "import_profile": {
-            "id": profile.id if profile else None,
-            "name": profile.profile_name if profile else f"{profile_context['bank_name']} PDF profile",
-            "confidence": profile_context["confidence"],
-            "column_mapping": profile_context["mapping"],
-            "bank_name": profile_context["bank_name"],
-            "columns": columns,
-        },
     }

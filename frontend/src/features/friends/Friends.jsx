@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ChevronRight, Copy, EyeOff, Search } from 'lucide-react';
 import Navigation from '../../components/layout/Navigation';
-import { useAuth } from '../../hooks/useAuth';
-import api, { getAuthHeaders } from '../../services/api';
+import { useAuth } from '../auth/authContext';
+import api, { getAuthHeaders } from '../../shared/services/apiClient';
 import './Friends.css';
 
 const moneyFormatter = new Intl.NumberFormat('en-IN', {

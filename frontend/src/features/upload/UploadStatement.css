@@ -55,23 +55,9 @@
   margin-bottom: 4px;
 }
 
-.upload-panel-heading span:not(.pdf-format-badge) {
+.upload-panel-heading span {
   color: var(--text-muted);
   font-size: 12px;
-}
-
-.pdf-format-badge {
-  display: inline-flex;
-  min-width: 42px;
-  height: 28px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(149, 239, 56, 0.38);
-  border-radius: 6px;
-  background: rgba(149, 239, 56, 0.09);
-  color: #bffb72;
-  font-size: 11px;
-  font-weight: 650;
 }
 
 .upload-form {
@@ -455,8 +441,7 @@
 }
 
 .app-shell .upload-page .dropzone-icon,
-.app-shell .upload-page .dropzone-button,
-.app-shell .upload-page .pdf-format-badge {
+.app-shell .upload-page .dropzone-button {
   background: #171717 !important;
   border-color: rgba(163, 255, 18, 0.28) !important;
   color: var(--upload-accent) !important;
@@ -551,6 +536,17 @@
   padding: 26px;
 }
 
+html body .app-shell .upload-page > .preview-panel {
+  width: 100%;
+  padding: 28px !important;
+  gap: 24px;
+}
+
+html body .app-shell .upload-page > .preview-panel .upload-summary {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-bottom: 0;
+}
+
 .upload-panel-heading {
   margin-bottom: 20px;
 }
@@ -565,8 +561,7 @@
   padding: 30px 24px;
 }
 
-.history-panel-heading,
-.profile-panel-heading {
+.history-panel-heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -574,21 +569,15 @@
   margin-bottom: 22px;
 }
 
-.history-panel-heading h2,
-.profile-panel-heading h2 {
+.history-panel-heading h2 {
   margin-bottom: 7px;
 }
 
-.history-panel-heading p,
-.profile-panel-heading p {
+.history-panel-heading p {
   margin: 0;
   color: var(--text-muted);
   font-size: 13px;
   line-height: 1.45;
-}
-
-.history-panel-heading .app-select {
-  flex: 0 0 190px;
 }
 
 .history-list {
@@ -612,11 +601,6 @@
   white-space: nowrap;
 }
 
-.profile-panel-heading {
-  align-items: center;
-}
-
-.profile-panel-heading > button,
 .load-more-history {
   display: inline-flex;
   min-height: 38px;
@@ -631,55 +615,19 @@
   cursor: pointer;
 }
 
-.profile-panel-heading > button svg {
-  width: 16px;
-}
-
-.profile-copy i {
-  display: block;
-  width: 100%;
-  height: 5px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #292d2b;
-}
-
-.profile-copy i span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--upload-accent);
-}
-
-.profile-copy em {
-  color: var(--text-muted);
-  font-size: 11px;
-  font-style: normal;
-}
-
-.profile-usage {
-  justify-items: center;
-}
-
-.profile-chevron {
-  width: 17px;
-  color: var(--text-muted);
-}
-
 @media (max-width: 920px) {
   .upload-layout {
     grid-template-columns: 1fr;
   }
 
-  .history-panel-heading,
-  .profile-panel-heading {
+  .history-panel-heading {
     flex-direction: column;
   }
 
-  .history-panel-heading .app-select {
-    width: 100%;
-    flex-basis: auto;
+  html body .app-shell .upload-page > .preview-panel .upload-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
 }
 
 @media (max-width: 620px) {
@@ -689,6 +637,14 @@
   }
 
   .upload-summary {
+    grid-template-columns: 1fr;
+  }
+
+  html body .app-shell .upload-page > .preview-panel {
+    padding: 18px !important;
+  }
+
+  html body .app-shell .upload-page > .preview-panel .upload-summary {
     grid-template-columns: 1fr;
   }
 }

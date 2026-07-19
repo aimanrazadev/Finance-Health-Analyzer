@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useState } from 'react';
-import { UIContext } from './uiContextCore';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+
+const UIContext = createContext(null);
 
 export const UIProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
@@ -50,4 +51,12 @@ export const UIProvider = ({ children }) => {
       </div>
     </UIContext.Provider>
   );
+};
+
+export const useUI = () => {
+  const context = useContext(UIContext);
+  if (!context) {
+    throw new Error('useUI must be used inside UIProvider');
+  }
+  return context;
 };

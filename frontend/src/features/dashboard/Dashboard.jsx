@@ -14,9 +14,8 @@ import {
 } from 'recharts';
 import Navigation from '../../components/layout/Navigation';
 import AppSelect from '../../components/ui/AppSelect';
-import { AnimateNumber } from '../../components/ui/AnimatedBlurNumber';
-import { useAuth } from '../../hooks/useAuth';
-import api, { getAuthHeaders } from '../../services/api';
+import { useAuth } from '../auth/authContext';
+import api, { getAuthHeaders } from '../../shared/services/apiClient';
 import { getCategoryChartColor } from '../../utils/categoryDisplay';
 import { getPeriodSelection, savePeriodSelection } from '../../utils/periodSession';
 import './Dashboard.css';
@@ -161,11 +160,7 @@ const DashboardMetric = ({ icon, label, numericValue, helper, delta, deltaLabel,
       ) : format === 'percent' ? (
         `${percentFormatter.format(Number(numericValue))}%`
       ) : (
-        <AnimateNumber
-          value={Number(numericValue || 0)}
-          locale="en-IN"
-          format={{ style: 'currency', currency: 'INR', minimumFractionDigits: 2, maximumFractionDigits: 2 }}
-        />
+        formatMoney(numericValue)
       )}
     </strong>
     {delta !== null && delta !== undefined ? (

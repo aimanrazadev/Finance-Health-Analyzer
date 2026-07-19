@@ -26,7 +26,12 @@ from app.services.category_service import get_visible_categories
 from app.services.friend_service import create_or_update_friend_from_transaction, is_friends_category
 from app.services.learning_service import save_category_correction
 from app.utils.merchant_extractor import normalize_merchant_name
-from app.ml.categorization import MIN_TRAINING_LABELS, retrain_after_correction, train_user_category_model
+from app.ml.categorization import (
+    MIN_TRAINING_LABELS,
+    evaluate_user_category_model,
+    retrain_after_correction,
+    train_user_category_model,
+)
 from app.utils.transaction_type import normalize_transaction_type
 
 router = APIRouter(prefix="/categories", tags=["categories"])
@@ -223,15 +228,20 @@ def retrain_category_model(
     label_count = db.query(CategoryCorrection).filter(CategoryCorrection.user_id == current_user.id).count()
     retrain_after_correction(current_user.id)
     model = train_user_category_model(db, current_user.id)
+    evaluation = evaluate_user_category_model(db, current_user.id)
     trained = model is not None
     return CategoryRetrainResponse(
         trained=trained,
         label_count=label_count,
         message=(
-            "Model retrained."
+            f"Model retrained. {evaluation['message']}"
             if trained
             else f"Need at least {MIN_TRAINING_LABELS} corrected transactions to train the ML model."
         ),
+        accuracy=evaluation.get("accuracy"),
+        class_count=int(evaluation.get("class_count") or 0),
+        test_sample_count=int(evaluation.get("test_sample_count") or 0),
+        evaluation_type=str(evaluation.get("evaluation_type") or "not_evaluated"),
     )
 
 

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ChevronRight, Eye, Plus, Upload } from 'lucide-react';
+import { Eye, Upload } from 'lucide-react';
 import AppSelect from '../../components/ui/AppSelect';
 import Navigation from '../../components/layout/Navigation';
-import { useAuth } from '../../hooks/useAuth';
-import api, { getAuthHeaders } from '../../services/api';
+import { useAuth } from '../auth/authContext';
+import api, { getAuthHeaders } from '../../shared/services/apiClient';
 import './UploadStatement.css';
 
 const MAX_PDF_SIZE = 10 * 1024 * 1024;
@@ -23,26 +23,20 @@ const UploadStatement = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [history, setHistory] = useState([]);
-  const [importProfiles, setImportProfiles] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deletingUploadId, setDeletingUploadId] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [historyFilter, setHistoryFilter] = useState('all');
   const [visibleHistoryCount, setVisibleHistoryCount] = useState(4);
 
   const headers = getAuthHeaders(token);
 
   const loadHistory = async () => {
     try {
-      const [historyResponse, profileResponse] = await Promise.all([
-        api.get('/uploads/history', { headers }),
-        api.get('/import-profiles', { headers }),
-      ]);
+      const historyResponse = await api.get('/uploads/history', { headers });
       setHistory(historyResponse.data);
-      setImportProfiles(profileResponse.data);
     } catch (err) {
       console.error(err);
     }
@@ -53,13 +47,9 @@ const UploadStatement = () => {
 
     const loadInitialHistory = async () => {
       try {
-        const [response, profileResponse] = await Promise.all([
-          api.get('/uploads/history', { headers: getAuthHeaders(token) }),
-          api.get('/import-profiles', { headers: getAuthHeaders(token) }),
-        ]);
+        const response = await api.get('/uploads/history', { headers: getAuthHeaders(token) });
         if (!cancelled) {
           setHistory(response.data);
-          setImportProfiles(profileResponse.data);
         }
       } catch (err) {
         console.error(err);
@@ -153,10 +143,8 @@ const UploadStatement = () => {
         file_name: preview.file_name,
         file_size: preview.file_size,
         file_type: 'pdf',
-        bank_name: preview.bank_name,
         opening_balance: preview.opening_balance,
         closing_balance: preview.closing_balance,
-        column_mapping: preview.column_mapping || {},
         total_rows: preview.total_rows,
         failed_rows: preview.failed_rows,
         rows: preview.rows,
@@ -232,11 +220,7 @@ const UploadStatement = () => {
     needs_review: 'Needs Review',
   }[method] || 'Needs Review');
   const getCategoriesForType = () => categories;
-  const newestUploadTime = history.reduce((latest, item) => Math.max(latest, new Date(item.upload_date).getTime()), 0);
-  const filteredHistory = historyFilter === 'recent'
-    ? history.filter((item) => newestUploadTime - new Date(item.upload_date).getTime() <= 30 * 24 * 60 * 60 * 1000)
-    : history;
-  const visibleHistory = filteredHistory.slice(0, visibleHistoryCount);
+  const visibleHistory = history.slice(0, visibleHistoryCount);
 
   return (
     <div>
@@ -260,7 +244,6 @@ const UploadStatement = () => {
                 <h2>Upload new statement</h2>
                 <span>PDF only, up to 10 MB</span>
               </div>
-              <span className="pdf-format-badge">PDF</span>
             </div>
             <form onSubmit={handlePreview} className="upload-form">
               <label className="statement-dropzone">
@@ -275,48 +258,18 @@ const UploadStatement = () => {
               </label>
               <button type="submit" className="primary-button preview-transactions-button" disabled={loadingPreview || !selectedFile}>
                 <Eye aria-hidden="true" />
-                {loadingPreview ? 'Reading PDF...' : 'Preview transactions'}
+                {loadingPreview ? 'Scanning statement...' : 'Scan statement'}
               </button>
             </form>
             </div>
 
-            <div className="upload-panel import-profile-panel">
-              <div className="profile-panel-heading">
-                <div><h2>Import profiles</h2><p>Access and manage your saved import profiles</p></div>
-                <button type="button" onClick={() => setSuccess('Import profiles are created automatically after a confirmed statement upload.')}><Plus /> Create new profile</button>
-              </div>
-              {importProfiles.length === 0 ? (
-                <div className="empty-state">PDF bank profiles appear after a confirmed upload.</div>
-              ) : (
-                <div className="history-list">
-                  {importProfiles.slice(0, 4).map((profile) => (
-                    <div className="history-item" key={profile.id}>
-                      <div className="profile-copy">
-                        <strong>{profile.profile_name}</strong>
-                        <span>{profile.bank_name || 'Bank format'}</span>
-                        <i><span style={{ width: `${Math.round((profile.confidence_score || 0) * 100)}%` }} /></i>
-                        <em>{Math.round((profile.confidence_score || 0) * 100)}% confidence</em>
-                      </div>
-                      <div className="profile-usage"><b>{profile.usage_count}</b><span>uses</span></div>
-                      <ChevronRight className="profile-chevron" aria-hidden="true" />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
 
           <div className="upload-panel upload-history-panel">
             <div className="history-panel-heading">
               <div><h2>Upload history</h2><p>View and manage your previously uploaded statements</p></div>
-              <AppSelect
-                ariaLabel="Filter uploaded statements"
-                value={historyFilter}
-                onChange={setHistoryFilter}
-                options={[{ value: 'all', label: 'All statements' }, { value: 'recent', label: 'Last 30 days' }]}
-              />
             </div>
-            {filteredHistory.length === 0 ? (
+            {history.length === 0 ? (
               <div className="empty-state">No statement uploads yet.</div>
             ) : (
               <div className="history-list">
@@ -339,7 +292,7 @@ const UploadStatement = () => {
                     </div>
                   </div>
                 ))}
-                {visibleHistoryCount < filteredHistory.length && (
+                {visibleHistoryCount < history.length && (
                   <button type="button" className="load-more-history" onClick={() => setVisibleHistoryCount((count) => count + 4)}>Load more statements</button>
                 )}
               </div>
@@ -379,10 +332,6 @@ const UploadStatement = () => {
               <div>
                 <span>Failed rows</span>
                 <strong>{preview.failed_rows}</strong>
-              </div>
-              <div>
-                <span>Import confidence</span>
-                <strong>{Math.round((preview.import_confidence || 0) * 100)}%</strong>
               </div>
               <div>
                 <span>Opening balance</span>

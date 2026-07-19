@@ -13,7 +13,6 @@ from app.schemas.schemas import (
 )
 from app.parsers.file_parser import MAX_UPLOAD_SIZE_BYTES, parse_statement_file, validate_statement_file
 from app.services.friend_service import auto_attach_transaction_if_friend, create_or_update_friend_from_transaction, is_friends_category
-from app.services.import_profile_service import save_import_profile_from_columns
 from app.utils.merchant_extractor import extract_transaction_merchant
 from app.utils.transaction_type import normalize_transaction_type
 
@@ -29,18 +28,12 @@ async def preview_statement_upload(
     content = await file.read(MAX_UPLOAD_SIZE_BYTES + 1)
     file_name = file.filename or "statement.pdf"
     parsed = parse_statement_file(file_name, content, db, user_id=current_user.id)
-    import_profile = parsed.get("import_profile") or {}
     return UploadPreviewResponse(
         file_name=file_name,
         file_size=len(content),
         file_type=parsed["file_type"],
-        import_profile_id=import_profile.get("id"),
-        import_profile_name=import_profile.get("name"),
-        import_confidence=import_profile.get("confidence") or 0,
-        bank_name=import_profile.get("bank_name"),
         opening_balance=parsed.get("opening_balance"),
         closing_balance=parsed.get("closing_balance"),
-        column_mapping=import_profile.get("column_mapping") or {},
         total_rows=parsed["total_rows"],
         successful_rows=parsed["successful_rows"],
         valid_rows=parsed["successful_rows"],
@@ -74,15 +67,6 @@ def confirm_statement_upload(
 ):
     validate_statement_file(upload_data.file_name, upload_data.file_size)
     file_type = "pdf"
-    if upload_data.column_mapping:
-        save_import_profile_from_columns(
-            db,
-            current_user.id,
-            upload_data.bank_name or upload_data.file_name,
-            file_type,
-            list(upload_data.column_mapping.keys()),
-        )
-
     uploaded_file = UploadedFile(
         user_id=current_user.id,
         filename=upload_data.file_name,

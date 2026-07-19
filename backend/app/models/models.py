@@ -112,25 +112,6 @@ class FriendMerchantLearning(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
-class ImportProfile(Base):
-    """Remembered bank statement column mappings for repeat uploads."""
-    __tablename__ = "import_profiles"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False, index=True)
-    profile_name = Column(String(150), nullable=False)
-    bank_name = Column(String(150), nullable=True, index=True)
-    file_type = Column(String(50), nullable=True)
-    header_signature = Column(String(500), nullable=False, index=True)
-    column_mapping = Column(Text, nullable=False)
-    preferences = Column(Text, nullable=True)
-    confidence_score = Column(Float, default=0.0)
-    usage_count = Column(Integer, default=0)
-    last_used_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-
 class FinancialScore(Base):
     """Financial health score snapshots generated from transaction analytics."""
     __tablename__ = "financial_scores"

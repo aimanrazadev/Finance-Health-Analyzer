@@ -4,10 +4,10 @@ import {
   Activity, CreditCard,
   RefreshCw, ShieldCheck, ShoppingBag, Sparkles, Store,
 } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../auth/authContext';
 import Navigation from '../../components/layout/Navigation';
 import AppSelect from '../../components/ui/AppSelect';
-import api, { getAuthHeaders } from '../../services/api';
+import api, { getAuthHeaders } from '../../shared/services/apiClient';
 import { getPeriodSelection, savePeriodSelection } from '../../utils/periodSession';
 import './AIInsights.css';
 

@@ -13,8 +13,8 @@ import { Line, LineChart, ResponsiveContainer } from 'recharts';
 import { useSearchParams } from 'react-router-dom';
 import AppSelect from '../../components/ui/AppSelect';
 import Navigation from '../../components/layout/Navigation';
-import { useAuth } from '../../hooks/useAuth';
-import api, { getAuthHeaders } from '../../services/api';
+import { useAuth } from '../auth/authContext';
+import api, { getAuthHeaders } from '../../shared/services/apiClient';
 import './NeedsReview.css';
 
 const PAGE_SIZE = 10;
@@ -266,11 +266,11 @@ const Categories = () => {
             onChange={setBulkCategoryId}
             ariaLabel="Bulk category"
             options={[
-              { value: '', label: 'Bulk category' },
+              { value: '', label: '--' },
               ...categories.map((category) => ({ value: category.id, label: category.name })),
             ]}
           />
-          <button className="categories-secondary-action plain-button" onClick={applyBulkCategory}>Assign</button>
+          <button className="categories-secondary-action plain-button" onClick={applyBulkCategory}>Select All</button>
           <button className="categories-primary-action" onClick={saveBulkCorrections}>Save All{selectedCount ? ` (${selectedCount})` : ''}</button>
         </section>
 

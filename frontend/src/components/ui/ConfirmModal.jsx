@@ -1,4 +1,4 @@
-import { useUI } from '../../hooks/useUI';
+import { useUI } from '../../shared/context/UIContext';
 import './UIPrimitives.css';
 
 const ConfirmModal = () => {

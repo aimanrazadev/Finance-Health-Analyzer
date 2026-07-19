@@ -9,7 +9,6 @@ from app.api.v1.categories import router as categories_router
 from app.api.v1.dashboard import router as dashboard_router
 from app.api.v1.financial_health import router as financial_health_router
 from app.api.v1.friends import router as friends_router
-from app.api.v1.import_profiles import router as import_profiles_router
 from app.api.v1.transactions import router as transactions_router
 from app.api.v1.uploads import router as uploads_router
 from app.db.schema_maintenance import ensure_database_schema
@@ -64,7 +63,6 @@ app.include_router(categories_router)
 app.include_router(dashboard_router)
 app.include_router(financial_health_router)
 app.include_router(friends_router)
-app.include_router(import_profiles_router)
 app.include_router(transactions_router)
 app.include_router(uploads_router)
 
@@ -86,7 +84,6 @@ def home():
             "dashboard": "/dashboard",
             "financial_health": "/financial-health/score",
             "friends": "/friends",
-            "import_profiles": "/import-profiles",
             "transactions": "/transactions",
             "uploads": "/uploads",
             "docs": "/docs",
