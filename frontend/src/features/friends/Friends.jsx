@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ChevronRight, Copy, EyeOff, Search } from 'lucide-react';
 import Navigation from '../../components/layout/Navigation';
-import { useAuth } from '../auth/authContext';
+import useAuth from '../auth/useAuth';
 import api, { getAuthHeaders } from '../../shared/services/apiClient';
 import './Friends.css';
 

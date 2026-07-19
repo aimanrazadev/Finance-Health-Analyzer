@@ -1,8 +1,7 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import api, { getAuthHeaders } from '../../shared/services/apiClient';
 import { clearPeriodSelection } from '../../utils/periodSession';
-
-const AuthContext = createContext(null);
+import AuthContext from './AuthContextCore';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -38,7 +37,6 @@ export const AuthProvider = ({ children }) => {
     };
 
     if (!token) {
-      setLoading(false);
       return undefined;
     }
 
@@ -136,12 +134,4 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
 };

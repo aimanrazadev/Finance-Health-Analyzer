@@ -1,5 +1,5 @@
-import { AuthProvider } from '../features/auth/authContext';
-import { UIProvider } from '../shared/context/UIContext';
+import { AuthProvider } from '../features/auth/authContext.jsx';
+import { UIProvider } from '../shared/context/UIContext.jsx';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import ToastHost from '../components/ui/ToastHost';
 

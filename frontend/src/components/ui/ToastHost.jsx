@@ -1,4 +1,4 @@
-import { useUI } from '../../shared/context/UIContext';
+import useUI from '../../shared/context/useUI';
 import './UIPrimitives.css';
 
 const ToastHost = () => {

@@ -13,12 +13,12 @@ import {
   UserRound,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../auth/authContext';
+import useAuth from '../auth/useAuth';
 import AppSelect from '../../components/ui/AppSelect';
 import CategoryBadge from '../../components/ui/CategoryBadge';
 import Navigation from '../../components/layout/Navigation';
 import Skeleton from '../../components/ui/Skeleton';
-import { useUI } from '../../shared/context/UIContext';
+import useUI from '../../shared/context/useUI';
 import api, { getAuthHeaders } from '../../shared/services/apiClient';
 import './Transactions.css';
 

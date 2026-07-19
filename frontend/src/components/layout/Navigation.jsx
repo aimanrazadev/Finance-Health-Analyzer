@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../features/auth/authContext';
+import useAuth from '../../features/auth/useAuth';
 import './Navigation.css';
 
 const iconPaths = {

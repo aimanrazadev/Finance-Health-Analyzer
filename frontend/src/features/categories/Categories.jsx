@@ -13,7 +13,7 @@ import { Line, LineChart, ResponsiveContainer } from 'recharts';
 import { useSearchParams } from 'react-router-dom';
 import AppSelect from '../../components/ui/AppSelect';
 import Navigation from '../../components/layout/Navigation';
-import { useAuth } from '../auth/authContext';
+import useAuth from '../auth/useAuth';
 import api, { getAuthHeaders } from '../../shared/services/apiClient';
 import './NeedsReview.css';
 

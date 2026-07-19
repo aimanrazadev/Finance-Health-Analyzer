@@ -4,7 +4,7 @@ import {
   Activity, CreditCard,
   RefreshCw, ShieldCheck, ShoppingBag, Sparkles, Store,
 } from 'lucide-react';
-import { useAuth } from '../auth/authContext';
+import useAuth from '../auth/useAuth';
 import Navigation from '../../components/layout/Navigation';
 import AppSelect from '../../components/ui/AppSelect';
 import api, { getAuthHeaders } from '../../shared/services/apiClient';
