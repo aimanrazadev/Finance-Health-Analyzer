@@ -110,6 +110,10 @@ class FriendUpdate(BaseModel):
     name: str = Field(..., min_length=1, max_length=150)
 
 
+class FriendMergeRequest(BaseModel):
+    target_friend_id: int = Field(..., gt=0)
+
+
 class FriendResponse(BaseModel):
     id: int
     user_id: int

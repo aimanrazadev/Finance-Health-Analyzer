@@ -303,6 +303,52 @@ def get_friend_detail(db: Session, user_id: int, friend_id: int) -> tuple[Friend
     return refresh_friend_stats(db, friend), transactions
 
 
+def merge_friend_into_existing(
+    db: Session,
+    user_id: int,
+    source_friend_id: int,
+    target_friend_id: int,
+) -> tuple[Friend, int]:
+    """Move one friend's complete history and learned aliases into another friend."""
+    if source_friend_id == target_friend_id:
+        raise ValueError("Choose a different friend to merge into.")
+
+    friends = db.query(Friend).filter(
+        Friend.user_id == user_id,
+        Friend.id.in_([source_friend_id, target_friend_id]),
+    ).all()
+    by_id = {friend.id: friend for friend in friends}
+    source = by_id.get(source_friend_id)
+    target = by_id.get(target_friend_id)
+    if not source or not target:
+        raise LookupError("Friend not found.")
+
+    source_transactions = db.query(Transaction).filter(
+        Transaction.user_id == user_id,
+        Transaction.friend_id == source.id,
+    ).all()
+    for transaction in source_transactions:
+        _ensure_transaction_link(db, user_id, target, transaction)
+        transaction.friend_id = target.id
+        transaction.is_friend_transaction = True
+        transaction.normalized_friend_name = target.normalized_name
+
+    db.query(FriendTransactionLink).filter(
+        FriendTransactionLink.user_id == user_id,
+        FriendTransactionLink.friend_id == source.id,
+    ).delete(synchronize_session=False)
+    db.query(FriendMerchantLearning).filter(
+        FriendMerchantLearning.user_id == user_id,
+        FriendMerchantLearning.friend_id == source.id,
+    ).update({FriendMerchantLearning.friend_id: target.id}, synchronize_session=False)
+
+    target.is_hidden = False
+    db.delete(source)
+    db.flush()
+    refresh_friend_stats(db, target)
+    return target, len(source_transactions)
+
+
 def get_friend_dashboard(db: Session, user_id: int) -> dict:
     friends = (
         db.query(Friend)

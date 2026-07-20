@@ -6,8 +6,17 @@ from sqlalchemy.orm import sessionmaker
 
 from app.analytics.financial_analytics import _month_start_months_ago, build_subscription_analytics
 from app.ml.categorization import MIN_TRAINING_LABELS, _learning_accuracy_cached, _manual_correction_rows, train_user_category_model
-from app.models.models import Category, CategoryCorrection, Subscription, Transaction
+from app.models.models import (
+    Category,
+    CategoryCorrection,
+    Friend,
+    FriendMerchantLearning,
+    FriendTransactionLink,
+    Subscription,
+    Transaction,
+)
 from app.services.categorization_service import _keyword_prediction
+from app.services.friend_service import merge_friend_into_existing
 from app.ai.structured_insights import validate_llm_content
 from app.schemas.schemas import AIFinancialContext
 
@@ -75,6 +84,55 @@ class LearningAccuracyTests(unittest.TestCase):
         self.assertIn(("Same merchant", "Shopping"), rows)
         self.assertIn(("Same merchant", "Food"), rows)
 
+
+class FriendMergeTests(unittest.TestCase):
+    def test_merge_moves_transactions_and_learning_to_target(self):
+        engine = create_engine("sqlite:///:memory:")
+        for table in (Friend.__table__, FriendTransactionLink.__table__, FriendMerchantLearning.__table__, Transaction.__table__):
+            table.create(engine)
+        session = sessionmaker(bind=engine)()
+        source = Friend(user_id=1, name="Old Name", normalized_name="old name")
+        target = Friend(user_id=1, name="Correct Name", normalized_name="correct name")
+        session.add_all([source, target])
+        session.flush()
+        transaction = Transaction(
+            user_id=1,
+            friend_id=source.id,
+            amount=250,
+            description="UPI old name",
+            transaction_type="expense",
+            date=datetime(2026, 1, 1),
+            is_friend_transaction=True,
+            normalized_friend_name=source.normalized_name,
+        )
+        session.add(transaction)
+        session.flush()
+        session.add_all([
+            FriendTransactionLink(user_id=1, friend_id=source.id, transaction_id=transaction.id),
+            FriendMerchantLearning(
+                user_id=1,
+                friend_id=source.id,
+                merchant_name="Old Name",
+                normalized_merchant="old name",
+            ),
+        ])
+        session.commit()
+
+        merged, moved_count = merge_friend_into_existing(session, 1, source.id, target.id)
+        session.commit()
+
+        self.assertEqual(moved_count, 1)
+        self.assertEqual(merged.id, target.id)
+        self.assertEqual(transaction.friend_id, target.id)
+        self.assertEqual(transaction.normalized_friend_name, target.normalized_name)
+        self.assertEqual(merged.transaction_count, 1)
+        self.assertIsNone(session.query(Friend).filter(Friend.id == source.id).first())
+        self.assertEqual(session.query(FriendTransactionLink).one().friend_id, target.id)
+        self.assertEqual(session.query(FriendMerchantLearning).one().friend_id, target.id)
+        session.close()
+
+
+class LearningModelTrainingTests(unittest.TestCase):
     def test_single_category_does_not_train_logistic_regression(self):
         engine = create_engine("sqlite:///:memory:")
         Category.__table__.create(engine)

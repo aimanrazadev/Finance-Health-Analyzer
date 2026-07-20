@@ -401,9 +401,19 @@
   color: #ff5c5c;
 }
 
-.friends-page button.hide-details-button {
+.friend-detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+.friends-page button.hide-details-button,
+.friends-page button.link-friend-button,
+.friends-page button.confirm-friend-merge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   min-height: 46px !important;
   margin-top: 8px;
@@ -413,17 +423,33 @@
   background: rgba(141, 234, 54, 0.035) !important;
   color: var(--friends-accent) !important;
   box-shadow: none !important;
-  grid-column: 1 / -1;
 }
 
-.friends-page button.hide-details-button:hover {
+.friends-page button.hide-details-button:hover,
+.friends-page button.link-friend-button:hover,
+.friends-page button.confirm-friend-merge:hover {
   border-color: var(--friends-accent) !important;
   background: rgba(141, 234, 54, 0.09) !important;
 }
 
-.hide-details-button svg {
+.hide-details-button svg,
+.link-friend-button svg {
   width: 17px;
   height: 17px;
+}
+
+.friend-merge-controls {
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: min(100%, 430px);
+  grid-column: 1 / -1;
+}
+
+.friend-merge-controls .app-select {
+  width: 100%;
+  margin-top: 8px;
 }
 
 .friend-transactions-heading {
@@ -595,6 +621,16 @@
     width: 100%;
     justify-items: start;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .friend-detail-actions,
+  .friend-merge-controls {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  .friend-detail-actions {
+    display: grid;
   }
 
   .friend-transaction-table-wrapper {

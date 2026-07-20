@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CalendarDays, ChevronRight, Copy, EyeOff, Search } from 'lucide-react';
+import { CalendarDays, ChevronRight, Copy, EyeOff, Link2, Search } from 'lucide-react';
 import Navigation from '../../components/layout/Navigation';
+import AppSelect from '../../components/ui/AppSelect';
 import useAuth from '../auth/useAuth';
 import api, { getAuthHeaders } from '../../shared/services/apiClient';
 import './Friends.css';
@@ -34,6 +35,9 @@ const Friends = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [mergeOpen, setMergeOpen] = useState(false);
+  const [mergeTargetId, setMergeTargetId] = useState('');
+  const [merging, setMerging] = useState(false);
   const [copiedFriendId, setCopiedFriendId] = useState(null);
 
   const chooseSelectedFriend = useCallback((friends, preferredFriendId) => {
@@ -123,6 +127,10 @@ const Friends = () => {
     }, { received: 0, sent: 0 });
   }, [detail]);
 
+  const mergeOptions = useMemo(() => (dashboard.friends || [])
+    .filter((friend) => friend.id !== detail?.friend?.id)
+    .map((friend) => ({ value: friend.id, label: friend.name })), [dashboard.friends, detail?.friend?.id]);
+
   const addFriend = async (event) => {
     event.preventDefault();
     if (!friendName.trim()) {
@@ -155,6 +163,34 @@ const Friends = () => {
     } catch (err) {
       console.error(err);
       setError('Unable to hide friend.');
+    }
+  };
+
+  const mergeFriend = async () => {
+    if (!detail?.friend?.id || !mergeTargetId) {
+      setError('Choose the existing friend you want to link these transactions to.');
+      return;
+    }
+    setMerging(true);
+    setError('');
+    setMessage('');
+    try {
+      const response = await api.post(
+        `/friends/${detail.friend.id}/merge`,
+        { target_friend_id: Number(mergeTargetId) },
+        { headers },
+      );
+      setMessage(response.data.message);
+      setMergeOpen(false);
+      setMergeTargetId('');
+      setDetail(null);
+      setSelectedFriend(response.data.friend);
+      await loadFriends(response.data.friend.id);
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.detail || 'Unable to link these friend records.');
+    } finally {
+      setMerging(false);
     }
   };
 
@@ -285,10 +321,44 @@ const Friends = () => {
                       <strong>{formatMoney(detailTotals.sent)}</strong>
                       <span>Sent</span>
                     </div>
-                    <button className="hide-details-button plain-button" onClick={() => hideFriend(detail.friend.id)}>
-                      <EyeOff aria-hidden="true" />
-                      Hide Details
-                    </button>
+                    <div className="friend-detail-actions">
+                      <button
+                        type="button"
+                        className="link-friend-button plain-button"
+                        onClick={() => {
+                          setMergeOpen((current) => !current);
+                          setMergeTargetId('');
+                        }}
+                        disabled={!mergeOptions.length}
+                      >
+                        <Link2 aria-hidden="true" />
+                        Link to existing friend
+                      </button>
+                      <button className="hide-details-button plain-button" onClick={() => hideFriend(detail.friend.id)}>
+                        <EyeOff aria-hidden="true" />
+                        Hide Details
+                      </button>
+                    </div>
+                    {mergeOpen && (
+                      <div className="friend-merge-controls">
+                        <AppSelect
+                          value={mergeTargetId}
+                          options={mergeOptions}
+                          onChange={setMergeTargetId}
+                          placeholder="Choose existing friend"
+                          ariaLabel="Choose friend to merge into"
+                          disabled={merging}
+                        />
+                        <button
+                          type="button"
+                          className="confirm-friend-merge plain-button"
+                          onClick={mergeFriend}
+                          disabled={!mergeTargetId || merging}
+                        >
+                          {merging ? 'Linking...' : 'Link transactions'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 

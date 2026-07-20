@@ -10,6 +10,7 @@ from app.schemas.schemas import (
     FriendCreateResponse,
     FriendDashboardResponse,
     FriendDetailResponse,
+    FriendMergeRequest,
     FriendResponse,
     FriendUpdate,
 )
@@ -19,6 +20,7 @@ from app.services.friend_service import (
     get_friend_detail,
     hide_friend,
     link_matching_transactions,
+    merge_friend_into_existing,
     refresh_friend_stats,
 )
 from app.services.friend_detection_service import display_friend_name, normalize_friend_key
@@ -131,6 +133,35 @@ def update_friend(
         friend=friend,
         linked_transactions=linked_count,
         message=f"{friend.name} updated.",
+    )
+
+
+@router.post("/{friend_id}/merge", response_model=FriendCreateResponse)
+def merge_friend(
+    friend_id: int,
+    payload: FriendMergeRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Move this friend's linked history into another existing friend."""
+    try:
+        target, moved_count = merge_friend_into_existing(
+            db,
+            current_user.id,
+            friend_id,
+            payload.target_friend_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+    db.commit()
+    db.refresh(target)
+    return FriendCreateResponse(
+        friend=target,
+        linked_transactions=moved_count,
+        message=f"Moved {moved_count} transaction(s) into {target.name}.",
     )
 
 
