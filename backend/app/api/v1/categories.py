@@ -24,7 +24,11 @@ from app.api.deps import get_current_user
 from app.services.categorization_service import categorize_transaction as smart_categorize_transaction
 from app.services.category_service import create_category as create_category_service
 from app.services.category_service import get_visible_categories
-from app.services.friend_service import create_or_update_friend_from_transaction, is_friends_category
+from app.services.friend_service import (
+    create_or_update_friend_from_transaction,
+    detach_transaction_from_friend,
+    is_friends_category,
+)
 from app.services.learning_service import save_category_correction
 from app.utils.merchant_extractor import normalize_merchant_name
 from app.ml.categorization import (
@@ -119,6 +123,8 @@ def correct_transaction_category(
     )
     transaction.category_confidence = 1.0
     transaction.categorization_method = "manual"
+    transaction.suggested_category_id = None
+    transaction.suggested_category_name = None
     transaction.extracted_merchant = correction.merchant
     transaction.review_status = "approved"
     transaction.merchant = transaction.merchant or correction.merchant
@@ -130,6 +136,8 @@ def correct_transaction_category(
             transaction.friend_id = friend.id
         except ValueError as exc:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    else:
+        detach_transaction_from_friend(db, current_user.id, transaction)
 
     retrain_after_correction(current_user.id)
     db.commit()
@@ -150,15 +158,28 @@ def bulk_correct_transaction_categories(
     db: Session = Depends(get_db),
 ):
     """Apply several category corrections and learn merchant rules for each."""
+    transaction_ids = {item.transaction_id for item in request.corrections}
+    if len(transaction_ids) != len(request.corrections):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Each transaction may appear only once in a bulk correction",
+        )
+    category_ids = {item.new_category_id for item in request.corrections}
+    transactions = {
+        row.id: row for row in db.query(Transaction).filter(
+            Transaction.user_id == current_user.id,
+            Transaction.id.in_(transaction_ids),
+        ).all()
+    }
+    categories = {row.id for row in db.query(Category).filter(Category.id.in_(category_ids)).all()}
+    if len(transactions) != len(transaction_ids):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="One or more transactions were not found")
+    if categories != category_ids:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="One or more selected categories do not exist")
+
     updated_count = 0
     for item in request.corrections:
-        transaction = (
-            db.query(Transaction)
-            .filter(Transaction.id == item.transaction_id, Transaction.user_id == current_user.id)
-            .first()
-        )
-        if not transaction or not db.query(Category).filter(Category.id == item.new_category_id).first():
-            continue
+        transaction = transactions[item.transaction_id]
 
         correction = save_category_correction(
             db,
@@ -176,6 +197,8 @@ def bulk_correct_transaction_categories(
         )
         transaction.category_confidence = 1.0
         transaction.categorization_method = "manual"
+        transaction.suggested_category_id = None
+        transaction.suggested_category_name = None
         transaction.extracted_merchant = correction.merchant
         transaction.merchant = transaction.merchant or correction.merchant
         transaction.review_status = "approved"
@@ -183,8 +206,10 @@ def bulk_correct_transaction_categories(
         if is_friends_category(db, item.new_category_id):
             try:
                 create_or_update_friend_from_transaction(db, current_user.id, transaction)
-            except ValueError:
-                continue
+            except ValueError as exc:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+        else:
+            detach_transaction_from_friend(db, current_user.id, transaction)
         updated_count += 1
 
     retrain_after_correction(current_user.id)
@@ -199,12 +224,21 @@ def bulk_correct_transaction_categories(
 def get_needs_review_transactions(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-    include_learned: bool = False,
+    include_approved: bool = False,
+    include_learned: bool | None = None,
 ):
     """Return unclear transactions that need a user category correction."""
-    query = db.query(Transaction).filter(Transaction.user_id == current_user.id)
-    if include_learned:
-        return query.order_by(Transaction.date.desc()).all()
+    query = (
+        db.query(Transaction, Category)
+        .outerjoin(Category, Transaction.category_id == Category.id)
+        .filter(Transaction.user_id == current_user.id)
+    )
+    if include_approved or include_learned is True:
+        rows = query.order_by(Transaction.date.desc()).all()
+        return [
+            {**transaction.__dict__, "category_name": category.name if category else None}
+            for transaction, category in rows
+        ]
 
     filters = [
         Transaction.category_confidence.is_(None),
@@ -218,7 +252,11 @@ def get_needs_review_transactions(
         or_(Transaction.is_friend_transaction == False, Transaction.is_friend_transaction.is_(None)),  # noqa: E712
         or_(*filters),
     )
-    return query.order_by(Transaction.date.desc()).all()
+    rows = query.order_by(Transaction.date.desc()).all()
+    return [
+        {**transaction.__dict__, "category_name": category.name if category else None}
+        for transaction, category in rows
+    ]
 
 
 @router.get("/learning-accuracy", response_model=LearningAccuracyResponse)

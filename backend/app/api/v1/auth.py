@@ -8,9 +8,9 @@ Authentication API routes
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.schemas.schemas import UserRegister, UserLogin, TokenResponse, UserResponse, MessageResponse
+from app.schemas.schemas import UserRegister, UserLogin, TokenResponse, UserResponse, MessageResponse, RefreshTokenRequest
 from app.models.models import User
-from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token
+from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token, verify_token
 from app.db.session import get_db
 from app.api.deps import get_current_user
 
@@ -133,7 +133,7 @@ def get_current_user_info(
     Get current authenticated user information
     
     Args:
-        current_user: Current user from token
+        payload: Refresh token issued at login
         
     Returns:
         UserResponse with user details
@@ -162,17 +162,28 @@ def logout(
 
 @router.post("/refresh", response_model=TokenResponse)
 def refresh_access_token(
-    current_user: User = Depends(get_current_user)
+    payload: RefreshTokenRequest,
+    db: Session = Depends(get_db),
 ):
     """
     Refresh access token using existing authentication
     
     Args:
-        current_user: Current user from token
+        payload: Refresh token issued at login
+        db: Database session used to verify the token owner
         
     Returns:
         TokenResponse with new access token
     """
+    token_payload = verify_token(payload.refresh_token)
+    if not token_payload or token_payload.get("type") != "refresh":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token",
+        )
+    current_user = db.query(User).filter(User.id == token_payload.get("user_id"), User.is_active == True).first()  # noqa: E712
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     token_data = {"user_id": current_user.id, "email": current_user.email}
     new_access_token = create_access_token(token_data)
     

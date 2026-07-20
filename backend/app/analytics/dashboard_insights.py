@@ -1,3 +1,4 @@
+from calendar import monthrange
 from sqlalchemy.orm import Session
 
 from app.schemas.schemas import DashboardInsightItem, DashboardInsightsResponse
@@ -31,7 +32,8 @@ def _severity_for_change(change: float) -> str:
 def build_dashboard_insights(db: Session, user_id: int, month: int, year: int, day: int | None = None) -> DashboardInsightsResponse:
     current = build_dashboard_summary(db, user_id, month, year, day)
     previous_month, previous_year = _previous_period(month, year)
-    previous = build_dashboard_summary(db, user_id, previous_month, previous_year)
+    comparison_day = min(day, monthrange(previous_year, previous_month)[1]) if day and previous_month > 0 else None
+    previous = build_dashboard_summary(db, user_id, previous_month, previous_year, comparison_day)
     insights: list[DashboardInsightItem] = []
 
     expense_change = _change_percentage(current.total_expenses, previous.total_expenses)

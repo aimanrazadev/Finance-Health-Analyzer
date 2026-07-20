@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CalendarDays,
   ChevronLeft,
@@ -71,6 +71,7 @@ const Transactions = () => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const requestSequence = useRef(0);
 
   const authHeaders = useMemo(() => getAuthHeaders(token), [token]);
   const periodDateRange = useMemo(() => getPeriodDateRange(
@@ -79,6 +80,7 @@ const Transactions = () => {
   ), [searchParams]);
 
   const loadTransactions = useCallback(async () => {
+    const requestId = ++requestSequence.current;
     setLoading(true);
     setError('');
 
@@ -91,12 +93,14 @@ const Transactions = () => {
       if (periodDateRange.endDate) params.end_date = periodDateRange.endDate;
 
       const response = await api.get('/transactions', { headers: authHeaders, params });
-      setTransactions(response.data);
+      if (requestId === requestSequence.current) {
+        setTransactions(Array.isArray(response.data) ? response.data : []);
+      }
     } catch (err) {
       console.error(err);
-      setError('Unable to load transactions.');
+      if (requestId === requestSequence.current) setError('Unable to load transactions.');
     } finally {
-      setLoading(false);
+      if (requestId === requestSequence.current) setLoading(false);
     }
   }, [authHeaders, filterCategory, filterType, periodDateRange, search]);
 
@@ -115,7 +119,18 @@ const Transactions = () => {
 
   useEffect(() => {
     if (token) queueMicrotask(loadTransactions);
+    return () => {
+      requestSequence.current += 1;
+    };
   }, [loadTransactions, token]);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setSearch(searchParams.get('search') || '');
+      setFilterCategory(searchParams.get('category_id') || '');
+      setPage(1);
+    });
+  }, [searchParams]);
 
   const resetForm = () => {
     setFormData(createDefaultFormState());

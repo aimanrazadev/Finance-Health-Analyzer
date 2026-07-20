@@ -4,7 +4,7 @@ from typing import List
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
-from app.models.models import Transaction, UploadedFile, User
+from app.models.models import Category, CategoryCorrection, Transaction, UploadedFile, User
 from app.schemas.schemas import (
     UploadConfirmRequest,
     UploadConfirmResponse,
@@ -12,7 +12,13 @@ from app.schemas.schemas import (
     UploadPreviewResponse,
 )
 from app.parsers.file_parser import MAX_UPLOAD_SIZE_BYTES, parse_statement_file, validate_statement_file
-from app.services.friend_service import auto_attach_transaction_if_friend, create_or_update_friend_from_transaction, is_friends_category
+from app.services.friend_service import (
+    auto_attach_transaction_if_friend,
+    create_or_update_friend_from_transaction,
+    detach_transaction_from_friend,
+    is_friends_category,
+)
+from app.ml.categorization import retrain_after_correction
 from app.utils.merchant_extractor import extract_transaction_merchant
 from app.utils.transaction_type import normalize_transaction_type
 
@@ -66,6 +72,20 @@ def confirm_statement_upload(
     db: Session = Depends(get_db),
 ):
     validate_statement_file(upload_data.file_name, upload_data.file_size)
+    category_ids = {
+        category_id
+        for row in upload_data.rows
+        for category_id in (row.category_id, row.suggested_category_id)
+        if category_id is not None
+    }
+    existing_category_ids = {
+        row.id for row in db.query(Category).filter(Category.id.in_(category_ids)).all()
+    } if category_ids else set()
+    if existing_category_ids != category_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="One or more uploaded category selections are invalid",
+        )
     file_type = "pdf"
     uploaded_file = UploadedFile(
         user_id=current_user.id,
@@ -112,6 +132,8 @@ def confirm_statement_upload(
             payment_method=None,
             category_confidence=row.category_confidence or 0.30,
             categorization_method=row.categorization_method or "needs_review",
+            suggested_category_id=row.suggested_category_id,
+            suggested_category_name=row.suggested_category_name,
             review_status="approved" if (row.category_confidence or 0.30) >= 0.80 and (row.categorization_method or "needs_review") != "needs_review" else "needs_review",
             is_needs_review=(row.category_confidence or 0.30) < 0.80 or (row.categorization_method or "needs_review") == "needs_review",
         )
@@ -169,9 +191,19 @@ def delete_uploaded_statement(
             detail="Uploaded statement not found",
         )
 
-    db.query(Transaction).filter(
+    transactions = db.query(Transaction).filter(
         Transaction.user_id == current_user.id,
         Transaction.uploaded_file_id == uploaded_file.id,
-    ).delete(synchronize_session=False)
+    ).all()
+    transaction_ids = [transaction.id for transaction in transactions]
+    if transaction_ids:
+        db.query(CategoryCorrection).filter(
+            CategoryCorrection.user_id == current_user.id,
+            CategoryCorrection.transaction_id.in_(transaction_ids),
+        ).delete(synchronize_session=False)
+    for transaction in transactions:
+        detach_transaction_from_friend(db, current_user.id, transaction)
+        db.delete(transaction)
     db.delete(uploaded_file)
+    retrain_after_correction(current_user.id)
     db.commit()

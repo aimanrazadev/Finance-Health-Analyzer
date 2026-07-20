@@ -6,6 +6,9 @@ from app.models.models import CategoryCorrection, CategoryLearningRule, Transact
 from app.utils.merchant_extractor import extract_merchant_name, normalize_merchant_name
 
 
+_UNSET = object()
+
+
 def increment_rule_usage(db: Session, rule: CategoryLearningRule) -> None:
     """Track learned-rule usage so the user can see what the app reused."""
     rule.times_used = (rule.times_used or 0) + 1
@@ -65,6 +68,10 @@ def save_category_correction(
     old_category_id: int | None,
     new_category_id: int,
     correction_source: str = "manual",
+    description: str | None = None,
+    merchant: str | None = None,
+    old_confidence: float | None | object = _UNSET,
+    old_method: str | None | object = _UNSET,
 ) -> CategoryCorrection:
     """Store a correction and create/update the matching merchant learning rule."""
     transaction = (
@@ -75,7 +82,8 @@ def save_category_correction(
     if not transaction:
         raise ValueError("Transaction not found")
 
-    merchant_name = transaction.merchant or extract_merchant_name(transaction.description)
+    correction_description = description or transaction.description
+    merchant_name = merchant or transaction.merchant or extract_merchant_name(correction_description)
     correction = CategoryCorrection(
         user_id=user_id,
         transaction_id=transaction_id,
@@ -83,10 +91,10 @@ def save_category_correction(
         new_category_id=new_category_id,
         merchant=merchant_name,
         extracted_merchant=merchant_name,
-        original_description=transaction.description,
-        description=transaction.description,
-        old_confidence=transaction.category_confidence,
-        old_method=transaction.categorization_method,
+        original_description=correction_description,
+        description=correction_description,
+        old_confidence=transaction.category_confidence if old_confidence is _UNSET else old_confidence,
+        old_method=transaction.categorization_method if old_method is _UNSET else old_method,
         correction_source=correction_source,
     )
     db.add(correction)

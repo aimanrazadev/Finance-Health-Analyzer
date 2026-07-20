@@ -62,7 +62,6 @@ const parsePeriod = (searchParams) => {
   const savedPeriod = getPeriodSelection();
   const month = monthParam === null ? savedPeriod.month : Number(monthParam);
   const year = yearParam === null ? savedPeriod.year : Number(yearParam);
-  if (month >= 1 && month <= 12 && Number.isFinite(year)) savePeriodSelection(month, year);
   return {
     month: Number.isFinite(month) ? month : now.getMonth() + 1,
     year: Number.isFinite(year) ? year : now.getFullYear(),
@@ -73,10 +72,16 @@ const CategoryBreakdown = () => {
   const navigate = useNavigate();
   const { token } = useAuth();
   const [searchParams] = useSearchParams();
-  const [{ month, year }] = useState(() => parsePeriod(searchParams));
+  const { month, year } = useMemo(() => parsePeriod(searchParams), [searchParams]);
   const [breakdown, setBreakdown] = useState({ total_expenses: 0, categories: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (month >= 1 && month <= 12 && Number.isFinite(year)) {
+      savePeriodSelection(month, year);
+    }
+  }, [month, year]);
 
   const openMerchantTransactions = (category, merchantName) => {
     const params = new URLSearchParams({

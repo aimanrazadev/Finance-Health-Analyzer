@@ -55,11 +55,18 @@ def merge_duplicate_friends(db: Session, user_id: int) -> None:
             keeper_by_compact[compact] = friend
             continue
 
-        (
-            db.query(FriendTransactionLink)
-            .filter(FriendTransactionLink.friend_id == friend.id)
-            .update({FriendTransactionLink.friend_id: keeper.id}, synchronize_session=False)
-        )
+        duplicate_links = db.query(FriendTransactionLink).filter(
+            FriendTransactionLink.friend_id == friend.id,
+        ).all()
+        for link in duplicate_links:
+            existing_link = db.query(FriendTransactionLink).filter(
+                FriendTransactionLink.friend_id == keeper.id,
+                FriendTransactionLink.transaction_id == link.transaction_id,
+            ).first()
+            if existing_link:
+                db.delete(link)
+            else:
+                link.friend_id = keeper.id
         (
             db.query(Transaction)
             .filter(Transaction.user_id == user_id, Transaction.friend_id == friend.id)
@@ -193,6 +200,26 @@ def refresh_friend_stats(db: Session, friend: Friend) -> Friend:
     dates = [row.date for row in rows if isinstance(row.date, datetime)]
     friend.last_transaction_at = max(dates) if dates else None
     return friend
+
+
+def detach_transaction_from_friend(db: Session, user_id: int, transaction: Transaction) -> None:
+    """Remove friend-only state when a transaction is moved to another category or deleted."""
+    old_friend = None
+    if transaction.friend_id:
+        old_friend = db.query(Friend).filter(
+            Friend.id == transaction.friend_id,
+            Friend.user_id == user_id,
+        ).first()
+    db.query(FriendTransactionLink).filter(
+        FriendTransactionLink.user_id == user_id,
+        FriendTransactionLink.transaction_id == transaction.id,
+    ).delete(synchronize_session=False)
+    transaction.friend_id = None
+    transaction.is_friend_transaction = False
+    transaction.normalized_friend_name = None
+    if old_friend:
+        db.flush()
+        refresh_friend_stats(db, old_friend)
 
 
 def link_matching_transactions(db: Session, user_id: int, friend: Friend) -> int:

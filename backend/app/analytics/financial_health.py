@@ -1,3 +1,4 @@
+from calendar import monthrange
 from statistics import mean
 
 from sqlalchemy.orm import Session
@@ -66,14 +67,15 @@ def _lifestyle_expenses(summary) -> float:
     return max(float(summary.total_expenses) - float(summary.total_savings), 0.0)
 
 
-def _stability_score(db: Session, user_id: int, month: int, year: int, current: float) -> tuple[int, str]:
+def _stability_score(db: Session, user_id: int, month: int, year: int, current: float, day: int | None = None) -> tuple[int, str]:
     if month == -1:
         return 60, "Select a month or year to compare spending stability over time."
     history: list[float] = []
     cursor_month, cursor_year = month, year
     for _ in range(3):
         cursor_month, cursor_year = previous_period(cursor_month, cursor_year)
-        previous = build_dashboard_summary(db, user_id, cursor_month, cursor_year)
+        comparison_day = min(day, monthrange(cursor_year, cursor_month)[1]) if day and cursor_month > 0 else None
+        previous = build_dashboard_summary(db, user_id, cursor_month, cursor_year, comparison_day)
         value = _lifestyle_expenses(previous)
         if value > 0:
             history.append(value)
@@ -128,9 +130,9 @@ def _tips(scores: dict[str, int]) -> list[str]:
     return tips or ["Your core financial signals are steady. Keep categorizing transactions consistently."]
 
 
-def calculate_financial_health_score(db: Session, user_id: int, month: int, year: int) -> dict:
-    summary = build_dashboard_summary(db, user_id, month, year)
-    recurring = subscription_summary(db, user_id, month, year)
+def calculate_financial_health_score(db: Session, user_id: int, month: int, year: int, day: int | None = None) -> dict:
+    summary = build_dashboard_summary(db, user_id, month, year, day)
+    recurring = subscription_summary(db, user_id, month, year, day)
     savings_score, savings_description = _savings_rate_score(summary.available_funds, summary.total_savings)
     subscription_score, subscription_description = _subscription_score(
         summary.total_income,
@@ -142,6 +144,7 @@ def calculate_financial_health_score(db: Session, user_id: int, month: int, year
         month,
         year,
         _lifestyle_expenses(summary),
+        day,
     )
     balance_score, balance_description = _balance_score(summary.closing_balance, summary.available_funds)
     overall_score = _clamp((savings_score + subscription_score + stability_score + balance_score) / 4)

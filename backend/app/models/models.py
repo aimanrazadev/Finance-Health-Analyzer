@@ -44,6 +44,8 @@ class Transaction(Base):
     source = Column(String(50), default="manual")
     category_confidence = Column(Float, default=0.30)
     categorization_method = Column(String(50), default="needs_review")
+    suggested_category_id = Column(Integer, nullable=True, index=True)
+    suggested_category_name = Column(String(100), nullable=True)
     is_friend_transaction = Column(Boolean, default=False)
     is_needs_review = Column(Boolean, default=False)
     review_status = Column(String(50), default="approved")

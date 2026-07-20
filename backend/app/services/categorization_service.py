@@ -17,9 +17,9 @@ except ImportError:
 CATEGORY_KEYWORDS = {
     "Food": [
         "albaik", "bakery", "burger", "cafe", "coffee", "delivery", "diner",
-        "doordash", "eatsure", "food", "grocery", "kfc", "mcdonald", "pizza",
+        "doordash", "eatsure", "food", "kfc", "mcdonald", "pizza",
         "burrito", "dhaba", "eatsure", "rebel", "restaurant", "starbucks",
-        "supermarket", "zomato", "swiggy", "toing",
+        "zomato", "swiggy", "toing",
     ],
     "Transport": [
         "bus", "careem", "dmrc", "rapido", "fuel", "gas", "metro", "ola", "parking",
@@ -70,9 +70,21 @@ def normalize_text(value: Optional[str]) -> str:
     return (value or "").strip().lower()
 
 
-def _keyword_prediction(description: str, merchant: Optional[str] = None) -> tuple[str, float]:
+def _keyword_prediction(
+    description: str,
+    merchant: Optional[str] = None,
+    transaction_type: Optional[str] = None,
+) -> tuple[str, float]:
     searchable_text = f"{normalize_text(description)} {normalize_text(merchant)}"
+    for category_name in ("Refunds", "Groceries"):
+        for keyword in CATEGORY_KEYWORDS[category_name]:
+            if keyword in searchable_text:
+                return category_name, 0.85 if len(keyword) >= 4 else 0.60
     for category_name, keywords in CATEGORY_KEYWORDS.items():
+        if category_name in {"Refunds", "Groceries"}:
+            continue
+        if category_name == "Salary" and transaction_type != "income":
+            continue
         for keyword in keywords:
             if keyword in searchable_text:
                 confidence = 0.85 if len(keyword) >= 4 else 0.60
@@ -126,19 +138,16 @@ def _learned_rule_prediction(
     if not normalized_merchant:
         return None, 0.0, "needs_review"
 
-    exact_rule = (
-        db.query(CategoryLearningRule)
-        .filter(
-            CategoryLearningRule.user_id == user_id,
-            CategoryLearningRule.normalized_merchant == normalized_merchant,
-        )
-        .first()
-    )
+    rule_cache = db.info.setdefault("category_learning_rules", {})
+    rules = rule_cache.get(user_id)
+    if rules is None:
+        rules = db.query(CategoryLearningRule).filter(CategoryLearningRule.user_id == user_id).all()
+        rule_cache[user_id] = rules
+    exact_rule = next((rule for rule in rules if rule.normalized_merchant == normalized_merchant), None)
     if exact_rule:
         increment_rule_usage(db, exact_rule)
         return exact_rule, 1.0, "learned"
 
-    rules = db.query(CategoryLearningRule).filter(CategoryLearningRule.user_id == user_id).all()
     best_rule = None
     best_score = 0.0
     for rule in rules:
@@ -179,7 +188,7 @@ def categorize_transaction(
             extracted_merchant,
         )
 
-    keyword_category, keyword_confidence = _keyword_prediction(description, extracted_merchant)
+    keyword_category, keyword_confidence = _keyword_prediction(description, extracted_merchant, transaction_type)
     if keyword_confidence >= SUGGESTION_CONFIDENCE_THRESHOLD:
         return _get_category_result(db, keyword_category, keyword_confidence, "rule_based", extracted_merchant)
 
@@ -197,7 +206,11 @@ def categorize_transaction(
 
 
 def get_category_by_name(db: Session, name: str) -> Optional[Category]:
-    return db.query(Category).filter(Category.name == name).first()
+    categories = db.info.get("categories_by_name")
+    if categories is None:
+        categories = {category.name: category for category in db.query(Category).all()}
+        db.info["categories_by_name"] = categories
+    return categories.get(name)
 
 
 def learn_user_category_preference(

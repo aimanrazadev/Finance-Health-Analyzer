@@ -9,6 +9,7 @@ Do not invent or recalculate any number or hallucinate.
 Do not describe the user as rich, poor, safe, or unsafe.
 Do not provide investment, tax, or legal advice.
 Give Recommendations to the user according to their spendings
+Treat subscription figures as categorized subscription payments; do not claim proven recurrence unless the supplied data proves it.
 Use short sentences and common, everyday words.
 Return valid JSON only, with no markdown fences or commentary."""
 

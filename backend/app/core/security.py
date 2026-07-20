@@ -9,16 +9,19 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from typing import Optional
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 # Password hashing configuration
 # Use pbkdf2_sha256 to avoid bcrypt backend compatibility and input length issues
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 # JWT configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY must be configured")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7))
@@ -76,7 +79,7 @@ def create_access_token(
     else:
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "type": "access"})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     
     return encoded_jwt
@@ -118,7 +121,7 @@ def verify_token(token: str) -> Optional[dict]:
         return None
 
 
-def get_user_id_from_token(token: str) -> Optional[int]:
+def get_user_id_from_token(token: str, expected_type: str = "access") -> Optional[int]:
     """
     Extract user_id from a valid JWT token
     
@@ -130,6 +133,9 @@ def get_user_id_from_token(token: str) -> Optional[int]:
     """
     payload = verify_token(token)
     if payload is None:
+        return None
+    token_type = payload.get("type", "access")
+    if token_type != expected_type:
         return None
     
     user_id = payload.get("user_id")

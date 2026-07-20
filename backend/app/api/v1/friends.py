@@ -110,6 +110,17 @@ def update_friend(
     if not normalized:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Friend name is required")
 
+    duplicate = db.query(Friend).filter(
+        Friend.user_id == current_user.id,
+        Friend.normalized_name == normalized,
+        Friend.id != friend.id,
+    ).first()
+    if duplicate:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A friend with this name already exists",
+        )
+
     friend.name = display_friend_name(payload.name)
     friend.normalized_name = normalized
     friend.is_hidden = False

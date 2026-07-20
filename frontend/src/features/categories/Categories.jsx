@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CalendarDays,
   ChartNoAxesCombined,
@@ -52,7 +52,7 @@ const Categories = () => {
   const [selectedCategories, setSelectedCategories] = useState({});
   const [bulkCategoryId, setBulkCategoryId] = useState('');
   const [searchTerm, setSearchTerm] = useState(() => searchParams.get('search') || '');
-  const [includeLearned, setIncludeLearned] = useState(false);
+  const [includeApproved, setIncludeApproved] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
   const [page, setPage] = useState(1);
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -60,6 +60,7 @@ const Categories = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [learningAccuracy, setLearningAccuracy] = useState(null);
+  const requestSequence = useRef(0);
   const uncategorizedOnly = searchParams.get('uncategorized') === '1';
   const periodDateRange = useMemo(() => getPeriodDateRange(
     searchParams.get('month'),
@@ -69,31 +70,45 @@ const Categories = () => {
   const headers = useMemo(() => getAuthHeaders(token), [token]);
 
   const loadData = useCallback(async () => {
+    const requestId = ++requestSequence.current;
     setLoading(true);
     setError('');
     try {
       const [categoryQueueResponse, categoriesResponse, learningAccuracyResponse] = await Promise.all([
         api.get('/categories/needs-review', {
           headers,
-          params: { include_learned: includeLearned },
+          params: { include_approved: includeApproved },
         }),
         api.get('/categories'),
         api.get('/categories/learning-accuracy', { headers }),
       ]);
-      setTransactions(categoryQueueResponse.data);
-      setCategories(categoriesResponse.data);
-      setLearningAccuracy(learningAccuracyResponse.data);
+      if (requestId !== requestSequence.current) return;
+      setTransactions(Array.isArray(categoryQueueResponse.data) ? categoryQueueResponse.data : []);
+      setCategories(Array.isArray(categoriesResponse.data) ? categoriesResponse.data : []);
+      setLearningAccuracy(learningAccuracyResponse.data && typeof learningAccuracyResponse.data === 'object'
+        ? learningAccuracyResponse.data
+        : null);
     } catch (err) {
       console.error(err);
-      setError('Unable to load category queue.');
+      if (requestId === requestSequence.current) setError('Unable to load category queue.');
     } finally {
-      setLoading(false);
+      if (requestId === requestSequence.current) setLoading(false);
     }
-  }, [headers, includeLearned]);
+  }, [headers, includeApproved]);
 
   useEffect(() => {
     if (token) queueMicrotask(loadData);
+    return () => {
+      requestSequence.current += 1;
+    };
   }, [loadData, token]);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setSearchTerm(searchParams.get('search') || '');
+      setPage(1);
+    });
+  }, [searchParams]);
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredTransactions = useMemo(() => transactions.filter((transaction) => {
@@ -214,9 +229,9 @@ const Categories = () => {
           <article className="categories-dashboard-card categories-stat-card">
             <span className="categories-icon-box"><FileText /></span>
             <div>
-              <p>{includeLearned ? 'All transactions' : 'Low-confidence transactions'}</p>
+              <p>{includeApproved ? 'All transactions' : 'Low-confidence transactions'}</p>
               <strong>{transactions.length}</strong>
-              <span>{includeLearned ? 'Including learned and categorized transactions' : 'Current review queue'}</span>
+              <span>{includeApproved ? 'Including approved transactions' : 'Current review queue'}</span>
             </div>
           </article>
 
@@ -224,11 +239,11 @@ const Categories = () => {
             <span className="categories-icon-box"><ChartNoAxesCombined /></span>
             <div>
               <p>Learning Accuracy</p>
-              <strong>{learningAccuracy?.accuracy == null ? '--' : `${Math.round(learningAccuracy.accuracy * 100)}%`}</strong>
+              <strong>{learningAccuracy?.status !== 'ready' ? '--' : `${Math.round(learningAccuracy.accuracy_percent)}%`}</strong>
               <span>
-                {learningAccuracy?.accuracy == null
+                {learningAccuracy?.status !== 'ready'
                   ? learningAccuracy?.message || 'Not enough correction data yet'
-                  : 'How accurately the system learns from your corrections'}
+                  : learningAccuracy.message}
               </span>
             </div>
           </article>
@@ -252,11 +267,11 @@ const Categories = () => {
           <label className="categories-learned-toggle">
             <input
               type="checkbox"
-              checked={includeLearned}
-              onChange={(event) => { setIncludeLearned(event.target.checked); setPage(1); }}
+              checked={includeApproved}
+              onChange={(event) => { setIncludeApproved(event.target.checked); setPage(1); }}
             />
-            <span>Include learned transactions</span>
-            <CircleHelp aria-hidden="true" title="Show transactions that already have learned category rules" />
+            <span>Show approved transactions too</span>
+            <CircleHelp aria-hidden="true" title="Include transactions that no longer need review" />
           </label>
 
           <AppSelect

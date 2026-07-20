@@ -96,7 +96,7 @@ def get_savings_analytics(
     day: Optional[int] = None,
 ):
     selected_month, selected_year, selected_day = resolve_period(month, year, day)
-    return build_savings_analytics(db, current_user.id, selected_month, selected_year)
+    return build_savings_analytics(db, current_user.id, selected_month, selected_year, selected_day)
 
 
 @router.get("/categories", response_model=CategoryAnalyticsResponse)
@@ -153,11 +153,10 @@ def get_dashboard_health_score(
     db: Session = Depends(get_db),
     month: Optional[int] = None,
     year: Optional[int] = None,
+    day: Optional[int] = None,
 ):
-    selected_month, selected_year, _selected_day = resolve_period(month, year)
-    if selected_month == 0:
-        selected_month = date.today().month
-    return calculate_financial_health_score(db, current_user.id, selected_month, selected_year)
+    selected_month, selected_year, selected_day = resolve_period(month, year, day)
+    return calculate_financial_health_score(db, current_user.id, selected_month, selected_year, selected_day)
 
 
 @router.get("/insights", response_model=DashboardInsightsResponse)

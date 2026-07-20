@@ -37,6 +37,10 @@ class TokenResponse(BaseModel):
     user: UserResponse
 
 
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str = Field(..., min_length=1)
+
+
 class MessageResponse(BaseModel):
     message: str
 
@@ -70,6 +74,7 @@ class TransactionResponse(BaseModel):
     user_id: int
     amount: float
     category_id: Optional[int]
+    category_name: Optional[str] = None
     friend_id: Optional[int] = None
     merchant_id: Optional[int] = None
     description: str
@@ -80,6 +85,8 @@ class TransactionResponse(BaseModel):
     date: datetime
     category_confidence: Optional[float] = None
     categorization_method: Optional[str] = None
+    suggested_category_id: Optional[int] = None
+    suggested_category_name: Optional[str] = None
     review_status: Optional[str] = None
     is_friend_transaction: Optional[bool] = False
     is_needs_review: Optional[bool] = False
@@ -231,8 +238,15 @@ class CategoryRetrainResponse(BaseModel):
 
 
 class LearningAccuracyResponse(BaseModel):
-    accuracy: Optional[float] = None
+    status: str
+    accuracy_percent: Optional[float] = None
+    correction_count: int
+    training_count: int
+    test_count: int
+    correct_count: int
+    minimum_required: int
     message: str
+    explanation: str
 
 
 # ==================== Dashboard Analytics Schemas ====================
@@ -469,16 +483,16 @@ class DashboardDataResponse(BaseModel):
 # ==================== Upload Schemas ====================
 
 class UploadPreviewRow(BaseModel):
-    row_number: int
+    row_number: int = Field(..., ge=1)
     transaction_date: datetime
     date: Optional[datetime] = None
-    description: str
+    description: str = Field(..., min_length=1, max_length=255)
     reference_no: Optional[str] = None
     withdrawal_amount: Optional[float] = None
     deposit_amount: Optional[float] = None
     balance: Optional[float] = None
-    amount: float
-    transaction_type: str
+    amount: float = Field(..., gt=0)
+    transaction_type: str = Field(..., pattern="^(income|expense)$")
     source: str = "manual"
     merchant: Optional[str] = None
     merchant_name: Optional[str] = None
@@ -488,7 +502,7 @@ class UploadPreviewRow(BaseModel):
     category_name: Optional[str] = None
     suggested_category_id: Optional[int] = None
     suggested_category_name: Optional[str] = None
-    category_confidence: Optional[float] = None
+    category_confidence: Optional[float] = Field(default=None, ge=0, le=1)
     categorization_method: Optional[str] = None
     review_status: Optional[str] = None
     is_needs_review: Optional[bool] = False
@@ -518,7 +532,7 @@ class UploadPreviewResponse(BaseModel):
 
 class UploadConfirmRequest(BaseModel):
     file_name: str
-    file_size: int
+    file_size: int = Field(..., gt=0)
     file_type: Optional[str] = None
     opening_balance: Optional[float] = None
     closing_balance: Optional[float] = None

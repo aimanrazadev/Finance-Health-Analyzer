@@ -1,3 +1,4 @@
+from calendar import monthrange
 from datetime import datetime, timedelta
 
 from sqlalchemy import func
@@ -19,6 +20,7 @@ from app.schemas.schemas import (
     SubscriptionAnalyticsResponse,
 )
 from app.analytics.dashboard_insights import build_dashboard_insights
+from app.utils.merchant_extractor import normalize_merchant_name
 from app.analytics.analytics import (
     SAVINGS_ALLOCATION_CATEGORY_NAMES,
     SUBSCRIPTION_CATEGORY_NAMES,
@@ -30,11 +32,12 @@ from app.analytics.analytics import (
 )
 
 
-def build_savings_analytics(db: Session, user_id: int, month: int, year: int) -> SavingsAnalyticsResponse:
+def build_savings_analytics(db: Session, user_id: int, month: int, year: int, day: int | None = None) -> SavingsAnalyticsResponse:
     """Measure how much income became savings and compare it with the prior period."""
-    current = build_dashboard_summary(db, user_id, month, year)
+    current = build_dashboard_summary(db, user_id, month, year, day)
     previous_month, previous_year = previous_period(month, year)
-    previous = build_dashboard_summary(db, user_id, previous_month, previous_year)
+    comparison_day = min(day, monthrange(previous_year, previous_month)[1]) if day and previous_month > 0 else None
+    previous = build_dashboard_summary(db, user_id, previous_month, previous_year, comparison_day)
 
     return SavingsAnalyticsResponse(
         month=month,
@@ -231,7 +234,7 @@ def _upsert_subscription(
         db.query(Subscription)
         .filter(
             Subscription.user_id == user_id,
-            Subscription.merchant_name == merchant_name,
+            func.lower(Subscription.merchant_name) == merchant_name.lower(),
             Subscription.status == "active",
         )
         .first()
@@ -249,23 +252,20 @@ def _upsert_subscription(
     return row
 
 
+def _month_start_months_ago(value: datetime, months: int) -> datetime:
+    month_index = value.year * 12 + (value.month - 1) - months
+    return datetime(month_index // 12, month_index % 12 + 1, 1)
+
+
 def build_subscription_analytics(db: Session, user_id: int, month: int, year: int, day: int | None = None) -> SubscriptionAnalyticsResponse:
     """Detect recurring subscription load from Subscriptions-category transactions."""
     start_date, end_date = month_bounds(month, year, day)
     if month == -1:
         history_start = start_date
     else:
-        history_start = datetime(end_date.year, max(1, end_date.month - 5), 1) if month != 0 else datetime(year, 1, 1)
-    merchant_name = func.coalesce(Transaction.extracted_merchant, Transaction.merchant, Transaction.description)
+        history_start = _month_start_months_ago(end_date, 5) if month != 0 else datetime(year, 1, 1)
     rows = (
-        db.query(
-            merchant_name.label("merchant_name"),
-            Transaction.category_id.label("category_id"),
-            func.coalesce(func.avg(Transaction.amount), 0).label("average_amount"),
-            func.coalesce(func.sum(Transaction.amount), 0).label("period_total"),
-            func.count(Transaction.id).label("transaction_count"),
-            func.max(Transaction.date).label("last_payment_date"),
-        )
+        db.query(Transaction)
         .join(Category, Transaction.category_id == Category.id)
         .filter(
             Transaction.user_id == user_id,
@@ -274,21 +274,38 @@ def build_subscription_analytics(db: Session, user_id: int, month: int, year: in
             Transaction.date <= end_date,
             func.lower(Category.name).in_(SUBSCRIPTION_CATEGORY_NAMES),
         )
-        .group_by(merchant_name, Transaction.category_id)
-        .order_by(func.sum(Transaction.amount).desc())
         .all()
     )
 
+    merchant_groups: dict[str, dict] = {}
+    for transaction in rows:
+        merchant = transaction.extracted_merchant or transaction.merchant or transaction.description
+        merchant_key = normalize_merchant_name(merchant) or merchant.strip().lower()
+        group = merchant_groups.setdefault(merchant_key, {
+            "merchant_name": merchant,
+            "category_id": transaction.category_id,
+            "monthly_totals": {},
+            "transaction_count": 0,
+            "last_payment_date": None,
+        })
+        month_key = (transaction.date.year, transaction.date.month)
+        group["monthly_totals"][month_key] = group["monthly_totals"].get(month_key, 0.0) + float(transaction.amount or 0)
+        group["transaction_count"] += 1
+        if group["last_payment_date"] is None or transaction.date > group["last_payment_date"]:
+            group["last_payment_date"] = transaction.date
+
     items: list[SubscriptionAnalyticsItem] = []
-    for row in rows:
-        average_amount = round(float(row.average_amount or 0), 2)
-        confidence = 0.95 if int(row.transaction_count or 0) >= 2 else 0.75
-        next_expected_payment = row.last_payment_date + timedelta(days=30) if row.last_payment_date else None
+    for group in merchant_groups.values():
+        merchant_name = group["merchant_name"]
+        monthly_totals = list(group["monthly_totals"].values())
+        average_amount = round(sum(monthly_totals) / len(monthly_totals), 2)
+        confidence = 0.95 if len(monthly_totals) >= 2 else 0.75
+        next_expected_payment = group["last_payment_date"] + timedelta(days=30) if group["last_payment_date"] else None
         stored = _upsert_subscription(
             db,
             user_id,
-            row.merchant_name,
-            row.category_id,
+            merchant_name,
+            group["category_id"],
             average_amount,
             confidence,
             next_expected_payment,
@@ -296,17 +313,18 @@ def build_subscription_analytics(db: Session, user_id: int, month: int, year: in
         items.append(
             SubscriptionAnalyticsItem(
                 id=stored.id,
-                merchant_name=row.merchant_name,
+                merchant_name=merchant_name,
                 amount=average_amount,
                 billing_period="monthly",
                 monthly_cost=average_amount,
                 annual_cost=round(average_amount * 12, 2),
-                transaction_count=int(row.transaction_count or 0),
+                transaction_count=group["transaction_count"],
                 confidence=confidence,
                 next_expected_payment=next_expected_payment,
             )
         )
 
+    items.sort(key=lambda item: item.monthly_cost, reverse=True)
     if items:
         db.commit()
 
@@ -348,13 +366,13 @@ def build_complete_dashboard_data(db: Session, user_id: int, month: int, year: i
     ]
     return DashboardDataResponse(
         summary=build_dashboard_summary(db, user_id, month, year, day),
-        savings=build_savings_analytics(db, user_id, month, year),
+        savings=build_savings_analytics(db, user_id, month, year, day),
         categories=build_category_analytics(db, user_id, month, year, day),
         merchants=build_merchant_analytics_detail(db, user_id, month, year, day),
         subscriptions=build_subscription_analytics(db, user_id, month, year, day),
         charts=build_dashboard_charts(db, user_id, month, year, day),
         trends=build_period_trend_summary(db, user_id, month, year, day),
         insights=build_dashboard_insights(db, user_id, month, year, day),
-        health=calculate_financial_health_score(db, user_id, month, year),
+        health=calculate_financial_health_score(db, user_id, month, year, day),
         recent_transactions=recent_transactions,
     )

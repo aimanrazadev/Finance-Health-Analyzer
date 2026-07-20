@@ -5,15 +5,21 @@ from sqlalchemy import or_
 from datetime import datetime
 
 from app.db.session import get_db
-from app.models.models import Category, Transaction, User
+from app.models.models import Category, CategoryCorrection, Transaction, User
 from app.schemas.schemas import TransactionCategoryCorrectionRequest, TransactionCreate, TransactionResponse
 from app.api.deps import get_current_user
 from app.services.categorization_service import (
     categorize_transaction,
     learn_user_category_preference,
 )
-from app.services.friend_service import auto_attach_transaction_if_friend, create_or_update_friend_from_transaction, is_friends_category
+from app.services.friend_service import (
+    auto_attach_transaction_if_friend,
+    create_or_update_friend_from_transaction,
+    detach_transaction_from_friend,
+    is_friends_category,
+)
 from app.services.learning_service import save_category_correction
+from app.ml.categorization import retrain_after_correction
 from app.utils.merchant_extractor import extract_transaction_merchant
 from app.utils.transaction_type import normalize_transaction_type
 
@@ -58,8 +64,11 @@ def create_transaction(
     db: Session = Depends(get_db),
 ):
     category_id = transaction_data.category_id
+    was_auto_categorized = category_id is None
     category_confidence = 1.0
     categorization_method = "manual" if category_id is not None else "needs_review"
+    suggested_category_id = None
+    suggested_category_name = None
     merchant = transaction_data.merchant
     if category_id is None:
         result = categorize_transaction(
@@ -73,6 +82,8 @@ def create_transaction(
         category_id = result["category_id"] if isinstance(result["category_id"], int) else None
         category_confidence = float(result["confidence"])
         categorization_method = str(result["method"])
+        suggested_category_id = result.get("suggested_category_id")
+        suggested_category_name = result.get("suggested_category_name")
         merchant = str(result.get("merchant") or transaction_data.merchant or "")
         extracted_merchant = str(result.get("merchant") or "").strip() or None
     else:
@@ -103,6 +114,8 @@ def create_transaction(
         date=transaction_data.date,
         category_confidence=category_confidence,
         categorization_method=categorization_method,
+        suggested_category_id=suggested_category_id,
+        suggested_category_name=suggested_category_name,
         review_status=review_status,
         is_needs_review=is_needs_review,
     )
@@ -110,7 +123,7 @@ def create_transaction(
     db.flush()
     if category_id is not None and is_friends_category(db, category_id):
         create_or_update_friend_from_transaction(db, current_user.id, transaction)
-    else:
+    elif was_auto_categorized:
         auto_attach_transaction_if_friend(db, current_user.id, transaction)
     db.commit()
     db.refresh(transaction)
@@ -134,7 +147,8 @@ def get_transactions(
         query = query.filter(
             or_(
                 Transaction.description.ilike(term),
-                Transaction.merchant.ilike(term)
+                Transaction.merchant.ilike(term),
+                Transaction.extracted_merchant.ilike(term),
             )
         )
 
@@ -176,6 +190,9 @@ def update_transaction(
         )
 
     old_category_id = transaction.category_id
+    old_confidence = transaction.category_confidence
+    old_method = transaction.categorization_method
+    was_auto_categorized = transaction_data.category_id is None
     new_category_id = transaction_data.category_id
 
     if new_category_id is None:
@@ -190,18 +207,23 @@ def update_transaction(
         new_category_id = result["category_id"] if isinstance(result["category_id"], int) else None
         transaction.category_confidence = float(result["confidence"])
         transaction.categorization_method = str(result["method"])
+        transaction.suggested_category_id = result.get("suggested_category_id")
+        transaction.suggested_category_name = result.get("suggested_category_name")
         transaction.extracted_merchant = str(result.get("merchant") or "").strip() or None
     else:
         ensure_category_exists(db, new_category_id)
         transaction.category_confidence = 1.0
         transaction.categorization_method = "manual"
+        transaction.suggested_category_id = None
+        transaction.suggested_category_name = None
         transaction.extracted_merchant = extract_transaction_merchant(transaction_data.description, transaction_data.merchant)
-        learn_user_category_preference(
-            db,
-            current_user.id,
-            transaction.extracted_merchant,
-            new_category_id,
-        )
+        if old_category_id == new_category_id:
+            learn_user_category_preference(
+                db,
+                current_user.id,
+                transaction.extracted_merchant,
+                new_category_id,
+            )
 
     if old_category_id != new_category_id and new_category_id is not None:
         save_category_correction(
@@ -211,7 +233,12 @@ def update_transaction(
             old_category_id,
             new_category_id,
             correction_source="manual",
+            description=transaction_data.description,
+            merchant=transaction.extracted_merchant or transaction_data.merchant,
+            old_confidence=old_confidence,
+            old_method=old_method,
         )
+        retrain_after_correction(current_user.id)
 
     transaction.amount = transaction_data.amount
     transaction.category_id = new_category_id
@@ -231,7 +258,9 @@ def update_transaction(
     if new_category_id is not None and is_friends_category(db, new_category_id):
         create_or_update_friend_from_transaction(db, current_user.id, transaction)
     else:
-        auto_attach_transaction_if_friend(db, current_user.id, transaction)
+        detach_transaction_from_friend(db, current_user.id, transaction)
+        if was_auto_categorized:
+            auto_attach_transaction_if_friend(db, current_user.id, transaction)
 
     db.commit()
     db.refresh(transaction)
@@ -284,10 +313,15 @@ def correct_transaction_category_from_transactions(
     )
     transaction.category_confidence = 1.0
     transaction.categorization_method = "manual"
+    transaction.suggested_category_id = None
+    transaction.suggested_category_name = None
     transaction.review_status = "approved"
     transaction.is_needs_review = False
     if is_friends_category(db, correction_data.category_id):
         create_or_update_friend_from_transaction(db, current_user.id, transaction)
+    else:
+        detach_transaction_from_friend(db, current_user.id, transaction)
+    retrain_after_correction(current_user.id)
     db.commit()
     db.refresh(transaction)
     return transaction
@@ -310,5 +344,11 @@ def delete_transaction(
             detail="Transaction not found"
         )
 
+    detach_transaction_from_friend(db, current_user.id, transaction)
+    db.query(CategoryCorrection).filter(
+        CategoryCorrection.user_id == current_user.id,
+        CategoryCorrection.transaction_id == transaction.id,
+    ).delete(synchronize_session=False)
     db.delete(transaction)
+    retrain_after_correction(current_user.id)
     db.commit()
