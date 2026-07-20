@@ -368,11 +368,18 @@
   height: 17px;
 }
 
-.friend-detail-total {
+.friend-detail-totals {
   display: grid;
   justify-items: end;
   align-content: start;
-  gap: 7px;
+  grid-template-columns: repeat(2, minmax(120px, auto));
+  gap: 12px 22px;
+}
+
+.friend-detail-total {
+  display: grid;
+  justify-items: end;
+  gap: 3px;
 }
 
 .friend-detail-total strong {
@@ -384,6 +391,14 @@
 
 .friend-detail-total > span {
   font-size: 13px;
+}
+
+.friend-detail-total.received strong {
+  color: var(--friends-accent);
+}
+
+.friend-detail-total.sent strong {
+  color: #ff5c5c;
 }
 
 .friends-page button.hide-details-button {
@@ -398,6 +413,7 @@
   background: rgba(141, 234, 54, 0.035) !important;
   color: var(--friends-accent) !important;
   box-shadow: none !important;
+  grid-column: 1 / -1;
 }
 
 .friends-page button.hide-details-button:hover {
@@ -573,6 +589,12 @@
 
   .friend-detail-total {
     justify-items: start;
+  }
+
+  .friend-detail-totals {
+    width: 100%;
+    justify-items: start;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .friend-transaction-table-wrapper {

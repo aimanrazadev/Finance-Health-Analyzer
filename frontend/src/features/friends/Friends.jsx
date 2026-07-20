@@ -110,6 +110,19 @@ const Friends = () => {
       .some((value) => String(value).toLowerCase().includes(term));
   });
 
+  const detailTotals = useMemo(() => {
+    const transactions = Array.isArray(detail?.transactions) ? detail.transactions : [];
+    return transactions.reduce((totals, transaction) => {
+      const amount = Math.abs(Number(transaction.amount) || 0);
+      if (transaction.transaction_type === 'income') {
+        totals.received += amount;
+      } else if (transaction.transaction_type === 'expense') {
+        totals.sent -= amount;
+      }
+      return totals;
+    }, { received: 0, sent: 0 });
+  }, [detail]);
+
   const addFriend = async (event) => {
     event.preventDefault();
     if (!friendName.trim()) {
@@ -263,9 +276,15 @@ const Friends = () => {
                       Member since {formatMemberSince(detail.friend.created_at)}
                     </p>
                   </div>
-                  <div className="friend-detail-total">
-                    <strong>{formatMoney(detail.friend.total_amount)}</strong>
-                    <span>Total Balance</span>
+                  <div className="friend-detail-totals">
+                    <div className="friend-detail-total received">
+                      <strong>{formatMoney(detailTotals.received)}</strong>
+                      <span>Received</span>
+                    </div>
+                    <div className="friend-detail-total sent">
+                      <strong>{formatMoney(detailTotals.sent)}</strong>
+                      <span>Sent</span>
+                    </div>
                     <button className="hide-details-button plain-button" onClick={() => hideFriend(detail.friend.id)}>
                       <EyeOff aria-hidden="true" />
                       Hide Details
